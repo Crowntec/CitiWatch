@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
+import { LoadingButton } from '@/components/Loading';
+import { makePublicRequest, validateForm } from '@/utils/api';
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -26,6 +28,18 @@ export default function Login() {
     setLoading(true);
     setError('');
 
+    // Client-side validation following API guidelines
+    const validationErrors = validateForm(formData, {
+      email: ['required', 'email'],
+      password: ['required', 'password']
+    });
+
+    if (validationErrors.length > 0) {
+      setError(validationErrors.join(', '));
+      setLoading(false);
+      return;
+    }
+
     // Dummy credentials for development
     const dummyCredentials = {
       email: 'demo@citiwatch.com',
@@ -40,32 +54,34 @@ export default function Login() {
         localStorage.setItem('token', dummyToken);
         localStorage.setItem('user', JSON.stringify({
           fullName: 'Demo User',
-          email: 'demo@citiwatch.com'
+          email: 'demo@citiwatch.com',
+          role: 'admin' // Set as admin for testing
         }));
         router.push('/dashboard');
         return;
       }
 
-      // TODO: Replace with actual API call when backend is ready
-      const response = await fetch('/api/User/Login', {
+      // API call with proper status field checking
+      const data = await makePublicRequest('/api/User/Login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
+      // Store JWT token and user data
+      if (data.token && data.user) {
         localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
         router.push('/dashboard');
       } else {
-        setError(data.message || 'Login failed');
+        setError('Login response missing required data');
       }
     } catch (error) {
-      // If API call fails, show helpful message about dummy credentials
-      setError('API not available. Use demo@citiwatch.com / password123 for testing.');
+      // Handle API errors gracefully
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('API not available. Use demo@citiwatch.com / password123 for testing.');
+      }
     } finally {
       setLoading(false);
     }
@@ -171,13 +187,14 @@ export default function Login() {
             </div>
 
             <div>
-              <button
+              <LoadingButton
                 type="submit"
-                disabled={loading}
+                isLoading={loading}
+                loadingText="Signing in..."
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {loading ? 'Signing in...' : 'Sign in'}
-              </button>
+                Sign in
+              </LoadingButton>
             </div>
           </form>
         </div>

@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { LoadingButton } from '@/components/Loading';
+import { makeAuthenticatedRequest, validateForm } from '@/utils/api';
+import Navigation from '@/components/Navigation';
 
 interface Category {
   id: string;
@@ -38,20 +41,15 @@ export default function SubmitComplaint() {
 
   const loadCategories = async () => {
     try {
-      const token = localStorage.getItem('token');
-      // TODO: Replace with actual API call
-      const response = await fetch('/api/Category/GetAll', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setCategories(data.data || []);
+      // Use authenticated request with proper error handling
+      const data = await makeAuthenticatedRequest('/api/Category/GetAll');
+      
+      if (data && data.data) {
+        setCategories(data.data);
       }
     } catch (error) {
       console.error('Error loading categories:', error);
+      setError('Failed to load categories');
     }
   };
 
@@ -114,14 +112,21 @@ export default function SubmitComplaint() {
     setError('');
     setSuccess('');
 
-    if (!formData.title || !formData.description || !formData.categoryId) {
-      setError('Please fill in all required fields');
+    // Client-side validation following API guidelines
+    const validationErrors = validateForm(formData, {
+      title: ['required'],
+      description: ['required'],
+      categoryId: ['required']
+    });
+
+    if (validationErrors.length > 0) {
+      setError(validationErrors.join(', '));
       setLoading(false);
       return;
     }
 
     try {
-      const token = localStorage.getItem('token');
+      // File uploads require FormData - don't set Content-Type header manually
       const formDataToSend = new FormData();
       
       formDataToSend.append('title', formData.title);
@@ -131,18 +136,13 @@ export default function SubmitComplaint() {
       if (formData.longitude) formDataToSend.append('longitude', formData.longitude);
       if (selectedFile) formDataToSend.append('formFile', selectedFile);
 
-      // TODO: Replace with actual API call
-      const response = await fetch('/api/Complaint/Submit', {
+      // Use authenticated request with proper error handling
+      const data = await makeAuthenticatedRequest('/api/Complaint/Submit', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
         body: formDataToSend,
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (data && data.status === 'success') {
         setSuccess('Complaint submitted successfully!');
         // Reset form
         setFormData({
@@ -158,11 +158,9 @@ export default function SubmitComplaint() {
         setTimeout(() => {
           router.push('/dashboard');
         }, 2000);
-      } else {
-        setError(data.message || 'Failed to submit complaint');
       }
     } catch (error) {
-      setError('Network error. Please try again.');
+      setError(error instanceof Error ? error.message : 'Failed to submit complaint');
     } finally {
       setLoading(false);
     }
@@ -171,37 +169,9 @@ export default function SubmitComplaint() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
       {/* Navigation */}
-      <nav className="bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Link href="/dashboard" className="text-2xl font-bold text-blue-400 flex items-center">
-                <i className="fas fa-city mr-2"></i>
-                CitiWatch
-              </Link>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/dashboard"
-                className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Dashboard
-              </Link>
-              <button
-                onClick={() => {
-                  localStorage.removeItem('token');
-                  router.push('/');
-                }}
-                className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white">Submit a Complaint</h1>
@@ -387,13 +357,14 @@ export default function SubmitComplaint() {
               >
                 Cancel
               </Link>
-              <button
+              <LoadingButton
                 type="submit"
-                disabled={loading}
+                isLoading={loading}
+                loadingText="Submitting..."
                 className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {loading ? 'Submitting...' : 'Submit Complaint'}
-              </button>
+                Submit Complaint
+              </LoadingButton>
             </div>
           </form>
         </div>

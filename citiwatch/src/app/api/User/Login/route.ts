@@ -15,13 +15,13 @@ export async function POST(request: NextRequest) {
     if (email === dummyCredentials.email && password === dummyCredentials.password) {
       // Return success with dummy token
       return NextResponse.json({
-        success: true,
+        status: 'success',
         token: `dummy-api-token-${Date.now()}`,
         user: {
           id: '1',
           fullName: 'Demo User',
           email: 'demo@citiwatch.com',
-          role: 'user'
+          role: 'admin'
         },
         message: 'Login successful'
       });
@@ -29,13 +29,13 @@ export async function POST(request: NextRequest) {
 
     // Invalid credentials
     return NextResponse.json(
-      { success: false, message: 'Invalid email or password' },
+      { status: 'error', message: 'Invalid email or password' },
       { status: 401 }
     );
 
   } catch (error) {
     return NextResponse.json(
-      { success: false, message: 'Internal server error' },
+      { status: 'error', message: 'Internal server error' },
       { status: 500 }
     );
   }

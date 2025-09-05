@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
+import { LoadingCard, LoadingSection } from '@/components/Loading';
+import { makeAuthenticatedRequest, getCurrentUser } from '@/utils/api';
 
 interface Complaint {
   id: string;
@@ -18,7 +20,8 @@ interface Complaint {
 export default function Dashboard() {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<{ fullName: string; email: string } | null>(null);
+  const [error, setError] = useState('');
+  const [user, setUser] = useState<{ fullName: string; email: string; role?: string } | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -29,26 +32,31 @@ export default function Dashboard() {
       return;
     }
 
+    // Get current user data
+    const currentUser = getCurrentUser();
+    setUser(currentUser);
+
     // Load user complaints
     loadUserComplaints();
-  }, []);
+  }, [router]);
 
   const loadUserComplaints = async () => {
     try {
-      const token = localStorage.getItem('token');
-      // TODO: Replace with actual API call
-      const response = await fetch('/api/Complaint/GetAllUserComplaints', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setComplaints(data.data || []);
+      setLoading(true);
+      setError('');
+      
+      // Use authenticated request with proper error handling
+      const data = await makeAuthenticatedRequest('/api/Complaint/GetAllUserComplaints');
+      
+      if (data && data.data) {
+        setComplaints(data.data);
+      } else {
+        // Set empty array if no data
+        setComplaints([]);
       }
     } catch (error) {
       console.error('Error loading complaints:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load complaints');
     } finally {
       setLoading(false);
     }
@@ -82,8 +90,21 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white">My Dashboard</h1>
+          <h1 className="text-3xl font-bold text-white">
+            Welcome back, {user?.fullName || 'User'}
+          </h1>
           <p className="text-gray-400 mt-2">Track your submitted complaints and their status</p>
+          {user?.role === 'admin' && (
+            <div className="mt-4">
+              <Link
+                href="/admin"
+                className="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md transition-colors text-sm"
+              >
+                <i className="fas fa-user-shield mr-2"></i>
+                Admin Panel
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Stats Cards */}
@@ -153,9 +174,19 @@ export default function Dashboard() {
           </div>
 
           {loading ? (
-            <div className="p-6 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto"></div>
-              <p className="mt-2 text-gray-400">Loading complaints...</p>
+            <LoadingCard message="Loading your complaints..." />
+          ) : error ? (
+            <div className="p-6">
+              <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-center">
+                <i className="fas fa-exclamation-triangle text-red-400 text-2xl mb-2"></i>
+                <p className="text-red-300 mb-4">{error}</p>
+                <button
+                  onClick={loadUserComplaints}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors"
+                >
+                  Try Again
+                </button>
+              </div>
             </div>
           ) : complaints.length === 0 ? (
             <div className="p-6 text-center">

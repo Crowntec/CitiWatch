@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
+import { LoadingButton } from '@/components/Loading';
+import { makePublicRequest, validateForm } from '@/utils/api';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -30,25 +32,37 @@ export default function Register() {
     setLoading(true);
     setError('');
 
+    // Client-side validation following API guidelines
+    const validationFields = {
+      fullName: formData.fullName,
+      email: formData.email,
+      password: formData.password,
+      confirmPassword: formData.confirmPassword
+    };
+
+    const validationErrors = validateForm(validationFields, {
+      fullName: ['required', 'fullName'],
+      email: ['required', 'email'],
+      password: ['required', 'password'],
+      confirmPassword: ['required']
+    });
+
+    if (validationErrors.length > 0) {
+      setError(validationErrors.join(', '));
+      setLoading(false);
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       setLoading(false);
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      setLoading(false);
-      return;
-    }
-
     try {
-      // TODO: Replace with actual API call
-      const response = await fetch('/api/User/Create', {
+      // API call with proper status field checking
+      const data = await makePublicRequest('/api/User/Create', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           fullName: formData.fullName,
           email: formData.email,
@@ -57,15 +71,19 @@ export default function Register() {
         }),
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
+      // Check for successful registration
+      if (data.status === 'success') {
         router.push('/login?message=Registration successful');
       } else {
         setError(data.message || 'Registration failed');
       }
     } catch (error) {
-      setError('Network error. Please try again.');
+      // Handle API errors gracefully
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Network error. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -191,13 +209,14 @@ export default function Register() {
             </div>
 
             <div>
-              <button
+              <LoadingButton
                 type="submit"
-                disabled={loading}
+                isLoading={loading}
+                loadingText="Creating account..."
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {loading ? 'Creating account...' : 'Create account'}
-              </button>
+                Create account
+              </LoadingButton>
             </div>
           </form>
         </div>

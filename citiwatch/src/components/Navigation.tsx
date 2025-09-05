@@ -36,6 +36,7 @@ export default function Navigation() {
     localStorage.removeItem('user');
     setIsLoggedIn(false);
     setUser(null);
+    setIsAdmin(false);
     router.push('/');
   };
 
@@ -95,9 +96,6 @@ export default function Navigation() {
               <>
                 <Link href="/dashboard" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
                   Dashboard
-                </Link>
-                <Link href="/categories" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
-                  Categories
                 </Link>
                 <Link href="/dashboard/submit" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
                   Submit Report
@@ -241,14 +239,6 @@ export default function Navigation() {
                     >
                       <i className="fas fa-tachometer-alt mr-4 w-5"></i>
                       Dashboard
-                    </Link>
-                    <Link 
-                      href="/categories" 
-                      className="text-gray-300 hover:text-white transition-colors text-lg flex items-center py-3"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <i className="fas fa-th-list mr-4 w-5"></i>
-                      Categories
                     </Link>
                     <Link 
                       href="/dashboard/submit" 

@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { LoadingCard, LoadingTableRows } from '@/components/Loading';
+import { makeAuthenticatedRequest, getCurrentUser, isUserAdmin } from '@/utils/api';
+import Navigation from '@/components/Navigation';
 
 interface Complaint {
   id: string;
@@ -35,77 +38,71 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState<User[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const router = useRouter();
 
   useEffect(() => {
-    // Check if user is authenticated and is admin
+    // Check if user is authenticated and is admin (Role-based access control)
     const token = localStorage.getItem('token');
     if (!token) {
       router.push('/login');
       return;
     }
 
-    // TODO: Decode token to check if user is admin
-    // For now, assume user is admin if they access this page
+    // Check if user has admin role
+    const user = getCurrentUser();
+    if (!user || !isUserAdmin()) {
+      router.push('/dashboard'); // Redirect non-admin users
+      return;
+    }
 
     loadData();
-  }, [activeTab]);
+  }, [activeTab, router]);
 
   const loadData = async () => {
     setLoading(true);
+    setError('');
+    
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-      
       if (activeTab === 'complaints') {
-        await loadComplaints(token);
+        await loadComplaints();
       } else if (activeTab === 'users') {
-        await loadUsers(token);
+        await loadUsers();
       } else if (activeTab === 'categories') {
-        await loadCategories(token);
+        await loadCategories();
       }
     } catch (error) {
       console.error('Error loading data:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load data');
     } finally {
       setLoading(false);
     }
   };
 
-  const loadComplaints = async (token: string) => {
-    // TODO: Replace with actual API call
-    const response = await fetch('/api/Complaint/GetAll', {
-      headers: { 'Authorization': `Bearer ${token}` },
-    });
-    if (response.ok) {
-      const data = await response.json();
-      setComplaints(data.data || []);
+  const loadComplaints = async () => {
+    const data = await makeAuthenticatedRequest('/api/Complaint/GetAll');
+    if (data && data.data) {
+      setComplaints(data.data);
     }
   };
 
-  const loadUsers = async (token: string) => {
-    // TODO: Replace with actual API call
-    const response = await fetch('/api/User/GetAll', {
-      headers: { 'Authorization': `Bearer ${token}` },
-    });
-    if (response.ok) {
-      const data = await response.json();
-      setUsers(data.data || []);
+  const loadUsers = async () => {
+    const data = await makeAuthenticatedRequest('/api/User/GetAll');
+    if (data && data.data) {
+      setUsers(data.data);
     }
   };
 
-  const loadCategories = async (token: string) => {
-    // TODO: Replace with actual API call
-    const response = await fetch('/api/Category/GetAll', {
-      headers: { 'Authorization': `Bearer ${token}` },
-    });
-    if (response.ok) {
-      const data = await response.json();
-      setCategories(data.data || []);
+  const loadCategories = async () => {
+    const data = await makeAuthenticatedRequest('/api/Category/GetAll');
+    if (data && data.data) {
+      setCategories(data.data);
     }
   };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     router.push('/');
   };
 
@@ -131,33 +128,22 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
       {/* Navigation */}
-      <nav className="bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-blue-400 flex items-center">
-                <i className="fas fa-city mr-2"></i>
-                CitiWatch Admin
-              </Link>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-400">Administrator Panel</span>
-              <button
-                onClick={handleLogout}
-                className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
           <p className="text-gray-400 mt-2">Manage complaints, users, and categories</p>
+          <div className="mt-4">
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors text-sm"
+            >
+              <i className="fas fa-arrow-left mr-2"></i>
+              Back to Dashboard
+            </Link>
+          </div>
         </div>
 
         {/* Stats Overview */}
@@ -249,9 +235,19 @@ export default function AdminDashboard() {
 
           <div className="p-6">
             {loading ? (
+              <LoadingCard message="Loading admin data..." />
+            ) : error ? (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto"></div>
-                <p className="mt-2 text-gray-400">Loading...</p>
+                <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+                  <i className="fas fa-exclamation-triangle text-red-400 text-2xl mb-2"></i>
+                  <p className="text-red-300 mb-4">{error}</p>
+                  <button
+                    onClick={loadData}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors"
+                  >
+                    Try Again
+                  </button>
+                </div>
               </div>
             ) : (
               <>
