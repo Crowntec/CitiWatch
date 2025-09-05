@@ -79,7 +79,7 @@ export default function Dashboard() {
       {/* Navigation */}
       <Navigation />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white">My Dashboard</h1>
@@ -91,7 +91,7 @@ export default function Dashboard() {
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-gray-700">
             <div className="flex items-center">
               <div className="p-2 bg-blue-600/20 rounded-lg">
-                <span className="text-2xl">📋</span>
+                <i className="fas fa-clipboard-list text-2xl text-blue-400"></i>
               </div>
               <div className="ml-4">
                 <p className="text-2xl font-semibold text-white">{complaints.length}</p>
@@ -102,7 +102,7 @@ export default function Dashboard() {
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-gray-700">
             <div className="flex items-center">
               <div className="p-2 bg-yellow-600/20 rounded-lg">
-                <span className="text-2xl">⏳</span>
+                <i className="fas fa-clock text-2xl text-yellow-400"></i>
               </div>
               <div className="ml-4">
                 <p className="text-2xl font-semibold text-white">
@@ -115,7 +115,7 @@ export default function Dashboard() {
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-gray-700">
             <div className="flex items-center">
               <div className="p-2 bg-blue-500/20 rounded-lg">
-                <span className="text-2xl">🔄</span>
+                <i className="fas fa-sync-alt text-2xl text-blue-400"></i>
               </div>
               <div className="ml-4">
                 <p className="text-2xl font-semibold text-white">
@@ -128,7 +128,7 @@ export default function Dashboard() {
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-gray-700">
             <div className="flex items-center">
               <div className="p-2 bg-green-600/20 rounded-lg">
-                <span className="text-2xl">✅</span>
+                <i className="fas fa-check-circle text-2xl text-green-400"></i>
               </div>
               <div className="ml-4">
                 <p className="text-2xl font-semibold text-white">
@@ -159,7 +159,7 @@ export default function Dashboard() {
             </div>
           ) : complaints.length === 0 ? (
             <div className="p-6 text-center">
-              <span className="text-4xl mb-4 block">📋</span>
+              <i className="fas fa-clipboard-list text-4xl mb-4 block text-gray-500"></i>
               <p className="text-gray-400 mb-4">No complaints submitted yet</p>
               <Link
                 href="/dashboard/submit"

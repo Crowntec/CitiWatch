@@ -135,8 +135,9 @@ export default function AdminDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-blue-400">
-                CitiWatch 🏙️ Admin
+              <Link href="/" className="text-2xl font-bold text-blue-400 flex items-center">
+                <i className="fas fa-city mr-2"></i>
+                CitiWatch Admin
               </Link>
             </div>
             <div className="flex items-center space-x-4">
@@ -164,7 +165,7 @@ export default function AdminDashboard() {
           <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6">
             <div className="flex items-center">
               <div className="p-2 bg-blue-900/50 rounded-lg">
-                <span className="text-2xl">📋</span>
+                <i className="fas fa-clipboard-list text-2xl text-blue-400"></i>
               </div>
               <div className="ml-4">
                 <p className="text-2xl font-semibold text-white">{complaints.length}</p>

@@ -78,8 +78,8 @@ export default function Register() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <div className="text-center">
-            <Link href="/" className="text-3xl font-bold text-blue-400">
-              CitiWatch 🏙️
+            <Link href="/" className="text-3xl font-bold text-blue-400 flex items-center justify-center">
+              <i className="fas fa-user-plus mr-4 w-5"></i>
             </Link>
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-white">

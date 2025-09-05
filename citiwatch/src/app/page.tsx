@@ -6,7 +6,7 @@ import Navigation from "@/components/Navigation";
 
 export default function Home() {
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="mobile-full-height relative overflow-hidden" style={{ minHeight: '100dvh' }}>
       {/* Background Video */}
       <video
         autoPlay
@@ -39,11 +39,17 @@ export default function Home() {
       <Navigation />
 
       {/* Hero Section */}
-      <div className="relative z-20 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8" style={{ minHeight: 'calc(100vh - 80px)' }}>
+      <div 
+        className="relative z-20 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 pt-20 pb-8" 
+        style={{ 
+          minHeight: '100dvh',
+          paddingTop: 'max(80px, env(safe-area-inset-top))'
+        }}
+      >
         {/* Central Icon */}
-        <div className="mb-12">
+        <div className="mb-8 sm:mb-12">
           <div 
-            className="w-24 h-24 rounded-2xl flex items-center justify-center shadow-2xl"
+            className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex items-center justify-center shadow-2xl mx-auto"
             style={{
               background: 'rgba(255, 255, 255, 0.075)',
             backdropFilter: 'blur(20px)',
@@ -54,17 +60,17 @@ export default function Home() {
             <Image 
               src="/logo.png" 
               alt="CitiWatch Logo" 
-              width={80} 
-              height={80} 
-              className="filter brightness-200"
+              width={64} 
+              height={64} 
+              className="filter brightness-200 w-16 h-16 sm:w-20 sm:h-20"
             />
           </div>
         </div>
 
         {/* Badge */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <span 
-            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-blue-300 border"
+            className="inline-flex items-center px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs font-medium text-blue-300 border"
             style={{
               background: 'rgba(30, 58, 138, 0.3)',
               backdropFilter: 'blur(10px)',
@@ -77,9 +83,9 @@ export default function Home() {
         </div>
 
         {/* Main Heading */}
-        <div className="text-center max-w-4xl mx-auto mb-6">
+        <div className="text-center max-w-4xl mx-auto mb-4 sm:mb-6 px-2">
           <h1 
-            className="text-5xl md:text-7xl font-bold text-white leading-tight"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-white leading-tight"
             style={{
               backgroundImage: 'radial-gradient(99% 86% at 50% 50%, rgb(213, 219, 230) 28.387387387387385%, rgb(4, 7, 13) 100%)',
               WebkitBackgroundClip: 'text',
@@ -93,14 +99,14 @@ export default function Home() {
         </div>
 
         {/* Subtitle */}
-        <div className="text-center mb-12">
-          <p className="text-lg text-gray-400 max-w-md mx-auto">
+        <div className="text-center mb-8 sm:mb-12 px-4">
+          <p className="text-base sm:text-lg text-gray-400 max-w-md mx-auto leading-relaxed">
             Report civic issues like potholes, broken lights, and graffiti in seconds. Upload photos, track progress, and make your city bettertogether.
           </p>
         </div>
 
         {/* CTA Button */}
-        <div className="mb-16">
+        <div className="mb-12 sm:mb-16 px-4">
           <Link
             href="/register"
             className="inline-flex items-center px-6 py-3 text-gray-300 hover:text-white transition-all duration-300 text-sm font-medium rounded group"

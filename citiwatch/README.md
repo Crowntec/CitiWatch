@@ -1,236 +1,278 @@
-# CitiWatch Frontend 🏙️
+# CitiWatch 🏙️
 
-A modern Next.js frontend application for the CitiWatch citizen reporting system. Built with TypeScript, Tailwind CSS, and designed to work with the .NET 9 backend API.
+A citizen reporting application built with .NET 9 that allows users to report civic issues and complaints with photo uploads.
 
 ## 📋 Overview
 
-This is the frontend component of CitiWatch, a web application that allows citizens to report municipal issues such as potholes, broken streetlights, graffiti, and other civic concerns. The frontend provides an intuitive interface for users to submit complaints with photo evidence and track their status.
+CitiWatch is a web API application designed to help citizens report municipal issues such as potholes, broken streetlights, graffiti, and other civic concerns. The application supports photo uploads via Cloudinary integration and provides a comprehensive complaint management system.
 
 ## 🚀 Features
 
-- **Landing Page**: Attractive homepage with feature highlights
-- **User Authentication**: Login and registration system
-- **User Dashboard**: Personal dashboard for citizens to view their complaints
-- **Complaint Submission**: Easy-to-use form for reporting issues with photo upload
-- **Admin Dashboard**: Administrative interface for managing complaints, users, and categories
-- **Category Management**: Admin interface for managing complaint categories
-- **Responsive Design**: Mobile-friendly interface using Tailwind CSS
-- **TypeScript**: Type-safe development with full TypeScript support
+- **User Management**: Registration, authentication, and role-based access
+- **Complaint Reporting**: Submit complaints with photo evidence
+- **File Upload**: Cloudinary integration for secure image storage
+- **Status Tracking**: Track complaint status from submission to resolution
+- **Category Management**: Organize complaints by categories
+- **JWT Authentication**: Secure API endpoints with token-based authentication
+- **RESTful API**: Clean and documented API endpoints
 
 ## 🛠️ Technology Stack
 
-- **Next.js 15.5.2**: React framework with App Router
-- **TypeScript**: Type-safe JavaScript development
-- **Tailwind CSS**: Utility-first CSS framework
-- **ESLint**: Code linting and quality assurance
-- **Turbopack**: Fast build tool for development
+- **.NET 9.0**: Latest .NET framework
+- **Entity Framework Core**: ORM for database operations
+- **SQL Server**: Primary database
+- **JWT Bearer**: Authentication and authorization
+- **Cloudinary**: Cloud-based image management
+- **BCrypt**: Password hashing
+- **Swagger/OpenAPI**: API documentation
 
-## 📦 Project Structure
+## 📦 Dependencies
+
+```xml
+<PackageReference Include="CloudinaryDotNet" Version="1.27.7" />
+<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.4" />
+<PackageReference Include="FastGuid" Version="1.4.0" />
+<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.4" />
+<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.4" />
+<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.4" />
+<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.4" />
+```
+
+## 🏗️ Project Structure
 
 ```
-src/
-├── app/
-│   ├── admin/                    # Admin dashboard
-│   │   └── page.tsx
-│   ├── categories/               # Category management
-│   │   └── page.tsx
-│   ├── dashboard/                # User dashboard
-│   │   ├── submit/               # Submit complaint page
-│   │   │   └── page.tsx
-│   │   └── page.tsx
-│   ├── login/                    # Login page
-│   │   └── page.tsx
-│   ├── register/                 # Registration page
-│   │   └── page.tsx
-│   ├── globals.css              # Global styles
-│   ├── layout.tsx               # Root layout
-│   └── page.tsx                 # Landing page
-├── .github/
-│   └── copilot-instructions.md  # Copilot workspace instructions
+CitiWatch/
+├── Application/
+│   ├── DTOs/                 # Data Transfer Objects
+│   ├── Helper/               # Utility classes
+│   ├── Interfaces/           # Service interfaces
+│   └── Services/             # Business logic services
+├── Domain/
+│   ├── Entities/             # Entity models
+│   └── Enums/                # Enumeration types
+├── Infrastructure/
+│   ├── Config/               # Configuration classes
+│   ├── Context/              # Database context
+│   └── Services/             # Infrastructure services
+├── Host/
+│   └── Controllers/          # API controllers
+└── Properties/
+    └── launchSettings.json   # Launch configuration
+```
+
+## ⚙️ Configuration
+
+### 1. Database Connection
+
+Update `appsettings.json` with your SQL Server connection string:
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Database=CitiWatchDB;Trusted_Connection=true;"
+  }
+}
+```
+
+### 2. JWT Settings
+
+Configure JWT authentication:
+
+```json
+{
+  "JwtSettings": {
+    "Key": "your-super-secret-key-here-at-least-32-characters",
+    "Issuer": "CitiWatch",
+    "Audience": "CitiWatch-Users",
+    "ExpiryInHours": 24
+  }
+}
+```
+
+### 3. Cloudinary Settings
+
+Set up Cloudinary for image uploads:
+
+```json
+{
+  "Cloudinary": {
+    "CloudName": "your-cloud-name",
+    "ApiKey": "your-api-key",
+    "ApiSecret": "your-api-secret",
+    "MaxFileSizeMB": 10
+  }
+}
 ```
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ 
-- npm or yarn
-- CitiWatch .NET backend API running
+- .NET 9.0 SDK
+- SQL Server (LocalDB or Full)
+- Visual Studio 2022 or VS Code
+- Cloudinary account (for image uploads)
 
 ### Installation
 
-1. **Navigate to the frontend directory**
+1. **Clone the repository**
    ```bash
-   cd citiwatch
+   git clone https://github.com/heir04/CitiWatch.git
+   cd CitiWatch
    ```
 
-2. **Install dependencies**
+2. **Restore packages**
    ```bash
-   npm install
+   dotnet restore
    ```
 
-3. **Start the development server**
+3. **Update configuration**
+   - Copy `appsettings.json` to `appsettings.Development.json`
+   - Update connection strings and API keys
+
+4. **Run database migrations**
    ```bash
-   npm run dev
+   dotnet ef database update
    ```
 
-4. **Access the application**
-   - Frontend: `http://localhost:3000`
+5. **Run the application**
+   ```bash
+   dotnet run
+   ```
 
-## 📚 Available Pages
+6. **Access the API**
+   - API: `https://localhost:7xxx`
+   - Swagger UI: `https://localhost:7xxx/swagger`
 
-### Public Pages
-- **Landing Page** (`/`): Homepage with feature overview
-- **Login** (`/login`): User authentication
-- **Register** (`/register`): New user registration
+## 📚 API Endpoints
 
-### User Pages (Authentication Required)
-- **Dashboard** (`/dashboard`): Personal complaint overview
-- **Submit Complaint** (`/dashboard/submit`): Report new issues
-
-### Admin Pages (Admin Role Required)
-- **Admin Dashboard** (`/admin`): Administrative overview
-- **Category Management** (`/categories`): Manage complaint categories
-
-## 🔐 Authentication & Authorization
-
-The application implements role-based access control:
-
-- **Public Access**: Landing page, login, and registration
-- **User Role**: Access to personal dashboard and complaint submission
-- **Admin Role**: Full access to admin features and user management
-
-JWT tokens are stored in localStorage and used for API authentication.
-
-## 🎨 UI Components & Design
-
-The application uses Tailwind CSS for styling with a consistent design system:
-
-- **Color Scheme**: Indigo primary with supporting colors
-- **Typography**: Clean, readable fonts with proper hierarchy
-- **Layout**: Responsive grid system that works on all devices
-- **Forms**: Consistent form styling with validation feedback
-- **Navigation**: Clear navigation with role-based menu items
-
-## 📱 Responsive Design
-
-The application is fully responsive and works across:
-- Desktop (1024px+)
-- Tablet (768px - 1023px)
-- Mobile (320px - 767px)
-
-## 🔗 API Integration
-
-The frontend is designed to integrate with the CitiWatch .NET backend:
-
-- **Base URL**: Configurable API endpoint
-- **Authentication**: JWT Bearer token system
-- **File Upload**: Multipart form data for image uploads
-- **Error Handling**: Comprehensive error handling and user feedback
-
-### API Endpoints Used
-- `POST /api/User/Login` - User authentication
+### Authentication
+- `POST /api/User/Login` - User login
 - `POST /api/User/Create` - User registration
-- `GET /api/User/GetAll` - Admin: Get all users
-- `GET /api/Complaint/GetAll` - Admin: Get all complaints
-- `GET /api/Complaint/GetAllUserComplaints` - User: Get own complaints
-- `POST /api/Complaint/Submit` - Submit new complaint
-- `GET /api/Category/GetAll` - Get categories
-- `POST /api/Category/Create` - Admin: Create category
-- `PUT /api/Category/Update/{id}` - Admin: Update category
-- `PUT /api/Category/Delete/{id}` - Admin: Delete category
+
+### User Management
+- `GET /api/User/GetAll` - Get all users (Admin)
+- `PUT /api/User/Update/{id}` - Update user profile
+
+### Complaints
+- `GET /api/Complaint/GetAll` - Get all complaints
+- `GET /api/Complaint/GetById/{id}` - Get specific complaint
+- `POST /api/Complaint/Submit` - Submit new complaint (with file upload)
+- `PUT /api/Complaint/UpdateStatus/{id}` - Update complaint status
+
+### Categories
+- `GET /api/Category/GetAll` - Get all categories
+- `POST /api/Category/Create` - Create new category
+- `PUT /api/Category/Update/{id}` - Update category
+
+### Status
+- `GET /api/Status/GetAll` - Get all statuses
+- `POST /api/Status/Create` - Create new status
+
+## 🔐 Authentication
+
+The API uses JWT Bearer token authentication. Include the token in the Authorization header:
+
+```
+Authorization: Bearer <your-jwt-token>
+```
+
+## 📝 Usage Examples
+
+### Submit a Complaint
+
+```bash
+curl -X POST "https://localhost:7xxx/api/Complaint/Submit" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: multipart/form-data" \
+  -F "Title=Pothole on Main Street" \
+  -F "Description=Large pothole causing vehicle damage" \
+  -F "CategoryId=<category-guid>" \
+  -F "Latitude=40.7128" \
+  -F "Longitude=-74.0060" \
+  -F "formFile=@photo.jpg"
+```
+
+### User Login
+
+```bash
+curl -X POST "https://localhost:7xxx/api/User/Login" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "password123"
+  }'
+```
 
 ## 🧪 Development
 
-### Available Scripts
-
+### Running Tests
 ```bash
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Start production server
-npm start
-
-# Run linting
-npm run lint
+dotnet test
 ```
 
-### Code Quality
+### Database Migrations
+```bash
+# Add new migration
+dotnet ef migrations add MigrationName
 
-- **ESLint**: Configured with Next.js recommended rules
-- **TypeScript**: Strict type checking enabled
-- **Prettier**: Code formatting (optional)
+# Update database
+dotnet ef database update
+
+# Remove last migration
+dotnet ef migrations remove
+```
+
+### Code Formatting
+```bash
+dotnet format
+```
 
 ## 📁 File Upload
 
-The application supports image uploads with:
+The application supports image uploads with the following specifications:
 - **Supported formats**: JPG, JPEG, PNG, GIF
-- **Maximum file size**: 10MB
-- **Client-side validation**: File type and size checking
-- **Progress feedback**: Upload status indicators
+- **Maximum file size**: 10MB (configurable)
+- **Storage**: Cloudinary cloud storage
+- **Folder structure**: `/complaints/`
 
-## 🔧 Configuration
+## 🔧 Environment Variables
 
-### Environment Variables
-
-Create a `.env.local` file for environment-specific settings:
+For production deployment, consider using environment variables:
 
 ```bash
-# API Configuration
-NEXT_PUBLIC_API_URL=http://localhost:5182/api
-NEXT_PUBLIC_API_BASE_URL=http://localhost:5182
-
-# Other configuration options
-NEXT_PUBLIC_APP_NAME=CitiWatch
+CONNECTIONSTRINGS__DEFAULTCONNECTION="your-connection-string"
+JWTSETTINGS__KEY="your-jwt-key"
+CLOUDINARY__CLOUDNAME="your-cloud-name"
+CLOUDINARY__APIKEY="your-api-key"
+CLOUDINARY__APISECRET="your-api-secret"
 ```
-
-## 🚀 Deployment
-
-### Build for Production
-
-```bash
-npm run build
-```
-
-### Deployment Options
-
-The application can be deployed to:
-- **Vercel**: Optimal for Next.js applications
-- **Netlify**: Static site hosting
-- **Docker**: Containerized deployment
-- **Traditional hosting**: Any hosting service supporting Node.js
 
 ## 🤝 Contributing
 
-1. Create a feature branch
-2. Make your changes following the existing code style
-3. Test thoroughly
-4. Submit a pull request
-
-## 📝 Notes
-
-- All API calls are currently configured as TODO items and need to be updated with actual API endpoints
-- The application includes mock data structures that match the backend API specification
-- Location services are integrated for automatic geolocation in complaint submission
-- The admin dashboard requires proper role checking implementation
-- File uploads need to be connected to the actual Cloudinary service
-
-## 🔧 Future Enhancements
-
-- Real-time updates for complaint status
-- Push notifications
-- Advanced filtering and search
-- Data visualization charts
-- Email notifications
-- Multi-language support
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## 📄 License
 
-This project is part of the CitiWatch system and follows the same license terms.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
----
+## 👥 Authors
 
-*Built with ❤️ using Next.js and Tailwind CSS*
+- **heir04** - *Initial work* - [GitHub](https://github.com/heir04)
+
+## 🙏 Acknowledgments
+
+- .NET Team for the excellent framework
+- Cloudinary for image management services
+- Entity Framework team for the ORM
+- Community contributors
+
+## 📞 Support
+
+If you have any questions or need help with setup, please open an issue in the GitHub repository.
+

@@ -26,8 +26,27 @@ export default function Login() {
     setLoading(true);
     setError('');
 
+    // Dummy credentials for development
+    const dummyCredentials = {
+      email: 'demo@citiwatch.com',
+      password: 'password123',
+    };
+
     try {
-      // TODO: Replace with actual API call
+      // Check for dummy credentials
+      if (formData.email === dummyCredentials.email && formData.password === dummyCredentials.password) {
+        // Generate a dummy token
+        const dummyToken = 'dummy-token-' + Date.now();
+        localStorage.setItem('token', dummyToken);
+        localStorage.setItem('user', JSON.stringify({
+          fullName: 'Demo User',
+          email: 'demo@citiwatch.com'
+        }));
+        router.push('/dashboard');
+        return;
+      }
+
+      // TODO: Replace with actual API call when backend is ready
       const response = await fetch('/api/User/Login', {
         method: 'POST',
         headers: {
@@ -45,7 +64,8 @@ export default function Login() {
         setError(data.message || 'Login failed');
       }
     } catch (error) {
-      setError('Network error. Please try again.');
+      // If API call fails, show helpful message about dummy credentials
+      setError('API not available. Use demo@citiwatch.com / password123 for testing.');
     } finally {
       setLoading(false);
     }
@@ -59,7 +79,7 @@ export default function Login() {
         <div>
           <div className="text-center">
             <Link href="/" className="text-3xl font-bold text-blue-400">
-              CitiWatch 🏙️
+              <i className="fas fa-sign-in-alt mr-4 w-5"></i>
             </Link>
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
@@ -76,6 +96,19 @@ export default function Login() {
           </p>
         </div>
         <div className="bg-gray-800/50 backdrop-blur-sm py-8 px-6 shadow-xl rounded-lg border border-gray-700">
+          {/* Development Login Info */}
+          <div className="bg-blue-900/30 border border-blue-600 text-blue-200 px-4 py-3 rounded-md mb-6">
+            <p className="text-sm">
+              <strong>Development Mode:</strong> Use these credentials to access the dashboard:
+            </p>
+            <p className="text-sm mt-1">
+              Email: <code className="bg-blue-800/50 px-1 rounded">demo@citiwatch.com</code>
+            </p>
+            <p className="text-sm">
+              Password: <code className="bg-blue-800/50 px-1 rounded">password123</code>
+            </p>
+          </div>
+          
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
               <div className="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-md">
