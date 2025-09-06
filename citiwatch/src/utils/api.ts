@@ -3,11 +3,11 @@
  * Implements proper token handling, status checks, and error handling
  */
 
-interface ApiResponse<T = any> {
+interface ApiResponse<T = unknown> {
   status: 'success' | 'error';
   message?: string;
   data?: T;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -16,7 +16,7 @@ interface ApiResponse<T = any> {
  * @param options - Fetch options
  * @returns Promise with API response or null if authentication failed
  */
-export const makeAuthenticatedRequest = async <T = any>(
+export const makeAuthenticatedRequest = async <T = unknown>(
   url: string, 
   options: RequestInit = {}
 ): Promise<ApiResponse<T> | null> => {
@@ -66,7 +66,7 @@ export const makeAuthenticatedRequest = async <T = any>(
  * @param options - Fetch options
  * @returns Promise with API response
  */
-export const makePublicRequest = async <T = any>(
+export const makePublicRequest = async <T = unknown>(
   url: string, 
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> => {

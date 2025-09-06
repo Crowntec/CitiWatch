@@ -62,15 +62,15 @@ export default function Login() {
       }
 
       // API call with proper status field checking
-      const data = await makePublicRequest('/api/User/Login', {
+      const data = await makePublicRequest<{ token?: string; user?: { fullName: string; email: string; role?: string } }>('/api/User/Login', {
         method: 'POST',
         body: JSON.stringify(formData),
       });
 
       // Store JWT token and user data
-      if (data.token && data.user) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+      if (data.data?.token && data.data?.user) {
+        localStorage.setItem('token', data.data.token);
+        localStorage.setItem('user', JSON.stringify(data.data.user));
         router.push('/dashboard');
       } else {
         setError('Login response missing required data');

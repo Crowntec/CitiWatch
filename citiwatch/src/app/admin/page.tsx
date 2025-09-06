@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { LoadingCard, LoadingTableRows } from '@/components/Loading';
+import { LoadingCard } from '@/components/Loading';
 import { makeAuthenticatedRequest, getCurrentUser, isUserAdmin } from '@/utils/api';
 import Navigation from '@/components/Navigation';
 
@@ -55,11 +55,30 @@ export default function AdminDashboard() {
       router.push('/dashboard'); // Redirect non-admin users
       return;
     }
+  }, [router]);
 
-    loadData();
-  }, [activeTab, router]);
+  const loadComplaints = async () => {
+    const data = await makeAuthenticatedRequest<Complaint[]>('/api/Complaint/GetAll');
+    if (data && data.data) {
+      setComplaints(data.data);
+    }
+  };
 
-  const loadData = async () => {
+  const loadUsers = async () => {
+    const data = await makeAuthenticatedRequest<User[]>('/api/User/GetAll');
+    if (data && data.data) {
+      setUsers(data.data);
+    }
+  };
+
+  const loadCategories = async () => {
+    const data = await makeAuthenticatedRequest<Category[]>('/api/Category/GetAll');
+    if (data && data.data) {
+      setCategories(data.data);
+    }
+  };
+
+  const loadData = useCallback(async () => {
     setLoading(true);
     setError('');
     
@@ -77,34 +96,25 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab]);
 
-  const loadComplaints = async () => {
-    const data = await makeAuthenticatedRequest('/api/Complaint/GetAll');
-    if (data && data.data) {
-      setComplaints(data.data);
+  useEffect(() => {
+    // Check if user is authenticated and is admin (Role-based access control)
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+      return;
     }
-  };
 
-  const loadUsers = async () => {
-    const data = await makeAuthenticatedRequest('/api/User/GetAll');
-    if (data && data.data) {
-      setUsers(data.data);
+    // Check if user has admin role
+    const user = getCurrentUser();
+    if (!user || !isUserAdmin()) {
+      router.push('/dashboard'); // Redirect non-admin users
+      return;
     }
-  };
 
-  const loadCategories = async () => {
-    const data = await makeAuthenticatedRequest('/api/Category/GetAll');
-    if (data && data.data) {
-      setCategories(data.data);
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    router.push('/');
-  };
+    loadData();
+  }, [activeTab, router, loadData]);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -184,7 +194,7 @@ export default function AdminDashboard() {
           <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6">
             <div className="flex items-center">
               <div className="p-2 rounded-lg">
-                <i className="fas fa-clock text-4xl text-yellow-400"></i>
+                <i className="fas fa-clock text-4xl text-white-400"></i>
               </div>
               <div className="ml-4">
                 <p className="text-2xl font-semibold text-white">

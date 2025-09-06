@@ -37,12 +37,12 @@ export default function SubmitComplaint() {
     }
 
     loadCategories();
-  }, []);
+  }, [router]);
 
   const loadCategories = async () => {
     try {
       // Use authenticated request with proper error handling
-      const data = await makeAuthenticatedRequest('/api/Category/GetAll');
+      const data = await makeAuthenticatedRequest<Category[]>('/api/Category/GetAll');
       
       if (data && data.data) {
         setCategories(data.data);
@@ -137,7 +137,7 @@ export default function SubmitComplaint() {
       if (selectedFile) formDataToSend.append('formFile', selectedFile);
 
       // Use authenticated request with proper error handling
-      const data = await makeAuthenticatedRequest('/api/Complaint/Submit', {
+      const data = await makeAuthenticatedRequest<{ message?: string }>('/api/Complaint/Submit', {
         method: 'POST',
         body: formDataToSend,
       });

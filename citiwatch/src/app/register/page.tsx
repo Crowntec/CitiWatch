@@ -61,7 +61,7 @@ export default function Register() {
 
     try {
       // API call with proper status field checking
-      const data = await makePublicRequest('/api/User/Create', {
+      const data = await makePublicRequest<{ message?: string }>('/api/User/Create', {
         method: 'POST',
         body: JSON.stringify({
           fullName: formData.fullName,

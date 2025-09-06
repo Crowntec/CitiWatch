@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
-import { LoadingCard, LoadingSection } from '@/components/Loading';
+import { LoadingCard } from '@/components/Loading';
 import { makeAuthenticatedRequest, getCurrentUser } from '@/utils/api';
 
 interface Complaint {
@@ -46,7 +46,7 @@ export default function Dashboard() {
       setError('');
       
       // Use authenticated request with proper error handling
-      const data = await makeAuthenticatedRequest('/api/Complaint/GetAllUserComplaints');
+      const data = await makeAuthenticatedRequest<Complaint[]>('/api/Complaint/GetAllUserComplaints');
       
       if (data && data.data) {
         setComplaints(data.data);
@@ -60,11 +60,6 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    router.push('/');
   };
 
   const getStatusColor = (status: string) => {
