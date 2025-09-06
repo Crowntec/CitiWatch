@@ -150,8 +150,8 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-blue-900/50 rounded-lg">
-                <i className="fas fa-clipboard-list text-2xl text-blue-400"></i>
+              <div className="p-2 rounded-lg">
+                <i className="fas fa-clipboard-list text-4xl text-white-400"></i>
               </div>
               <div className="ml-4">
                 <p className="text-2xl font-semibold text-white">{complaints.length}</p>
@@ -161,8 +161,8 @@ export default function AdminDashboard() {
           </div>
           <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-green-900/50 rounded-lg">
-                <span className="text-2xl">👥</span>
+              <div className="p-2 rounded-lg">
+                <i className="fa-solid fa-users text-4xl text-white-400"></i>
               </div>
               <div className="ml-4">
                 <p className="text-2xl font-semibold text-white">{users.length}</p>
@@ -172,8 +172,8 @@ export default function AdminDashboard() {
           </div>
           <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-blue-900/50 rounded-lg">
-                <span className="text-2xl">📂</span>
+              <div className="p-2 rounded-lg">
+                <i className="fa-solid fa-layer-group text-4xl text-white-400"></i>
               </div>
               <div className="ml-4">
                 <p className="text-2xl font-semibold text-white">{categories.length}</p>
@@ -183,8 +183,8 @@ export default function AdminDashboard() {
           </div>
           <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-yellow-900/50 rounded-lg">
-                <span className="text-2xl">⏳</span>
+              <div className="p-2 rounded-lg">
+                <i className="fas fa-clock text-4xl text-yellow-400"></i>
               </div>
               <div className="ml-4">
                 <p className="text-2xl font-semibold text-white">
