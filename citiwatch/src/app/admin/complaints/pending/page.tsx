@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { makeAuthenticatedRequest } from '@/utils/api';
 import { LoadingCard } from '@/components/Loading';
 import AdminLayout from '@/components/AdminLayout';
 
@@ -17,6 +16,66 @@ interface Complaint {
   imageUrl?: string;
 }
 
+// Mock pending complaints data
+const mockPendingComplaints: Complaint[] = [
+  {
+    id: '1',
+    title: 'Broken Street Light on Main Street',
+    description: 'The street light near the intersection of Main Street and Oak Avenue has been broken for over a week, creating safety concerns for pedestrians.',
+    status: 'pending',
+    category: 'Infrastructure',
+    userName: 'John Smith',
+    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+    imageUrl: 'https://via.placeholder.com/400x300?text=Broken+Street+Light'
+  },
+  {
+    id: '2',
+    title: 'Pothole on Highway 101',
+    description: 'Large pothole causing damage to vehicles. Multiple cars have reported tire damage from this hazard.',
+    status: 'pending',
+    category: 'Infrastructure',
+    userName: 'Sarah Johnson',
+    createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 days ago (overdue)
+  },
+  {
+    id: '3',
+    title: 'Noise Complaint - Construction Site',
+    description: 'Construction work starting at 5 AM, violating city noise ordinances and disturbing residents.',
+    status: 'pending',
+    category: 'Public Safety',
+    userName: 'Mike Davis',
+    createdAt: new Date().toISOString(), // Today
+  },
+  {
+    id: '4',
+    title: 'Illegal Dumping in Park',
+    description: 'Someone has been dumping trash and old furniture in Central Park. This is creating an environmental hazard.',
+    status: 'pending',
+    category: 'Environment',
+    userName: 'Lisa Chen',
+    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+    imageUrl: 'https://via.placeholder.com/400x300?text=Illegal+Dumping'
+  },
+  {
+    id: '5',
+    title: 'Bus Stop Vandalism',
+    description: 'Bus stop shelter has been vandalized with graffiti and broken glass. Needs immediate attention.',
+    status: 'pending',
+    category: 'Transportation',
+    userName: 'Robert Wilson',
+    createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(), // 8 days ago (overdue)
+  },
+  {
+    id: '6',
+    title: 'Water Main Break',
+    description: 'Water main break on Elm Street causing flooding and water service disruption to nearby homes.',
+    status: 'pending',
+    category: 'Infrastructure',
+    userName: 'Emma Thompson',
+    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+  }
+];
+
 export default function PendingComplaintsPage() {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,12 +87,11 @@ export default function PendingComplaintsPage() {
     setError('');
     
     try {
-      const data = await makeAuthenticatedRequest<Complaint[]>('/api/Complaint/GetAll');
-      if (data && data.data) {
-        // Filter only pending complaints
-        const pendingComplaints = data.data.filter(c => c.status.toLowerCase() === 'pending');
-        setComplaints(pendingComplaints);
-      }
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Use mock data instead of API call
+      setComplaints(mockPendingComplaints);
     } catch (error) {
       console.error('Error loading pending complaints:', error);
       setError('Failed to load pending complaints');
@@ -240,7 +298,7 @@ export default function PendingComplaintsPage() {
               className="flex items-center justify-center p-4 bg-orange-600 hover:bg-orange-700 rounded-lg text-white transition-colors"
             >
               <i className="fas fa-calendar-day mr-2"></i>
-              Today's Submissions
+              Today&apos;s Submissions
             </button>
             <button 
               onClick={loadComplaints}

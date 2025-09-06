@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { makeAuthenticatedRequest } from '@/utils/api';
 import { LoadingCard } from '@/components/Loading';
 import AdminLayout from '@/components/AdminLayout';
 
@@ -13,6 +12,45 @@ interface User {
   role: number;
   createdAt: string;
 }
+
+// Mock users data
+const mockUsers: User[] = [
+  {
+    id: '1',
+    fullName: 'John Smith',
+    email: 'john.smith@email.com',
+    role: 0, // User
+    createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+  },
+  {
+    id: '2',
+    fullName: 'Sarah Johnson',
+    email: 'sarah.johnson@email.com',
+    role: 0, // User
+    createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString()
+  },
+  {
+    id: '3',
+    fullName: 'Mike Davis',
+    email: 'mike.davis@email.com',
+    role: 0, // User
+    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  },
+  {
+    id: '4',
+    fullName: 'Lisa Chen',
+    email: 'lisa.chen@email.com',
+    role: 1, // Admin
+    createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString()
+  },
+  {
+    id: '5',
+    fullName: 'Robert Wilson',
+    email: 'robert.wilson@email.com',
+    role: 0, // User
+    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+  }
+];
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -26,10 +64,11 @@ export default function UsersPage() {
     setError('');
     
     try {
-      const data = await makeAuthenticatedRequest<User[]>('/api/User/GetAll');
-      if (data && data.data) {
-        setUsers(data.data);
-      }
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Use mock data instead of API call
+      setUsers(mockUsers);
     } catch (error) {
       console.error('Error loading users:', error);
       setError('Failed to load users');

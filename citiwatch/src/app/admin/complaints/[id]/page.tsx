@@ -1,9 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, use } from 'react';
 import Link from 'next/link';
-import { makeAuthenticatedRequest } from '@/utils/api';
 import { LoadingCard } from '@/components/Loading';
 import AdminLayout from '@/components/AdminLayout';
 
@@ -25,28 +23,28 @@ interface Complaint {
   };
 }
 
-export default function ComplaintDetailPage({ params }: { params: { id: string } }) {
+export default function ComplaintDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
   const [complaint, setComplaint] = useState<Complaint | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [updating, setUpdating] = useState(false);
   const [newStatus, setNewStatus] = useState('');
   const [showStatusModal, setShowStatusModal] = useState(false);
-  const router = useRouter();
 
-  const loadComplaint = async () => {
+  const loadComplaint = useCallback(async () => {
     setLoading(true);
     setError('');
     
     try {
       // TODO: Implement actual API call for single complaint
-      // const data = await makeAuthenticatedRequest<Complaint>(`/api/Complaint/GetById/${params.id}`);
+      // const data = await makeAuthenticatedRequest<Complaint>(`/api/Complaint/GetById/${resolvedParams.id}`);
       
       // Mock data for now
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       const mockComplaint: Complaint = {
-        id: params.id,
+        id: resolvedParams.id,
         title: 'Broken Street Light on Main Street',
         description: 'The street light on Main Street near the intersection with Oak Avenue has been broken for several days. It\'s causing safety concerns for pedestrians and drivers, especially during evening hours. The light appears to be flickering intermittently before going completely dark.',
         status: 'pending',
@@ -62,7 +60,7 @@ export default function ComplaintDetailPage({ params }: { params: { id: string }
           address: 'Main Street & Oak Avenue, City Center'
         }
       };
-      
+
       setComplaint(mockComplaint);
       setNewStatus(mockComplaint.status);
     } catch (error) {
@@ -71,11 +69,11 @@ export default function ComplaintDetailPage({ params }: { params: { id: string }
     } finally {
       setLoading(false);
     }
-  };
+  }, [resolvedParams.id]);
 
   useEffect(() => {
     loadComplaint();
-  }, [params.id]);
+  }, [loadComplaint]);
 
   const handleStatusUpdate = async () => {
     if (!complaint || newStatus === complaint.status) {

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 // Mock category data - replace with actual database queries
 const mockCategories = [
@@ -34,7 +34,7 @@ const mockCategories = [
   }
 ];
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // TODO: Add authentication check here
     // const authHeader = request.headers.get('authorization');

@@ -4,13 +4,37 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { LoadingButton } from '@/components/Loading';
-import { makeAuthenticatedRequest, validateForm } from '@/utils/api';
+// Mock validation function
 import Navigation from '@/components/Navigation';
 
 interface Category {
   id: string;
   name: string;
 }
+
+// Mock categories data
+const mockCategories: Category[] = [
+  {
+    id: '1',
+    name: 'Infrastructure'
+  },
+  {
+    id: '2',
+    name: 'Public Safety'
+  },
+  {
+    id: '3',
+    name: 'Environment'
+  },
+  {
+    id: '4',
+    name: 'Transportation'
+  },
+  {
+    id: '5',
+    name: 'Healthcare'
+  }
+];
 
 export default function SubmitComplaint() {
   const [formData, setFormData] = useState({
@@ -41,12 +65,11 @@ export default function SubmitComplaint() {
 
   const loadCategories = async () => {
     try {
-      // Use authenticated request with proper error handling
-      const data = await makeAuthenticatedRequest<Category[]>('/api/Category/GetAll');
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 300));
       
-      if (data && data.data) {
-        setCategories(data.data);
-      }
+      // Use mock data instead of API call
+      setCategories(mockCategories);
     } catch (error) {
       console.error('Error loading categories:', error);
       setError('Failed to load categories');
@@ -95,7 +118,7 @@ export default function SubmitComplaint() {
           });
           setLocationLoading(false);
         },
-        (error) => {
+        () => {
           setError('Unable to get location. Please enter manually.');
           setLocationLoading(false);
         }
@@ -112,12 +135,11 @@ export default function SubmitComplaint() {
     setError('');
     setSuccess('');
 
-    // Client-side validation following API guidelines
-    const validationErrors = validateForm(formData, {
-      title: ['required'],
-      description: ['required'],
-      categoryId: ['required']
-    });
+    // Simple validation
+    const validationErrors = [];
+    if (!formData.title.trim()) validationErrors.push('Title is required');
+    if (!formData.description.trim()) validationErrors.push('Description is required');
+    if (!formData.categoryId) validationErrors.push('Category is required');
 
     if (validationErrors.length > 0) {
       setError(validationErrors.join(', '));
@@ -136,29 +158,25 @@ export default function SubmitComplaint() {
       if (formData.longitude) formDataToSend.append('longitude', formData.longitude);
       if (selectedFile) formDataToSend.append('formFile', selectedFile);
 
-      // Use authenticated request with proper error handling
-      const data = await makeAuthenticatedRequest<{ message?: string }>('/api/Complaint/Submit', {
-        method: 'POST',
-        body: formDataToSend,
-      });
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      if (data && data.status === 'success') {
-        setSuccess('Complaint submitted successfully!');
-        // Reset form
-        setFormData({
-          title: '',
-          description: '',
-          categoryId: '',
-          latitude: '',
-          longitude: '',
-        });
-        setSelectedFile(null);
-        
-        // Redirect to dashboard after 2 seconds
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 2000);
-      }
+      // Mock successful submission
+      setSuccess('Complaint submitted successfully!');
+      // Reset form
+      setFormData({
+        title: '',
+        description: '',
+        categoryId: '',
+        latitude: '',
+        longitude: '',
+      });
+      setSelectedFile(null);
+      
+      // Redirect to dashboard after 2 seconds
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 2000);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to submit complaint');
     } finally {

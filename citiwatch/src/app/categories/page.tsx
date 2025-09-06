@@ -28,7 +28,7 @@ export default function CategoriesPage() {
     }
 
     loadCategories();
-  }, []);
+  }, [router]);
 
   const loadCategories = async () => {
     try {
@@ -84,7 +84,7 @@ export default function CategoriesPage() {
         const data = await response.json();
         setError(data.message || 'Failed to add category');
       }
-    } catch (error) {
+    } catch {
       setError('Network error. Please try again.');
     }
   };
@@ -118,7 +118,7 @@ export default function CategoriesPage() {
         const data = await response.json();
         setError(data.message || 'Failed to update category');
       }
-    } catch (error) {
+    } catch {
       setError('Network error. Please try again.');
     }
   };
@@ -147,7 +147,7 @@ export default function CategoriesPage() {
         const data = await response.json();
         setError(data.message || 'Failed to delete category');
       }
-    } catch (error) {
+    } catch {
       setError('Network error. Please try again.');
     }
   };

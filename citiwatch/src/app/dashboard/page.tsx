@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import { LoadingCard } from '@/components/Loading';
-import { makeAuthenticatedRequest, getCurrentUser } from '@/utils/api';
+// Mock user data
 
 interface Complaint {
   id: string;
@@ -16,6 +16,35 @@ interface Complaint {
   createdAt: string;
   imageUrl?: string;
 }
+
+// Mock user complaints data
+const mockUserComplaints: Complaint[] = [
+  {
+    id: '1',
+    title: 'Broken Street Light on Oak Avenue',
+    description: 'The street light has been flickering for days and went out completely last night.',
+    status: 'pending',
+    category: 'Infrastructure',
+    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    imageUrl: 'https://via.placeholder.com/400x300?text=Street+Light'
+  },
+  {
+    id: '2',
+    title: 'Trash Not Collected',
+    description: 'Garbage has not been collected on my street for two weeks.',
+    status: 'in progress',
+    category: 'Environment',
+    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  },
+  {
+    id: '3',
+    title: 'Pothole on Main Street',
+    description: 'Large pothole causing damage to vehicles near the intersection.',
+    status: 'resolved',
+    category: 'Infrastructure',
+    createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()
+  }
+];
 
 export default function Dashboard() {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
@@ -33,7 +62,12 @@ export default function Dashboard() {
     }
 
     // Get current user data
-    const currentUser = getCurrentUser();
+    // Mock current user data
+    const currentUser = {
+      fullName: 'John Doe',
+      email: 'john.doe@email.com',
+      role: '0'
+    };
     setUser(currentUser);
 
     // Load user complaints
@@ -45,15 +79,11 @@ export default function Dashboard() {
       setLoading(true);
       setError('');
       
-      // Use authenticated request with proper error handling
-      const data = await makeAuthenticatedRequest<Complaint[]>('/api/Complaint/GetAllUserComplaints');
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 800));
       
-      if (data && data.data) {
-        setComplaints(data.data);
-      } else {
-        // Set empty array if no data
-        setComplaints([]);
-      }
+      // Use mock data instead of API call
+      setComplaints(mockUserComplaints);
     } catch (error) {
       console.error('Error loading complaints:', error);
       setError(error instanceof Error ? error.message : 'Failed to load complaints');

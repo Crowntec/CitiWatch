@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import { LoadingButton } from '@/components/Loading';
-import { makePublicRequest, validateForm } from '@/utils/api';
+// Mock registration functionality
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -32,20 +32,14 @@ export default function Register() {
     setLoading(true);
     setError('');
 
-    // Client-side validation following API guidelines
-    const validationFields = {
-      fullName: formData.fullName,
-      email: formData.email,
-      password: formData.password,
-      confirmPassword: formData.confirmPassword
-    };
-
-    const validationErrors = validateForm(validationFields, {
-      fullName: ['required', 'fullName'],
-      email: ['required', 'email'],
-      password: ['required', 'password'],
-      confirmPassword: ['required']
-    });
+    // Simple validation
+    const validationErrors = [];
+    if (!formData.fullName.trim()) validationErrors.push('Full name is required');
+    if (!formData.email.trim()) validationErrors.push('Email is required');
+    if (!/\S+@\S+\.\S+/.test(formData.email)) validationErrors.push('Please enter a valid email');
+    if (!formData.password) validationErrors.push('Password is required');
+    if (formData.password.length < 6) validationErrors.push('Password must be at least 6 characters');
+    if (!formData.confirmPassword) validationErrors.push('Please confirm password');
 
     if (validationErrors.length > 0) {
       setError(validationErrors.join(', '));
@@ -60,23 +54,17 @@ export default function Register() {
     }
 
     try {
-      // API call with proper status field checking
-      const data = await makePublicRequest<{ message?: string }>('/api/User/Create', {
-        method: 'POST',
-        body: JSON.stringify({
-          fullName: formData.fullName,
-          email: formData.email,
-          password: formData.password,
-          role: formData.role,
-        }),
+      // Mock registration - simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Mock successful registration
+      console.log('Mock user registered:', {
+        fullName: formData.fullName,
+        email: formData.email,
+        role: formData.role,
       });
-
-      // Check for successful registration
-      if (data.status === 'success') {
-        router.push('/login?message=Registration successful');
-      } else {
-        setError(data.message || 'Registration failed');
-      }
+      
+      router.push('/login?message=Registration successful');
     } catch (error) {
       // Handle API errors gracefully
       if (error instanceof Error) {

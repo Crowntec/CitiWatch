@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import { LoadingButton } from '@/components/Loading';
-import { makePublicRequest, validateForm } from '@/utils/api';
+// Mock login functionality
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -28,11 +28,11 @@ export default function Login() {
     setLoading(true);
     setError('');
 
-    // Client-side validation following API guidelines
-    const validationErrors = validateForm(formData, {
-      email: ['required', 'email'],
-      password: ['required', 'password']
-    });
+    // Simple validation
+    const validationErrors = [];
+    if (!formData.email.trim()) validationErrors.push('Email is required');
+    if (!/\S+@\S+\.\S+/.test(formData.email)) validationErrors.push('Please enter a valid email');
+    if (!formData.password) validationErrors.push('Password is required');
 
     if (validationErrors.length > 0) {
       setError(validationErrors.join(', '));
@@ -61,20 +61,20 @@ export default function Login() {
         return;
       }
 
-      // API call with proper status field checking
-      const data = await makePublicRequest<{ token?: string; user?: { fullName: string; email: string; role?: string } }>('/api/User/Login', {
-        method: 'POST',
-        body: JSON.stringify(formData),
-      });
-
-      // Store JWT token and user data
-      if (data.data?.token && data.data?.user) {
-        localStorage.setItem('token', data.data.token);
-        localStorage.setItem('user', JSON.stringify(data.data.user));
-        router.push('/dashboard');
-      } else {
-        setError('Login response missing required data');
-      }
+      // Mock login logic - simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Mock successful login
+      const mockToken = 'mock-token-' + Date.now();
+      const mockUser = {
+        fullName: 'Demo User',
+        email: formData.email,
+        role: 'admin'
+      };
+      
+      localStorage.setItem('token', mockToken);
+      localStorage.setItem('user', JSON.stringify(mockUser));
+      router.push('/dashboard');
     } catch (error) {
       // Handle API errors gracefully
       if (error instanceof Error) {

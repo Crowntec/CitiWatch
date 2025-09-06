@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { makeAuthenticatedRequest } from '@/utils/api';
 import { LoadingCard } from '@/components/Loading';
 import AdminLayout from '@/components/AdminLayout';
 
@@ -11,6 +9,35 @@ interface Category {
   name: string;
   createdAt: string;
 }
+
+// Mock categories data
+const mockCategories: Category[] = [
+  {
+    id: '1',
+    name: 'Infrastructure',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '2',
+    name: 'Public Safety',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '3',
+    name: 'Environment',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '4',
+    name: 'Transportation',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '5',
+    name: 'Healthcare',
+    createdAt: new Date().toISOString()
+  }
+];
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -27,10 +54,11 @@ export default function CategoriesPage() {
     setError('');
     
     try {
-      const data = await makeAuthenticatedRequest<Category[]>('/api/Category/GetAll');
-      if (data && data.data) {
-        setCategories(data.data);
-      }
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Use mock data instead of API call
+      setCategories(mockCategories);
     } catch (error) {
       console.error('Error loading categories:', error);
       setError('Failed to load categories');

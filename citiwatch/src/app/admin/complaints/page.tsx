@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { makeAuthenticatedRequest } from '@/utils/api';
 import { LoadingCard } from '@/components/Loading';
 import AdminLayout from '@/components/AdminLayout';
 
@@ -17,6 +16,57 @@ interface Complaint {
   imageUrl?: string;
 }
 
+// Mock all complaints data
+const mockAllComplaints: Complaint[] = [
+  {
+    id: '1',
+    title: 'Broken Street Light on Main Street',
+    description: 'The street light near the intersection has been broken for over a week.',
+    status: 'pending',
+    category: 'Infrastructure',
+    userName: 'John Smith',
+    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    imageUrl: 'https://via.placeholder.com/400x300?text=Street+Light'
+  },
+  {
+    id: '2',
+    title: 'Pothole on Highway 101',
+    description: 'Large pothole causing damage to vehicles.',
+    status: 'in progress',
+    category: 'Infrastructure',
+    userName: 'Sarah Johnson',
+    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: '3',
+    title: 'Noise Complaint - Construction Site',
+    description: 'Construction work starting at 5 AM, violating city ordinances.',
+    status: 'resolved',
+    category: 'Public Safety',
+    userName: 'Mike Davis',
+    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: '4',
+    title: 'Illegal Dumping in Park',
+    description: 'Someone has been dumping trash in Central Park.',
+    status: 'pending',
+    category: 'Environment',
+    userName: 'Lisa Chen',
+    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    imageUrl: 'https://via.placeholder.com/400x300?text=Illegal+Dumping'
+  },
+  {
+    id: '5',
+    title: 'Bus Stop Vandalism',
+    description: 'Bus stop shelter has been vandalized with graffiti.',
+    status: 'resolved',
+    category: 'Transportation',
+    userName: 'Robert Wilson',
+    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+  }
+];
+
 export default function ComplaintsPage() {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,10 +80,11 @@ export default function ComplaintsPage() {
     setError('');
     
     try {
-      const data = await makeAuthenticatedRequest<Complaint[]>('/api/Complaint/GetAll');
-      if (data && data.data) {
-        setComplaints(data.data);
-      }
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 600));
+      
+      // Use mock data instead of API call
+      setComplaints(mockAllComplaints);
     } catch (error) {
       console.error('Error loading complaints:', error);
       setError('Failed to load complaints');

@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
       message: 'All complaints retrieved successfully'
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { status: 'error', message: 'Internal server error' },
       { status: 500 }
