@@ -111,8 +111,8 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-gray-700">
             <div className="flex items-center">
-              <div className="p-2 bg-blue-600/20 rounded-lg">
-                <i className="fas fa-clipboard-list text-2xl text-blue-400"></i>
+              <div className="p-2 rounded-lg">
+                <i className="fas fa-clipboard-list text-4xl text--400"></i>
               </div>
               <div className="ml-4">
                 <p className="text-2xl font-semibold text-white">{complaints.length}</p>
@@ -122,8 +122,8 @@ export default function Dashboard() {
           </div>
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-gray-700">
             <div className="flex items-center">
-              <div className="p-2 bg-yellow-600/20 rounded-lg">
-                <i className="fas fa-clock text-2xl text-yellow-400"></i>
+              <div className="p-2 rounded-lg">
+                <i className="fas fa-clock text-4xl text-yellow-400"></i>
               </div>
               <div className="ml-4">
                 <p className="text-2xl font-semibold text-white">
@@ -135,8 +135,8 @@ export default function Dashboard() {
           </div>
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-gray-700">
             <div className="flex items-center">
-              <div className="p-2 bg-blue-500/20 rounded-lg">
-                <i className="fas fa-sync-alt text-2xl text-blue-400"></i>
+              <div className="p-2 rounded-lg">
+                <i className="fas fa-sync-alt text-4xl text-blue-400"></i>
               </div>
               <div className="ml-4">
                 <p className="text-2xl font-semibold text-white">
@@ -148,8 +148,8 @@ export default function Dashboard() {
           </div>
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-gray-700">
             <div className="flex items-center">
-              <div className="p-2 bg-green-600/20 rounded-lg">
-                <i className="fas fa-check-circle text-2xl text-green-400"></i>
+              <div className="p-2 rounded-lg">
+                <i className="fas fa-check-circle text-4xl text-green-400"></i>
               </div>
               <div className="ml-4">
                 <p className="text-2xl font-semibold text-white">
