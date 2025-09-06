@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { LoadingCard } from '@/components/Loading';
-import { makeAuthenticatedRequest, getCurrentUser, isUserAdmin } from '@/utils/api';
-import Navigation from '@/components/Navigation';
+import { makeAuthenticatedRequest } from '@/utils/api';
+import AdminLayout from '@/components/AdminLayout';
 
 interface Complaint {
   id: string;
@@ -32,89 +32,90 @@ interface Category {
   createdAt: string;
 }
 
+interface DashboardStats {
+  totalUsers: number;
+  totalComplaints: number;
+  pendingComplaints: number;
+  inProgressComplaints: number;
+  resolvedComplaints: number;
+  totalCategories: number;
+  complaintsThisMonth: number;
+  newUsersThisMonth: number;
+}
+
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<'complaints' | 'users' | 'categories'>('complaints');
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalUsers: 0,
+    totalComplaints: 0,
+    pendingComplaints: 0,
+    inProgressComplaints: 0,
+    resolvedComplaints: 0,
+    totalCategories: 0,
+    complaintsThisMonth: 0,
+    newUsersThisMonth: 0
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const router = useRouter();
 
-  useEffect(() => {
-    // Check if user is authenticated and is admin (Role-based access control)
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-
-    // Check if user has admin role
-    const user = getCurrentUser();
-    if (!user || !isUserAdmin()) {
-      router.push('/dashboard'); // Redirect non-admin users
-      return;
-    }
-  }, [router]);
-
-  const loadComplaints = async () => {
-    const data = await makeAuthenticatedRequest<Complaint[]>('/api/Complaint/GetAll');
-    if (data && data.data) {
-      setComplaints(data.data);
-    }
-  };
-
-  const loadUsers = async () => {
-    const data = await makeAuthenticatedRequest<User[]>('/api/User/GetAll');
-    if (data && data.data) {
-      setUsers(data.data);
-    }
-  };
-
-  const loadCategories = async () => {
-    const data = await makeAuthenticatedRequest<Category[]>('/api/Category/GetAll');
-    if (data && data.data) {
-      setCategories(data.data);
-    }
-  };
-
-  const loadData = useCallback(async () => {
+  const loadData = async () => {
     setLoading(true);
     setError('');
     
     try {
-      if (activeTab === 'complaints') {
-        await loadComplaints();
-      } else if (activeTab === 'users') {
-        await loadUsers();
-      } else if (activeTab === 'categories') {
-        await loadCategories();
-      }
+      const [complaintsData, usersData, categoriesData] = await Promise.all([
+        makeAuthenticatedRequest<Complaint[]>('/api/Complaint/GetAll'),
+        makeAuthenticatedRequest<User[]>('/api/User/GetAll'),
+        makeAuthenticatedRequest<Category[]>('/api/Category/GetAll')
+      ]);
+
+      const complaintsArray = complaintsData?.data || [];
+      const usersArray = usersData?.data || [];
+      const categoriesArray = categoriesData?.data || [];
+
+      setComplaints(complaintsArray);
+      setUsers(usersArray);
+      setCategories(categoriesArray);
+
+      // Calculate stats
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+
+      const complaintsThisMonth = complaintsArray.filter(c => {
+        const createdDate = new Date(c.createdAt);
+        return createdDate.getMonth() === currentMonth && createdDate.getFullYear() === currentYear;
+      }).length;
+
+      const newUsersThisMonth = usersArray.filter(u => {
+        const createdDate = new Date(u.createdAt);
+        return createdDate.getMonth() === currentMonth && createdDate.getFullYear() === currentYear;
+      }).length;
+
+      setStats({
+        totalUsers: usersArray.length,
+        totalComplaints: complaintsArray.length,
+        pendingComplaints: complaintsArray.filter(c => c.status.toLowerCase() === 'pending').length,
+        inProgressComplaints: complaintsArray.filter(c => c.status.toLowerCase() === 'in progress').length,
+        resolvedComplaints: complaintsArray.filter(c => c.status.toLowerCase() === 'resolved').length,
+        totalCategories: categoriesArray.length,
+        complaintsThisMonth,
+        newUsersThisMonth
+      });
     } catch (error) {
-      console.error('Error loading data:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load data');
+      console.error('Error loading dashboard data:', error);
+      setError('Failed to load dashboard data');
     } finally {
       setLoading(false);
     }
-  }, [activeTab]);
+  };
 
   useEffect(() => {
-    // Check if user is authenticated and is admin (Role-based access control)
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-
-    // Check if user has admin role
-    const user = getCurrentUser();
-    if (!user || !isUserAdmin()) {
-      router.push('/dashboard'); // Redirect non-admin users
-      return;
-    }
-
     loadData();
-  }, [activeTab, router, loadData]);
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -131,313 +132,312 @@ export default function AdminDashboard() {
     }
   };
 
-  const getRoleText = (role: number) => {
-    return role === 1 ? 'Admin' : 'User';
+  const getComplaintsByCategory = () => {
+    const categoryCount: { [key: string]: number } = {};
+    complaints.forEach(complaint => {
+      categoryCount[complaint.category] = (categoryCount[complaint.category] || 0) + 1;
+    });
+    return Object.entries(categoryCount).map(([name, count]) => ({ name, count }));
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
-      {/* Navigation */}
-      <Navigation />
+  const getRecentComplaints = () => {
+    return complaints
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5);
+  };
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="p-8">
+          <LoadingCard message="Loading dashboard data..." />
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout>
+        <div className="p-8">
+          <div className="text-center py-8">
+            <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+              <i className="fas fa-exclamation-triangle text-red-400 text-2xl mb-2"></i>
+              <p className="text-red-300 mb-4">{error}</p>
+              <button
+                onClick={loadData}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  return (
+    <AdminLayout>
+      <div className="p-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
-          <p className="text-gray-400 mt-2">Manage complaints, users, and categories</p>
-          <div className="mt-4">
+          <h1 className="text-3xl font-bold text-white">Dashboard Overview</h1>
+          <p className="text-gray-400 mt-2">Monitor your CitiWatch platform performance and statistics</p>
+        </div>
+
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6">
+            <div className="flex items-center">
+              <div className="p-3 rounded-full bg-blue-500/20">
+                <i className="fas fa-users text-2xl text-blue-400"></i>
+              </div>
+              <div className="ml-4">
+                <p className="text-3xl font-bold text-white">{stats.totalUsers}</p>
+                <p className="text-gray-400">Total Users</p>
+                <p className="text-sm text-green-400 mt-1">+{stats.newUsersThisMonth} this month</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6">
+            <div className="flex items-center">
+              <div className="p-3 rounded-full bg-purple-500/20">
+                <i className="fas fa-exclamation-circle text-2xl text-purple-400"></i>
+              </div>
+              <div className="ml-4">
+                <p className="text-3xl font-bold text-white">{stats.totalComplaints}</p>
+                <p className="text-gray-400">Total Complaints</p>
+                <p className="text-sm text-green-400 mt-1">+{stats.complaintsThisMonth} this month</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6">
+            <div className="flex items-center">
+              <div className="p-3 rounded-full bg-yellow-500/20">
+                <i className="fas fa-clock text-2xl text-yellow-400"></i>
+              </div>
+              <div className="ml-4">
+                <p className="text-3xl font-bold text-white">{stats.pendingComplaints}</p>
+                <p className="text-gray-400">Pending</p>
+                <p className="text-sm text-yellow-400 mt-1">Requires action</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6">
+            <div className="flex items-center">
+              <div className="p-3 rounded-full bg-green-500/20">
+                <i className="fas fa-check-circle text-2xl text-green-400"></i>
+              </div>
+              <div className="ml-4">
+                <p className="text-3xl font-bold text-white">{stats.resolvedComplaints}</p>
+                <p className="text-gray-400">Resolved</p>
+                <p className="text-sm text-green-400 mt-1">
+                  {stats.totalComplaints > 0 ? Math.round((stats.resolvedComplaints / stats.totalComplaints) * 100) : 0}% resolved
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Status Overview Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Complaints by Status */}
+          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Complaints by Status</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-4 h-4 bg-yellow-500 rounded-full mr-3"></div>
+                  <span className="text-gray-300">Pending</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-white font-semibold mr-2">{stats.pendingComplaints}</span>
+                  <div className="w-24 bg-gray-700 rounded-full h-2">
+                    <div 
+                      className="bg-yellow-500 h-2 rounded-full" 
+                      style={{ width: `${stats.totalComplaints > 0 ? (stats.pendingComplaints / stats.totalComplaints) * 100 : 0}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-4 h-4 bg-blue-500 rounded-full mr-3"></div>
+                  <span className="text-gray-300">In Progress</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-white font-semibold mr-2">{stats.inProgressComplaints}</span>
+                  <div className="w-24 bg-gray-700 rounded-full h-2">
+                    <div 
+                      className="bg-blue-500 h-2 rounded-full" 
+                      style={{ width: `${stats.totalComplaints > 0 ? (stats.inProgressComplaints / stats.totalComplaints) * 100 : 0}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-4 h-4 bg-green-500 rounded-full mr-3"></div>
+                  <span className="text-gray-300">Resolved</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-white font-semibold mr-2">{stats.resolvedComplaints}</span>
+                  <div className="w-24 bg-gray-700 rounded-full h-2">
+                    <div 
+                      className="bg-green-500 h-2 rounded-full" 
+                      style={{ width: `${stats.totalComplaints > 0 ? (stats.resolvedComplaints / stats.totalComplaints) * 100 : 0}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Complaints by Category */}
+          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Complaints by Category</h3>
+            <div className="space-y-3">
+              {getComplaintsByCategory().slice(0, 5).map((category, index) => (
+                <div key={category.name} className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div 
+                      className={`w-4 h-4 rounded-full mr-3`}
+                      style={{ backgroundColor: `hsl(${index * 60}, 70%, 50%)` }}
+                    ></div>
+                    <span className="text-gray-300">{category.name}</span>
+                  </div>
+                  <span className="text-white font-semibold">{category.count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6 mb-8">
+          <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Link
-              href="/dashboard"
-              className="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors text-sm"
+              href="/admin/complaints"
+              className="flex items-center justify-center p-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors"
             >
-              <i className="fas fa-arrow-left mr-2"></i>
-              Back to Dashboard
+              <i className="fas fa-list mr-2"></i>
+              View All Complaints
+            </Link>
+            <Link
+              href="/admin/users"
+              className="flex items-center justify-center p-4 bg-purple-600 hover:bg-purple-700 rounded-lg text-white transition-colors"
+            >
+              <i className="fas fa-users mr-2"></i>
+              Manage Users
+            </Link>
+            <Link
+              href="/admin/categories/manage"
+              className="flex items-center justify-center p-4 bg-green-600 hover:bg-green-700 rounded-lg text-white transition-colors"
+            >
+              <i className="fas fa-plus mr-2"></i>
+              Add Category
+            </Link>
+            <Link
+              href="/admin/complaints/pending"
+              className="flex items-center justify-center p-4 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-white transition-colors"
+            >
+              <i className="fas fa-clock mr-2"></i>
+              Pending Reviews
             </Link>
           </div>
         </div>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6">
-            <div className="flex items-center">
-              <div className="p-2 rounded-lg">
-                <i className="fas fa-clipboard-list text-4xl text-white-400"></i>
-              </div>
-              <div className="ml-4">
-                <p className="text-2xl font-semibold text-white">{complaints.length}</p>
-                <p className="text-gray-400">Total Complaints</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6">
-            <div className="flex items-center">
-              <div className="p-2 rounded-lg">
-                <i className="fa-solid fa-users text-4xl text-white-400"></i>
-              </div>
-              <div className="ml-4">
-                <p className="text-2xl font-semibold text-white">{users.length}</p>
-                <p className="text-gray-400">Total Users</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6">
-            <div className="flex items-center">
-              <div className="p-2 rounded-lg">
-                <i className="fa-solid fa-layer-group text-4xl text-white-400"></i>
-              </div>
-              <div className="ml-4">
-                <p className="text-2xl font-semibold text-white">{categories.length}</p>
-                <p className="text-gray-400">Categories</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6">
-            <div className="flex items-center">
-              <div className="p-2 rounded-lg">
-                <i className="fas fa-clock text-4xl text-white-400"></i>
-              </div>
-              <div className="ml-4">
-                <p className="text-2xl font-semibold text-white">
-                  {complaints.filter(c => c.status.toLowerCase() === 'pending').length}
-                </p>
-                <p className="text-gray-400">Pending</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Tabs */}
+        {/* Latest Complaints Table */}
         <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg">
-          <div className="border-b border-gray-700">
-            <nav className="-mb-px flex">
-              <button
-                onClick={() => setActiveTab('complaints')}
-                className={`py-4 px-6 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'complaints'
-                    ? 'border-blue-500 text-blue-400'
-                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600'
-                }`}
+          <div className="px-6 py-4 border-b border-gray-700">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white">Latest Complaints</h3>
+              <Link
+                href="/admin/complaints"
+                className="text-blue-400 hover:text-blue-300 text-sm"
               >
-                Complaints
-              </button>
-              <button
-                onClick={() => setActiveTab('users')}
-                className={`py-4 px-6 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'users'
-                    ? 'border-blue-500 text-blue-400'
-                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600'
-                }`}
-              >
-                Users
-              </button>
-              <button
-                onClick={() => setActiveTab('categories')}
-                className={`py-4 px-6 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'categories'
-                    ? 'border-blue-500 text-blue-400'
-                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600'
-                }`}
-              >
-                Categories
-              </button>
-            </nav>
+                View All
+              </Link>
+            </div>
           </div>
-
           <div className="p-6">
-            {loading ? (
-              <LoadingCard message="Loading admin data..." />
-            ) : error ? (
-              <div className="text-center py-8">
-                <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
-                  <i className="fas fa-exclamation-triangle text-red-400 text-2xl mb-2"></i>
-                  <p className="text-red-300 mb-4">{error}</p>
-                  <button
-                    onClick={loadData}
-                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors"
-                  >
-                    Try Again
-                  </button>
-                </div>
-              </div>
+            {getRecentComplaints().length === 0 ? (
+              <p className="text-gray-400 text-center py-8">No complaints found.</p>
             ) : (
-              <>
-                {/* Complaints Tab */}
-                {activeTab === 'complaints' && (
-                  <div>
-                    <h3 className="text-lg font-medium text-white mb-4">All Complaints</h3>
-                    {complaints.length === 0 ? (
-                      <p className="text-gray-400">No complaints found.</p>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-700">
-                          <thead className="bg-gray-700/50">
-                            <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                Title
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                User
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                Category
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                Status
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                Date
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                Actions
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-gray-800/30 divide-y divide-gray-700">
-                            {complaints.map((complaint) => (
-                              <tr key={complaint.id} className="hover:bg-gray-700/30 transition-colors">
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="text-sm font-medium text-white">
-                                    {complaint.title}
-                                  </div>
-                                  <div className="text-sm text-gray-400 max-w-xs truncate">
-                                    {complaint.description}
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                  {complaint.userName}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                  {complaint.category}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(complaint.status)}`}>
-                                    {complaint.status}
-                                  </span>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                                  {new Date(complaint.createdAt).toLocaleDateString()}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                  <button className="text-blue-400 hover:text-blue-300 mr-3 transition-colors">
-                                    View
-                                  </button>
-                                  <button className="text-green-400 hover:text-green-300 transition-colors">
-                                    Update Status
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Users Tab */}
-                {activeTab === 'users' && (
-                  <div>
-                    <h3 className="text-lg font-medium text-white mb-4">All Users</h3>
-                    {users.length === 0 ? (
-                      <p className="text-gray-400">No users found.</p>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-700">
-                          <thead className="bg-gray-700/50">
-                            <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                Name
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                Email
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                Role
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                Joined
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                Actions
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-gray-800/30 divide-y divide-gray-700">
-                            {users.map((user) => (
-                              <tr key={user.id} className="hover:bg-gray-700/30 transition-colors">
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
-                                  {user.fullName}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                  {user.email}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                                    user.role === 1 ? 'bg-purple-900/50 text-purple-300 border-purple-700' : 'bg-gray-700/50 text-gray-300 border-gray-600'
-                                  }`}>
-                                    {getRoleText(user.role)}
-                                  </span>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                                  {new Date(user.createdAt).toLocaleDateString()}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                  <button className="text-blue-400 hover:text-blue-300 mr-3 transition-colors">
-                                    Edit
-                                  </button>
-                                  <button className="text-red-400 hover:text-red-300 transition-colors">
-                                    Delete
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Categories Tab */}
-                {activeTab === 'categories' && (
-                  <div>
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-medium text-white">Categories</h3>
-                      <button className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors">
-                        Add Category
-                      </button>
-                    </div>
-                    {categories.length === 0 ? (
-                      <p className="text-gray-400">No categories found.</p>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {categories.map((category) => (
-                          <div key={category.id} className="bg-gray-700/50 border border-gray-600 rounded-lg p-4">
-                            <div className="flex justify-between items-center">
-                              <h4 className="text-lg font-medium text-white">{category.name}</h4>
-                              <div className="flex space-x-2">
-                                <button className="text-blue-400 hover:text-blue-300 text-sm transition-colors">
-                                  Edit
-                                </button>
-                                <button className="text-red-400 hover:text-red-300 text-sm transition-colors">
-                                  Delete
-                                </button>
-                              </div>
-                            </div>
-                            <p className="text-sm text-gray-400 mt-1">
-                              Created: {new Date(category.createdAt).toLocaleDateString()}
-                            </p>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-700">
+                  <thead>
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        Title
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        User
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        Category
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-700">
+                    {getRecentComplaints().map((complaint) => (
+                      <tr key={complaint.id} className="hover:bg-gray-700/30 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-white">
+                            {complaint.title}
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </>
+                          <div className="text-sm text-gray-400 max-w-xs truncate">
+                            {complaint.description}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                          {complaint.userName}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                          {complaint.category}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(complaint.status)}`}>
+                            {complaint.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                          {new Date(complaint.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <Link
+                            href={`/admin/complaints/${complaint.id}`}
+                            className="text-blue-400 hover:text-blue-300 mr-3 transition-colors"
+                          >
+                            View
+                          </Link>
+                          <button className="text-green-400 hover:text-green-300 transition-colors">
+                            Update Status
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 }
