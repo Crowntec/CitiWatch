@@ -48,3 +48,14 @@ html {
   height: 100dvh;
   min-height: -webkit-fill-available;
 }
+
+/* Custom responsive utilities */
+@media (min-width: 475px) {
+  .xs\:flex {
+    display: flex;
+  }
+  
+  .xs\:hidden {
+    display: none;
+  }
+}

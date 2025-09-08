@@ -225,16 +225,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         }`}>
           {/* Top Bar - Desktop & Mobile */}
           <header className="bg-gray-900/95 backdrop-blur-sm border-b border-gray-700 sticky top-0 z-20">
-            <div className="flex items-center justify-between h-16 px-4 md:px-6">
+            <div className="flex items-center justify-between h-14 sm:h-16 px-3 sm:px-4 md:px-6">
               {/* Left Section */}
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2 sm:space-x-4">
                 {/* Mobile Menu Button */}
                 <button
                   onClick={toggleMobileMenu}
-                  className="md:hidden text-gray-400 hover:text-white p-2 rounded-lg transition-colors"
+                  className="md:hidden text-gray-400 hover:text-white p-1.5 sm:p-2 rounded-lg transition-colors"
                   aria-label="Toggle mobile menu"
                 >
-                  <i className="ri-menu-line text-xl"></i>
+                  <i className="ri-menu-line text-lg sm:text-xl"></i>
                 </button>
                 
                 {/* Desktop Sidebar Toggle */}
@@ -246,18 +246,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   <i className={`ri-${sidebarCollapsed ? 'menu-unfold' : 'menu-fold'}-line text-lg`}></i>
                 </button>
 
-                {/* Mobile Logo */}
-                <Link href="/admin" className="md:hidden flex items-center space-x-2">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center">
+                {/* Mobile Logo - Smaller on very small screens */}
+                <Link href="/admin" className="md:hidden flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center">
                     <Image 
                       src="/primarylogo.png" 
                       alt="CitiWatch Logo" 
-                      width={32} 
-                      height={32}
-                      className="rounded-lg"
+                      width={24} 
+                      height={24}
+                      className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg"
                     />
                   </div>
-                  <span className="text-lg font-bold text-white">Admin</span>
+                  <span className="text-sm sm:text-lg font-bold text-white">Admin</span>
                 </Link>
 
                 {/* Desktop Breadcrumb/Page Title */}
@@ -295,71 +295,99 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </div>
 
               {/* Right Section */}
-              <div className="flex items-center space-x-2">
-                {/* Quick Actions - Desktop */}
-                <div className="hidden md:flex items-center space-x-1">
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                {/* Quick Actions - Desktop Only */}
+                <div className="hidden lg:flex items-center space-x-1">
+                  <Link
+                    href="/admin/complaints/pending"
+                    className="p-2 text-gray-400 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors"
+                    title="Pending Complaints"
+                  >
+                    <i className="ri-timer-line text-lg"></i>
+                  </Link>
+                  <Link
+                    href="/admin/complaints"
+                    className="p-2 text-gray-400 hover:text-blue-400 hover:bg-gray-800 rounded-lg transition-colors"
+                    title="All Complaints"
+                  >
+                    <i className="ri-feedback-line text-lg"></i>
+                  </Link>
+                  <Link
+                    href="/admin/users"
+                    className="p-2 text-gray-400 hover:text-green-400 hover:bg-gray-800 rounded-lg transition-colors"
+                    title="Users"
+                  >
+                    <i className="ri-team-line text-lg"></i>
+                  </Link>
                 </div>
 
-                {/* Notifications */}
-                <button className="relative p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
-                  <i className="ri-notification-3-line text-lg"></i>
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                {/* Notifications - Hide on very small screens */}
+                <button className="hidden xs:flex relative p-1.5 sm:p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+                  <i className="ri-notification-3-line text-base sm:text-lg"></i>
+                  <span className="absolute top-0.5 sm:top-1 right-0.5 sm:right-1 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-500 rounded-full"></span>
                 </button>
 
-                {/* Dark Mode Toggle */}
+                {/* Dark Mode Toggle - Hide on very small screens */}
                 <button
                   onClick={() => setDarkMode(!darkMode)}
-                  className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+                  className="hidden xs:flex p-1.5 sm:p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
                   title="Toggle Dark Mode"
                 >
-                  <i className={`ri-${darkMode ? 'sun' : 'moon'}-line text-lg`}></i>
+                  <i className={`ri-${darkMode ? 'sun' : 'moon'}-line text-base sm:text-lg`}></i>
                 </button>
 
-                {/* User Menu */}
-                <div className="flex items-center space-x-3">
+                {/* User Avatar - Always visible but smaller on mobile */}
+                <div className="flex items-center space-x-2">
                   <div className="hidden sm:block text-right">
-                    <p className="text-sm font-medium text-white">{user?.fullName}</p>
+                    <p className="text-xs sm:text-sm font-medium text-white">{user?.fullName}</p>
                     <p className="text-xs text-gray-400 capitalize">{user?.role}</p>
                   </div>
                   <div className="relative">
-                    <button className="flex items-center space-x-2 p-1 rounded-lg hover:bg-gray-800 transition-colors">
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                        <i className="ri-user-line text-white text-sm"></i>
+                    <button className="flex items-center space-x-1 p-0.5 sm:p-1 rounded-lg hover:bg-gray-800 transition-colors">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <i className="ri-user-line text-white text-xs sm:text-sm"></i>
                       </div>
                     </button>
                   </div>
                 </div>
 
-                {/* Home & Logout */}
-                <div className="flex items-center space-x-1 ml-2 pl-2 border-l border-gray-600">
+                {/* Mobile Menu Button (More Actions) */}
+                <div className="flex xs:hidden">
+                  <button className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+                    <i className="ri-more-2-line text-lg"></i>
+                  </button>
+                </div>
+
+                {/* Home & Logout - Hidden on small screens, shown on larger */}
+                <div className="hidden sm:flex items-center space-x-1 ml-2 pl-2 border-l border-gray-600">
                   <Link
                     href="/"
-                    className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+                    className="p-1.5 sm:p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
                     title="Go to Home"
                   >
-                    <i className="ri-home-line text-lg"></i>
+                    <i className="ri-home-line text-base sm:text-lg"></i>
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-900/20 rounded-lg transition-colors"
+                    className="p-1.5 sm:p-2 text-gray-400 hover:text-red-400 hover:bg-red-900/20 rounded-lg transition-colors"
                     title="Logout"
                   >
-                    <i className="ri-logout-box-r-line text-lg"></i>
+                    <i className="ri-logout-box-r-line text-base sm:text-lg"></i>
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Mobile Search Bar */}
-            <div className="lg:hidden px-4 pb-3">
+            {/* Mobile Search Bar - More compact */}
+            <div className="lg:hidden px-3 sm:px-4 pb-2 sm:pb-3">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <i className="ri-search-line text-gray-400"></i>
+                  <i className="ri-search-line text-gray-400 text-sm"></i>
                 </div>
                 <input
                   type="search"
                   placeholder="Search..."
-                  className="w-full bg-gray-800/50 border border-gray-600 text-white placeholder-gray-400 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full bg-gray-800/50 border border-gray-600 text-white placeholder-gray-400 rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
             </div>
