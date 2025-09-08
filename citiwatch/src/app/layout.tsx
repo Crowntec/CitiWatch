@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { AuthProvider } from "@/auth/AuthContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,12 +28,15 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <script src="https://kit.fontawesome.com/b8581067ed.js" crossOrigin="anonymous" async></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ErrorBoundary>
-          {children}
+          <AuthProvider>
+            {children}
+          </AuthProvider>
         </ErrorBoundary>
       </body>
     </html>

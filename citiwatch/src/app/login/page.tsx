@@ -1,20 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import { LoadingButton } from '@/components/Loading';
-// Mock login functionality
+import { useAuth } from '@/auth/AuthContext';
 
 export default function Login() {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { login, isLoading, isAuthenticated, isAdmin } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    // Redirect if already authenticated
+    if (isAuthenticated) {
+      if (isAdmin) {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
+    }
+  }, [isAuthenticated, isAdmin, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -25,7 +36,6 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
 
     // Simple validation
@@ -36,54 +46,17 @@ export default function Login() {
 
     if (validationErrors.length > 0) {
       setError(validationErrors.join(', '));
-      setLoading(false);
       return;
     }
 
-    // Dummy credentials for development
-    const dummyCredentials = {
-      email: 'demo@citiwatch.com',
-      password: 'password123',
-    };
-
     try {
-      // Check for dummy credentials
-      if (formData.email === dummyCredentials.email && formData.password === dummyCredentials.password) {
-        // Generate a dummy token
-        const dummyToken = 'dummy-token-' + Date.now();
-        localStorage.setItem('token', dummyToken);
-        localStorage.setItem('user', JSON.stringify({
-          fullName: 'Demo User',
-          email: 'demo@citiwatch.com',
-          role: 'admin' // Set as admin for testing
-        }));
-        router.push('/dashboard');
-        return;
-      }
-
-      // Mock login logic - simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock successful login
-      const mockToken = 'mock-token-' + Date.now();
-      const mockUser = {
-        fullName: 'Demo User',
-        email: formData.email,
-        role: 'admin'
-      };
-      
-      localStorage.setItem('token', mockToken);
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      router.push('/dashboard');
+      await login(formData.email, formData.password);
     } catch (error) {
-      // Handle API errors gracefully
       if (error instanceof Error) {
         setError(error.message);
       } else {
-        setError('API not available. Use demo@citiwatch.com / password123 for testing.');
+        setError('Login failed. Please try again.');
       }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -189,12 +162,28 @@ export default function Login() {
             <div>
               <LoadingButton
                 type="submit"
-                isLoading={loading}
+                isLoading={isLoading}
                 loadingText="Signing in..."
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Sign in
               </LoadingButton>
+            </div>
+
+            {/* Demo Credentials */}
+            <div className="mt-6 bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+              <h3 className="text-sm font-medium text-gray-300 mb-2">Demo Credentials:</h3>
+              <div className="space-y-2 text-xs text-gray-400">
+                <div>
+                  <span className="text-blue-400">Admin:</span> admin@citiwatch.com / admin123
+                </div>
+                <div>
+                  <span className="text-green-400">User:</span> user@citiwatch.com / user123
+                </div>
+                <div>
+                  <span className="text-yellow-400">Demo:</span> demo@citiwatch.com / password123
+                </div>
+              </div>
             </div>
           </form>
         </div>

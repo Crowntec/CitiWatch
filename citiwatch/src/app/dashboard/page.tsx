@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import { LoadingCard } from '@/components/Loading';
-// Mock user data
+import { useAuth } from '@/auth/AuthContext';
+import { ProtectedRoute } from '@/auth/ProtectedRoute';
 
 interface Complaint {
   id: string;
@@ -50,29 +51,15 @@ export default function Dashboard() {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [user, setUser] = useState<{ fullName: string; email: string; role?: string } | null>(null);
+  const { user, isAuthenticated } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    // Check if user is authenticated
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-
-    // Get current user data
-    // Mock current user data
-    const currentUser = {
-      fullName: 'John Doe',
-      email: 'john.doe@email.com',
-      role: '0'
-    };
-    setUser(currentUser);
-
     // Load user complaints
-    loadUserComplaints();
-  }, [router]);
+    if (isAuthenticated) {
+      loadUserComplaints();
+    }
+  }, [isAuthenticated]);
 
   const loadUserComplaints = async () => {
     try {
@@ -108,9 +95,10 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
-      {/* Navigation */}
-      <Navigation />
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
+        {/* Navigation */}
+        <Navigation />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         {/* Header */}
@@ -253,7 +241,8 @@ export default function Dashboard() {
             </div>
           )}
         </div>
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }

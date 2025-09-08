@@ -4,41 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/auth/AuthContext";
 
 export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState<{ fullName: string; email: string; role?: string } | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { user, logout, isAuthenticated, isAdmin } = useAuth();
   const router = useRouter();
-
-  useEffect(() => {
-    // Check authentication status
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    
-    if (token) {
-      setIsLoggedIn(true);
-      if (userData) {
-        try {
-          const parsedUser = JSON.parse(userData);
-          setUser(parsedUser);
-          setIsAdmin(parsedUser.role === 'admin');
-        } catch (error) {
-          console.error('Error parsing user data:', error);
-        }
-      }
-    }
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setIsLoggedIn(false);
-    setUser(null);
-    setIsAdmin(false);
-    router.push('/');
-  };
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -75,17 +46,31 @@ export default function Navigation() {
           
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {isLoggedIn ? (
+            {isAuthenticated ? (
               <>
                 <Link href="/" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
                   Home
                 </Link>
-                <Link href="/dashboard" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
-                  Dashboard
-                </Link>
-                <Link href="/dashboard/submit" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
-                  Submit Report
-                </Link>
+                {!isAdmin && (
+                  <>
+                    <Link href="/dashboard" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
+                      Dashboard
+                    </Link>
+                    <Link href="/dashboard/submit" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
+                      Submit Report
+                    </Link>
+                  </>
+                )}
+                {isAdmin && (
+                  <>
+                    <Link href="/admin" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
+                      Admin Dashboard
+                    </Link>
+                    <Link href="/admin/complaints" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
+                      Manage Complaints
+                    </Link>
+                  </>
+                )}
                 {isAdmin && (
                   <Link href="/admin" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
                     Admin
@@ -112,13 +97,13 @@ export default function Navigation() {
 
           {/* Desktop Get Started Button */}
           <div className="hidden md:flex items-center space-x-4">
-            {isLoggedIn ? (
+            {isAuthenticated ? (
               <>
                 <span className="text-gray-300 text-sm">
                   Welcome, {user?.fullName || 'User'}
                 </span>
                 <button
-                  onClick={handleLogout}
+                  onClick={logout}
                   className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors flex items-center"
                 >
                   Logout
@@ -178,7 +163,7 @@ export default function Navigation() {
           >
             <div className="py-8 px-8">
               <div className="flex flex-col space-y-6">
-                {isLoggedIn ? (
+                {isAuthenticated ? (
                   <>
                     <Link 
                       href="/" 
@@ -188,31 +173,45 @@ export default function Navigation() {
                       <i className="fas fa-home mr-4 w-5"></i>
                       Home
                     </Link>
-                    <Link 
-                      href="/dashboard" 
-                      className="text-gray-300 hover:text-white transition-colors text-lg flex items-center py-3"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <i className="fas fa-tachometer-alt mr-4 w-5"></i>
-                      Dashboard
-                    </Link>
-                    <Link 
-                      href="/dashboard/submit" 
-                      className="text-gray-300 hover:text-white transition-colors text-lg flex items-center py-3"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <i className="fas fa-plus-circle mr-4 w-5"></i>
-                      Submit Report
-                    </Link>
+                    {!isAdmin && (
+                      <>
+                        <Link 
+                          href="/dashboard" 
+                          className="text-gray-300 hover:text-white transition-colors text-lg flex items-center py-3"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          <i className="fas fa-tachometer-alt mr-4 w-5"></i>
+                          Dashboard
+                        </Link>
+                        <Link 
+                          href="/dashboard/submit" 
+                          className="text-gray-300 hover:text-white transition-colors text-lg flex items-center py-3"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          <i className="fas fa-plus-circle mr-4 w-5"></i>
+                          Submit Report
+                        </Link>
+                      </>
+                    )}
                     {isAdmin && (
-                      <Link 
-                        href="/admin" 
-                        className="text-gray-300 hover:text-white transition-colors text-lg flex items-center py-3"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        <i className="fas fa-user-shield mr-4 w-5"></i>
-                        Admin
-                      </Link>
+                      <>
+                        <Link 
+                          href="/admin" 
+                          className="text-gray-300 hover:text-white transition-colors text-lg flex items-center py-3"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          <i className="fas fa-tachometer-alt mr-4 w-5"></i>
+                          Admin Dashboard
+                        </Link>
+                        <Link 
+                          href="/admin/complaints" 
+                          className="text-gray-300 hover:text-white transition-colors text-lg flex items-center py-3"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          <i className="fas fa-exclamation-triangle mr-4 w-5"></i>
+                          Manage Complaints
+                        </Link>
+                      </>
                     )}
                     <div className="pt-6 mt-6 border-t border-gray-600/30 space-y-4">
                       <div className="text-gray-400 text-sm">
@@ -220,7 +219,7 @@ export default function Navigation() {
                       </div>
                       <button
                         onClick={() => {
-                          handleLogout();
+                          logout();
                           setIsMobileMenuOpen(false);
                         }}
                         className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg text-lg font-medium transition-colors flex items-center w-full"
@@ -233,28 +232,12 @@ export default function Navigation() {
                 ) : (
                   <>
                     <Link 
-                      href="/dashboard" 
+                      href="/" 
                       className="text-gray-300 hover:text-white transition-colors text-lg flex items-center py-3"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      <i className="fas fa-tachometer-alt mr-4 w-5"></i>
-                      Dashboard
-                    </Link>
-                    <Link 
-                      href="/dashboard/submit" 
-                      className="text-gray-300 hover:text-white transition-colors text-lg flex items-center py-3"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <i className="fas fa-plus-circle mr-4 w-5"></i>
-                      Submit Report
-                    </Link>
-                    <Link 
-                      href="/admin" 
-                      className="text-gray-300 hover:text-white transition-colors text-lg flex items-center py-3"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <i className="fas fa-user-shield mr-4 w-5"></i>
-                      Admin
+                      <i className="fas fa-home mr-4 w-5"></i>
+                      Home
                     </Link>
                     <Link 
                       href="#contact" 
