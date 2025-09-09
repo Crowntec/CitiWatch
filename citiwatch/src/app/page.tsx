@@ -3,10 +3,17 @@
 import Image from "next/image";
 import Link from "next/link";
 import Navigation from "@/components/Navigation";
+import StructuredData from "@/components/StructuredData";
+import type { Metadata } from "next";
+
+// Note: Since this is a client component, we'll set metadata via the root layout
+// For SEO optimization, consider converting to server component if possible
 
 export default function Home() {
   return (
-    <div className="mobile-full-height relative overflow-hidden" style={{ minHeight: '100dvh' }}>
+    <>
+      <StructuredData type="website" />
+      <div className="mobile-full-height relative overflow-hidden" style={{ minHeight: '100dvh' }}>
       {/* Background Video */}
       <video
         autoPlay
@@ -152,5 +159,6 @@ export default function Home() {
         </div>
       </div>
     </div>
+    </>
   );
 }

@@ -1,0 +1,31 @@
+User-agent: *
+Allow: /
+Allow: /categories
+Allow: /login
+Allow: /register
+
+# Disallow admin and user-specific areas
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /user/
+Disallow: /api/
+
+# Disallow sensitive files
+Disallow: /*.json
+Disallow: /*.txt
+Disallow: /private/
+
+# Allow crawling of public assets
+Allow: /public/
+Allow: /*.css
+Allow: /*.js
+Allow: /*.png
+Allow: /*.jpg
+Allow: /*.svg
+Allow: /*.ico
+
+# Crawl delay (optional)
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://citiwatch.com/sitemap.xml
