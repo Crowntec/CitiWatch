@@ -8,7 +8,6 @@ interface StructuredDataProps {
 
 export default function StructuredData({ 
   type = 'website', 
-  pageUrl = 'https://citiwatch.com',
   breadcrumbs = []
 }: StructuredDataProps) {
   const organizationSchema = {
@@ -111,7 +110,7 @@ export default function StructuredData({
     }))
   } : null;
 
-  let schemas: any[] = [organizationSchema];
+  const schemas: Array<Record<string, unknown>> = [organizationSchema];
   
   switch (type) {
     case 'website':

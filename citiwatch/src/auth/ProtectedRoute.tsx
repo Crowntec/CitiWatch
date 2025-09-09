@@ -15,7 +15,7 @@ export function ProtectedRoute({
   requireAdmin = false, 
   fallbackPath = '/login' 
 }: ProtectedRouteProps) {
-  const { user, isLoading, isAuthenticated, isAdmin } = useAuth();
+  const { isLoading, isAuthenticated, isAdmin } = useAuth();
   const router = useRouter();
 
   useEffect(() => {

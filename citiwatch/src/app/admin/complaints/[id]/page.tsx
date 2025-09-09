@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, use } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { LoadingCard } from '@/components/Loading';
 import AdminLayout from '@/components/AdminLayout';
 
@@ -209,10 +210,12 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
                   <div>
                     <h3 className="text-lg font-medium text-white mb-2">Attached Image</h3>
                     <div className="rounded-lg overflow-hidden">
-                      <img 
+                      <Image 
                         src={complaint.imageUrl} 
                         alt="Complaint attachment"
                         className="w-full h-64 object-cover"
+                        width={400}
+                        height={256}
                       />
                     </div>
                   </div>

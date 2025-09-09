@@ -16,7 +16,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const { user, logout, isLoading } = useAuth();
-  const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {

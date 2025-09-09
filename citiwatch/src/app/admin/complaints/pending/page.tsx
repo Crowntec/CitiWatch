@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { LoadingCard } from '@/components/Loading';
 import AdminLayout from '@/components/AdminLayout';
 
@@ -403,10 +404,12 @@ export default function PendingComplaintsPage() {
                       </div>
                       {complaint.imageUrl && (
                         <div className="ml-4 flex-shrink-0">
-                          <img 
+                          <Image 
                             src={complaint.imageUrl} 
                             alt="Complaint"
                             className="w-16 h-16 rounded-lg object-cover"
+                            width={64}
+                            height={64}
                           />
                         </div>
                       )}

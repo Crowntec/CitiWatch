@@ -52,7 +52,6 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { user, isAuthenticated } = useAuth();
-  const router = useRouter();
 
   useEffect(() => {
     // Load user complaints

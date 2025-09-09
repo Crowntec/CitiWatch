@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { LoadingCard } from '@/components/Loading';
 import AdminLayout from '@/components/AdminLayout';
 
@@ -426,10 +427,12 @@ export default function ComplaintsPage() {
                   {/* Image */}
                   {complaint.imageUrl && (
                     <div className="mb-4">
-                      <img 
+                      <Image 
                         className="w-full h-48 rounded-lg object-cover border border-gray-600" 
                         src={complaint.imageUrl} 
                         alt="Complaint"
+                        width={400}
+                        height={192}
                       />
                     </div>
                   )}
