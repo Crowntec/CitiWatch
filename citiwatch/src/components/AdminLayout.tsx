@@ -351,14 +351,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   </div>
                 </div>
 
-                {/* Mobile Menu Button (More Actions) */}
-                <div className="flex xs:hidden">
-                  <button className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
-                    <i className="ri-more-2-line text-lg"></i>
-                  </button>
-                </div>
-
-                {/* Home & Logout - Hidden on small screens, shown on larger */}
+               {/* Home & Logout - Hidden on small screens, shown on larger */}
                 <div className="hidden sm:flex items-center space-x-1 ml-2 pl-2 border-l border-gray-600">
                   <Link
                     href="/"
