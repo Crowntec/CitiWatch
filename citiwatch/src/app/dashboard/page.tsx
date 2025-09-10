@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import { LoadingCard } from '@/components/Loading';
 import { useAuth } from '@/auth/AuthContext';

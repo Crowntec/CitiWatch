@@ -64,7 +64,7 @@ export default function Home() {
             }}
           >
             <Image 
-              src="/logo.png" 
+              src="/primarylogo.png" 
               alt="CitiWatch Logo" 
               width={64} 
               height={64} 
