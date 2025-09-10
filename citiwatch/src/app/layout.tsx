@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://citiwatch.com'),
+  metadataBase: new URL('https://citiwatch-kappa.vercel.app'),
   title: {
     default: "CitiWatch - Digital Citizen Reporting Platform",
     template: "%s | CitiWatch"
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://citiwatch.com",
+    url: "https://citiwatch-kappa.vercel.app",
     siteName: "CitiWatch",
     title: "CitiWatch - Digital Citizen Reporting Platform",
     description: "Empowering citizens to report municipal issues and track complaint resolution. Join thousands of users building better communities through digital civic engagement.",
@@ -84,10 +84,10 @@ export default function RootLayout({
         <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
         
         {/* Favicon and App Icons */}
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/logo.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/logo.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/logo.png" />
+        <link rel="icon" href="/primarylogo.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/primarylogo.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/primarylogo.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/primarylogo.png" />
         
         {/* PWA and Mobile */}
         <link rel="manifest" href="/manifest.json" />
@@ -105,7 +105,7 @@ export default function RootLayout({
         <meta name="format-detection" content="telephone=no" />
         
         {/* Additional SEO */}
-        <link rel="canonical" href="https://citiwatch.com" />
+        <link rel="canonical" href="https://citiwatch-kappa.vercel.app" />
         <meta name="language" content="English" />
         <meta name="revisit-after" content="7 days" />
       </head>
