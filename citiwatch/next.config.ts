@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'citiwatch.com',
+        hostname: 'citiwatch-kappa.vercel.app/',
       },
       {
         protocol: 'https', 
