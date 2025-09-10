@@ -28,4 +28,4 @@ Allow: /*.ico
 Crawl-delay: 1
 
 # Sitemap location
-Sitemap: https://citiwatch.com/sitemap.xml
+Sitemap: https://citiwatch-kappa.vercel.app//sitemap.xml

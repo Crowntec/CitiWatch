@@ -15,8 +15,8 @@ export default function StructuredData({
     "@type": "Organization",
     "name": "CitiWatch",
     "description": "Digital Citizen Reporting Platform for Municipal Services",
-    "url": "https://citiwatch.com",
-    "logo": "https://citiwatch.com/primarylogo.png",
+    "url": "https://citiwatch-kappa.vercel.app/",
+    "logo": "https://citiwatch-kappa.vercel.app//primarylogo.png",
     "sameAs": [
       "https://twitter.com/citiwatch",
       "https://facebook.com/citiwatch"
@@ -36,10 +36,10 @@ export default function StructuredData({
     "@type": "WebSite",
     "name": "CitiWatch",
     "description": "Digital platform empowering citizens to report municipal issues and track complaint resolution",
-    "url": "https://citiwatch.com",
+    "url": "https://citiwatch-kappa.vercel.app/",
     "potentialAction": {
       "@type": "SearchAction",
-      "target": "https://citiwatch.com/search?q={search_term_string}",
+      "target": "https://citiwatch-kappa.vercel.app//search?q={search_term_string}",
       "query-input": "required name=search_term_string"
     },
     "author": {
@@ -51,7 +51,7 @@ export default function StructuredData({
       "name": "CitiWatch",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://citiwatch.com/primarylogo.png",
+        "url": "https://citiwatch-kappa.vercel.app//primarylogo.png",
         "width": 512,
         "height": 512
       }
@@ -70,7 +70,7 @@ export default function StructuredData({
     "areaServed": "Global",
     "availableChannel": {
       "@type": "ServiceChannel",
-      "serviceUrl": "https://citiwatch.com",
+      "serviceUrl": "https://citiwatch-kappa.vercel.app/",
       "serviceSmsNumber": "+1-800-CITIWATCH"
     },
     "category": "Municipal Services",
@@ -82,7 +82,7 @@ export default function StructuredData({
     "@type": "WebApplication",
     "name": "CitiWatch",
     "description": "Digital citizen reporting platform for municipal services",
-    "url": "https://citiwatch.com",
+    "url": "https://citiwatch-kappa.vercel.app/",
     "applicationCategory": "GovernmentApplication",
     "operatingSystem": "Web Browser",
     "offers": {

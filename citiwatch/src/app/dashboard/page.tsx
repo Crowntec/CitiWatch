@@ -27,7 +27,7 @@ const mockUserComplaints: Complaint[] = [
     status: 'pending',
     category: 'Infrastructure',
     createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    imageUrl: 'https://via.placeholder.com/400x300?text=Street+Light'
+    imageUrl: 'https://media.istockphoto.com/id/184086176/photo/broken-pole.jpg?s=2048x2048&w=is&k=20&c=XyLsnkM1nqQVL8O9kxAvbh9Ib-iTLUJoRHfMEbotC0o='
   },
   {
     id: '2',
