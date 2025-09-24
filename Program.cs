@@ -1,4 +1,5 @@
 using System.Text;
+using CitiWatch.Application.Commands;
 using CitiWatch.Application.Helper;
 using CitiWatch.Application.Interfaces;
 using CitiWatch.Application.Services;
@@ -8,8 +9,17 @@ using CitiWatch.Infrastructure.Services;
 using CloudinaryDotNet;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+
+// Check for CLI commands first
+var parser = new CommandLineParser(args);
+if (parser.IsCliCommand())
+{
+    await HandleCliCommand(parser);
+    return;
+}
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -108,3 +118,69 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// CLI Command Handler
+static async Task HandleCliCommand(CommandLineParser parser)
+{
+    try
+    {
+        // Build a minimal service provider for CLI operations
+        var services = new ServiceCollection();
+        
+        // Add configuration
+        var configuration = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json", optional: false)
+            .AddJsonFile("appsettings.Development.json", optional: true)
+            .Build();
+        
+        services.AddSingleton<IConfiguration>(configuration);
+        
+        // Add DbContext
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        services.AddDbContext<ApplicationContext>(options =>
+            options.UseSqlServer(connectionString));
+        
+        // Add AdminCommands
+        services.AddScoped<AdminCommands>();
+        
+        var serviceProvider = services.BuildServiceProvider();
+        
+        using var scope = serviceProvider.CreateScope();
+        var adminCommands = scope.ServiceProvider.GetRequiredService<AdminCommands>();
+        
+        var command = parser.GetCommand();
+        var success = false;
+        
+        switch (command)
+        {
+            case "create-admin":
+                parser.ValidateCreateAdminArguments();
+                var email = parser.GetArgumentValue("email")!;
+                var password = parser.GetArgumentValue("password")!;
+                var name = parser.GetArgumentValue("name");
+                success = await adminCommands.CreateAdminAsync(email, password, name);
+                break;
+                
+            case "list-admins":
+                success = await adminCommands.ListAdminsAsync();
+                break;
+                
+            case "help":
+                AdminCommands.ShowHelp();
+                success = true;
+                break;
+                
+            default:
+                Console.WriteLine("❌ Unknown command. Use --help for available commands.");
+                AdminCommands.ShowHelp();
+                break;
+        }
+        
+        Environment.Exit(success ? 0 : 1);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ CLI Error: {ex.Message}");
+        Environment.Exit(1);
+    }
+}

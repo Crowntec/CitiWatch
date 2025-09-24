@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import { LoadingButton } from '@/components/Loading';
-// Mock registration functionality
+import { useAuth } from '@/auth/AuthContext';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -13,11 +13,12 @@ export default function Register() {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 0, // 0 = User, 1 = Admin
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const router = useRouter();
+  const { register } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const value = e.target.type === 'number' ? parseInt(e.target.value) : e.target.value;
@@ -54,17 +55,20 @@ export default function Register() {
     }
 
     try {
-      // Mock registration - simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock successful registration
-      console.log('Mock user registered:', {
+      const result = await register({
         fullName: formData.fullName,
         email: formData.email,
-        role: formData.role,
+        password: formData.password,
       });
       
-      router.push('/login?message=Registration successful');
+      if (result.success) {
+        setSuccess(result.message);
+        setTimeout(() => {
+          router.push('/login?message=Registration successful');
+        }, 2000);
+      } else {
+        setError(result.message);
+      }
     } catch (error) {
       // Handle API errors gracefully
       if (error instanceof Error) {
@@ -106,6 +110,12 @@ export default function Register() {
             {error && (
               <div className="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-md">
                 {error}
+              </div>
+            )}
+            
+            {success && (
+              <div className="bg-green-900/50 border border-green-700 text-green-300 px-4 py-3 rounded-md">
+                {success} - Redirecting to login...
               </div>
             )}
             
@@ -180,21 +190,7 @@ export default function Register() {
               />
             </div>
 
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-300">
-                Account Type
-              </label>
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-600 bg-gray-700/50 text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              >
-                <option value={0}>Citizen (User)</option>
-                <option value={1}>Administrator</option>
-              </select>
-            </div>
+
 
             <div>
               <LoadingButton

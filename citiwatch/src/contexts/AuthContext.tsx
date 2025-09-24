@@ -1,17 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { User } from '@/types/api';
 import { AuthService } from '@/services/auth';
-
-interface User {
-  id: string;
-  fullName: string;
-  email: string;
-  role: string;
-  createdOn?: string;
-  lastModifiedOn?: string;
-}
 
 interface AuthContextType {
   user: User | null;
@@ -20,7 +11,6 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
   register: (userData: any) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
-  isAdmin?: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,7 +18,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
     // Check if user is logged in on app start
@@ -40,28 +29,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    setIsLoading(true);
     try {
       const response = await AuthService.login({ email, password });
       
-      if (response.success) {
+      if (response.isSuccessful) {
         setUser(response.data);
-        
-        // Redirect based on role
-        if (response.data?.role?.toLowerCase() === 'admin') {
-          router.push('/admin');
-        } else {
-          router.push('/dashboard');
-        }
-        
-        setIsLoading(false);
         return { success: true, message: response.message };
       }
       
-      setIsLoading(false);
       return { success: false, message: response.message };
     } catch (error) {
-      setIsLoading(false);
       return { 
         success: false, 
         message: error instanceof Error ? error.message : 'Login failed' 
@@ -72,7 +49,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (userData: any) => {
     try {
       const response = await AuthService.register(userData);
-      return response;
+      
+      if (response.isSuccessful) {
+        return { success: true, message: response.message };
+      }
+      
+      return { success: false, message: response.message };
     } catch (error) {
       return { 
         success: false, 
@@ -84,17 +66,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     AuthService.logout();
     setUser(null);
-    router.push('/login');
   };
 
-  const value: AuthContextType = {
+  const value = {
     user,
     isAuthenticated: !!user,
     isLoading,
     login,
     register,
     logout,
-    isAdmin: user?.role?.toLowerCase() === 'admin'
   };
 
   return (
@@ -104,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useAuth(): AuthContextType {
+export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
