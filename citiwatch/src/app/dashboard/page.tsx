@@ -95,6 +95,7 @@ export default function Dashboard() {
   };
 
   const openModal = (complaint: Complaint) => {
+    console.log('Opening modal for complaint:', complaint.id);
     setSelectedComplaint(complaint);
     setIsModalOpen(true);
   };
@@ -225,7 +226,7 @@ export default function Dashboard() {
                 onClick={loadUserComplaints}
                 disabled={loading}
                 className="text-gray-400 hover:text-white transition-colors px-2 py-1 rounded"
-                title="Refresh complaints"
+                title="Refresh complaints (Ctrl+R)"
               >
                 <i className={`fas fa-refresh ${loading ? 'animate-spin' : ''}`}></i>
               </button>
@@ -391,32 +392,30 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-        </div>
 
         {/* Complaint Detail Modal */}
         {isModalOpen && selectedComplaint && (
-          <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-              {/* Background overlay */}
-              <div className="fixed inset-0 bg-black bg-opacity-75 transition-opacity" onClick={closeModal}></div>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+            {/* Background overlay */}
+            <div className="absolute inset-0 bg-black bg-opacity-75" onClick={closeModal}></div>
 
-              {/* Modal content */}
-              <div className="inline-block align-bottom bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-gray-700">
-                {/* Header */}
-                <div className="bg-gray-700/50 px-6 py-4 border-b border-gray-600">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-medium text-white">Complaint Details</h3>
-                    <button
-                      onClick={closeModal}
-                      className="text-gray-400 hover:text-white transition-colors"
-                    >
-                      <i className="fas fa-times text-xl"></i>
-                    </button>
-                  </div>
+            {/* Modal content */}
+            <div className="relative bg-gray-800 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden border-2 border-gray-600 z-10">
+              {/* Header */}
+              <div className="bg-gray-700/50 px-6 py-4 border-b border-gray-600">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium text-white">Complaint Details</h3>
+                  <button
+                    onClick={closeModal}
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    <i className="fas fa-times text-xl"></i>
+                  </button>
                 </div>
+              </div>
 
-                {/* Content */}
-                <div className="px-6 py-4 max-h-96 overflow-y-auto">
+              {/* Content */}
+              <div className="px-6 py-4 max-h-96 overflow-y-auto">
                   {/* Status and ID */}
                   <div className="flex items-center justify-between mb-4">
                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedComplaint.statusName || '')}`}>
@@ -482,21 +481,21 @@ export default function Dashboard() {
                       </div>
                     )}
                   </div>
-                </div>
+              </div>
 
-                {/* Footer */}
-                <div className="bg-gray-700/50 px-6 py-3 border-t border-gray-600 flex justify-end">
-                  <button
-                    onClick={closeModal}
-                    className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-md text-sm font-medium transition-colors"
-                  >
-                    Close
-                  </button>
-                </div>
+              {/* Footer */}
+              <div className="bg-gray-700/50 px-6 py-3 border-t border-gray-600 flex justify-end">
+                <button
+                  onClick={closeModal}
+                  className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-md text-sm font-medium transition-colors"
+                >
+                  Close
+                </button>
               </div>
             </div>
           </div>
-        )}
+          )}
+        </div>
       </div>
     </ProtectedRoute>
   );

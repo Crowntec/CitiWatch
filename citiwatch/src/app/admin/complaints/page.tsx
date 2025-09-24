@@ -5,81 +5,31 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { LoadingCard } from '@/components/Loading';
 import AdminLayout from '@/components/AdminLayout';
+import { ComplaintService, type Complaint } from '@/services/complaint';
+import { StatusService, type Status } from '@/services/status';
 
-interface Complaint {
-  id: string;
-  title: string;
-  description: string;
+// Interface to match the UI expectations
+interface ComplaintWithUser extends Complaint {
   status: string;
   category: string;
-  userName: string;
+  userName?: string;
   createdAt: string;
   imageUrl?: string;
 }
 
-// Mock all complaints data
-const mockAllComplaints: Complaint[] = [
-  {
-    id: '1',
-    title: 'Broken Street Light on Main Street',
-    description: 'The street light near the intersection has been broken for over a week.',
-    status: 'pending',
-    category: 'Infrastructure',
-    userName: 'John Smith',
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    imageUrl: 'https://via.placeholder.com/400x300?text=Street+Light'
-  },
-  {
-    id: '2',
-    title: 'Pothole on Highway 101',
-    description: 'Large pothole causing damage to vehicles.',
-    status: 'in progress',
-    category: 'Infrastructure',
-    userName: 'Sarah Johnson',
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: '3',
-    title: 'Noise Complaint - Construction Site',
-    description: 'Construction work starting at 5 AM, violating city ordinances.',
-    status: 'resolved',
-    category: 'Public Safety',
-    userName: 'Mike Davis',
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: '4',
-    title: 'Illegal Dumping in Park',
-    description: 'Someone has been dumping trash in Central Park.',
-    status: 'pending',
-    category: 'Environment',
-    userName: 'Lisa Chen',
-    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    imageUrl: 'https://via.placeholder.com/400x300?text=Illegal+Dumping'
-  },
-  {
-    id: '5',
-    title: 'Bus Stop Vandalism',
-    description: 'Bus stop shelter has been vandalized with graffiti.',
-    status: 'resolved',
-    category: 'Transportation',
-    userName: 'Robert Wilson',
-    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-  }
-];
-
 export default function ComplaintsPage() {
-  const [complaints, setComplaints] = useState<Complaint[]>([]);
+  const [complaints, setComplaints] = useState<ComplaintWithUser[]>([]);
+  const [statuses, setStatuses] = useState<Status[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState<'all' | 'pending' | 'in progress' | 'resolved'>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   
   // Modal state for status updates
   const [showStatusModal, setShowStatusModal] = useState(false);
-  const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
-  const [newStatus, setNewStatus] = useState('');
+  const [selectedComplaint, setSelectedComplaint] = useState<ComplaintWithUser | null>(null);
+  const [newStatusId, setNewStatusId] = useState('');
   const [updating, setUpdating] = useState(false);
 
   const loadComplaints = async () => {
@@ -87,14 +37,34 @@ export default function ComplaintsPage() {
     setError('');
     
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 600));
+      const [complaintsResult, statusesResult] = await Promise.all([
+        ComplaintService.getAllComplaints(),
+        StatusService.getAllStatuses()
+      ]);
       
-      // Use mock data instead of API call
-      setComplaints(mockAllComplaints);
-    } catch (error) {
+      if (!complaintsResult.success) {
+        throw new Error(complaintsResult.message);
+      }
+      
+      if (!statusesResult.success) {
+        throw new Error(statusesResult.message); 
+      }
+      
+      // Transform the API data to match the UI expectations
+      const transformedComplaints = complaintsResult.data?.map(complaint => ({
+        ...complaint,
+        status: complaint.statusName || 'Unknown',
+        category: complaint.categoryName || 'Unknown',
+        userName: 'Unknown User', // API doesn't provide user name in current structure
+        createdAt: complaint.createdOn,
+        imageUrl: complaint.mediaUrl || undefined
+      })) || [];
+      
+      setComplaints(transformedComplaints);
+      setStatuses(statusesResult.data || []);
+    } catch (error: any) {
       console.error('Error loading complaints:', error);
-      setError('Failed to load complaints');
+      setError(error.message || 'Failed to load complaints');
     } finally {
       setLoading(false);
     }
@@ -107,10 +77,10 @@ export default function ComplaintsPage() {
   const filteredComplaints = complaints.filter(complaint => {
     const matchesSearch = complaint.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          complaint.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         complaint.userName.toLowerCase().includes(searchTerm.toLowerCase());
+                         (complaint.userName && complaint.userName.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesStatus = selectedStatus === 'all' || 
-                         complaint.status.toLowerCase() === selectedStatus;
+                         complaint.status.toLowerCase() === selectedStatus.toLowerCase();
     
     const matchesCategory = selectedCategory === 'all' ||
                            complaint.category === selectedCategory;
@@ -162,41 +132,51 @@ export default function ComplaintsPage() {
   };
 
   // Modal functions
-  const openStatusModal = (complaint: Complaint) => {
+  const openStatusModal = (complaint: ComplaintWithUser) => {
     setSelectedComplaint(complaint);
-    setNewStatus(complaint.status);
+    // Find the status ID for the current status
+    const currentStatus = statuses.find(s => s.name.toLowerCase() === complaint.status.toLowerCase());
+    setNewStatusId(currentStatus?.id || '');
     setShowStatusModal(true);
   };
 
-  const updateComplaintStatus = async (id: string, status: string) => {
+  const updateComplaintStatus = async (id: string, statusId: string) => {
     try {
       setUpdating(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const result = await ComplaintService.updateComplaintStatus(id, { statusId });
+      
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+      
+      // Find the status name for UI update
+      const statusName = statuses.find(s => s.id === statusId)?.name || 'Unknown';
       
       setComplaints(prev => 
         prev.map(complaint => 
           complaint.id === id 
-            ? { ...complaint, status: status, updatedAt: new Date().toISOString() }
+            ? { ...complaint, status: statusName, lastModifiedOn: new Date().toISOString() }
             : complaint
         )
       );
       
-      console.log(`Updated complaint ${id} status to ${status}`);
-    } catch (error) {
+      console.log(`Updated complaint ${id} status to ${statusName}`);
+    } catch (error: any) {
       console.error('Error updating status:', error);
+      setError(error.message || 'Failed to update complaint status');
     } finally {
       setUpdating(false);
     }
   };
 
   const handleStatusUpdate = async () => {
-    if (!selectedComplaint || !newStatus) return;
+    if (!selectedComplaint || !newStatusId) return;
     
-    await updateComplaintStatus(selectedComplaint.id, newStatus);
+    await updateComplaintStatus(selectedComplaint.id, newStatusId);
     setShowStatusModal(false);
     setSelectedComplaint(null);
-    setNewStatus('');
+    setNewStatusId('');
   };
 
   const stats = getStats();
@@ -359,12 +339,12 @@ export default function ComplaintsPage() {
                 id="status"
                 className="block w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value as 'all' | 'pending' | 'in progress' | 'resolved')}
+                onChange={(e) => setSelectedStatus(e.target.value)}
               >
                 <option value="all">All Statuses</option>
-                <option value="pending">Pending</option>
-                <option value="in progress">In Progress</option>
-                <option value="resolved">Resolved</option>
+                {statuses.map(status => (
+                  <option key={status.id} value={status.name}>{status.name}</option>
+                ))}
               </select>
             </div>
             <div>
@@ -484,7 +464,12 @@ export default function ComplaintsPage() {
                       {complaint.status.toLowerCase() === 'pending' && (
                         <button 
                           className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
-                          onClick={() => updateComplaintStatus(complaint.id, 'in progress')}
+                          onClick={() => {
+                            const inProgressStatus = statuses.find(s => s.name.toLowerCase() === 'in progress');
+                            if (inProgressStatus) {
+                              updateComplaintStatus(complaint.id, inProgressStatus.id);
+                            }
+                          }}
                           title="Start Working"
                         >
                           <i className="fas fa-play"></i>
@@ -493,7 +478,12 @@ export default function ComplaintsPage() {
                       {complaint.status.toLowerCase() === 'in progress' && (
                         <button 
                           className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
-                          onClick={() => updateComplaintStatus(complaint.id, 'resolved')}
+                          onClick={() => {
+                            const resolvedStatus = statuses.find(s => s.name.toLowerCase() === 'resolved');
+                            if (resolvedStatus) {
+                              updateComplaintStatus(complaint.id, resolvedStatus.id);
+                            }
+                          }}
                           title="Mark as Resolved"
                         >
                           <i className="fas fa-check"></i>
@@ -532,19 +522,19 @@ export default function ComplaintsPage() {
                   Update status for: <strong>{selectedComplaint.title}</strong>
                 </p>
                 <div className="space-y-3 mb-6">
-                  {['pending', 'in progress', 'resolved', 'rejected'].map((status) => (
-                    <label key={status} className="flex items-center">
+                  {statuses.map((status) => (
+                    <label key={status.id} className="flex items-center">
                       <input
                         type="radio"
                         name="status"
-                        value={status}
-                        checked={newStatus === status}
-                        onChange={(e) => setNewStatus(e.target.value)}
+                        value={status.id}
+                        checked={newStatusId === status.id}
+                        onChange={(e) => setNewStatusId(e.target.value)}
                         className="mr-3 text-blue-600"
                       />
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(status)}`}>
-                        <i className={`${getStatusIcon(status)} mr-1 text-xs`}></i>
-                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(status.name)}`}>
+                        <i className={`${getStatusIcon(status.name)} mr-1 text-xs`}></i>
+                        {status.name}
                       </span>
                     </label>
                   ))}
@@ -558,7 +548,7 @@ export default function ComplaintsPage() {
                   </button>
                   <button
                     onClick={() => handleStatusUpdate()}
-                    disabled={!newStatus || updating}
+                    disabled={!newStatusId || updating}
                     className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center justify-center"
                   >
                     {updating ? (
