@@ -5,80 +5,19 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { LoadingCard } from '@/components/Loading';
 import AdminLayout from '@/components/AdminLayout';
+import { ComplaintService, type Complaint } from '@/services/complaint';
 
-interface Complaint {
-  id: string;
-  title: string;
-  description: string;
+// Interface for UI
+interface ComplaintWithUser extends Complaint {
   status: string;
   category: string;
-  userName: string;
+  userName?: string;
   createdAt: string;
   imageUrl?: string;
 }
 
-// Mock pending complaints data
-const mockPendingComplaints: Complaint[] = [
-  {
-    id: '1',
-    title: 'Broken Street Light on Main Street',
-    description: 'The street light near the intersection of Main Street and Oak Avenue has been broken for over a week, creating safety concerns for pedestrians.',
-    status: 'pending',
-    category: 'Infrastructure',
-    userName: 'John Smith',
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-    imageUrl: 'https://media.istockphoto.com/id/184086176/photo/broken-pole.jpg?s=2048x2048&w=is&k=20&c=XyLsnkM1nqQVL8O9kxAvbh9Ib-iTLUJoRHfMEbotC0o='
-  },
-  {
-    id: '2',
-    title: 'Pothole on Highway 101',
-    description: 'Large pothole causing damage to vehicles. Multiple cars have reported tire damage from this hazard.',
-    status: 'pending',
-    category: 'Infrastructure',
-    userName: 'Sarah Johnson',
-    createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 days ago (overdue)
-  },
-  {
-    id: '3',
-    title: 'Noise Complaint - Construction Site',
-    description: 'Construction work starting at 5 AM, violating city noise ordinances and disturbing residents.',
-    status: 'pending',
-    category: 'Public Safety',
-    userName: 'Mike Davis',
-    createdAt: new Date().toISOString(), // Today
-  },
-  {
-    id: '4',
-    title: 'Illegal Dumping in Park',
-    description: 'Someone has been dumping trash and old furniture in Central Park. This is creating an environmental hazard.',
-    status: 'pending',
-    category: 'Environment',
-    userName: 'Lisa Chen',
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
-    imageUrl: 'https://via.placeholder.com/400x300?text=Illegal+Dumping'
-  },
-  {
-    id: '5',
-    title: 'Bus Stop Vandalism',
-    description: 'Bus stop shelter has been vandalized with graffiti and broken glass. Needs immediate attention.',
-    status: 'pending',
-    category: 'Transportation',
-    userName: 'Robert Wilson',
-    createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(), // 8 days ago (overdue)
-  },
-  {
-    id: '6',
-    title: 'Water Main Break',
-    description: 'Water main break on Elm Street causing flooding and water service disruption to nearby homes.',
-    status: 'pending',
-    category: 'Infrastructure',
-    userName: 'Emma Thompson',
-    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-  }
-];
-
 export default function PendingComplaintsPage() {
-  const [complaints, setComplaints] = useState<Complaint[]>([]);
+  const [complaints, setComplaints] = useState<ComplaintWithUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -88,14 +27,26 @@ export default function PendingComplaintsPage() {
     setError('');
     
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const result = await ComplaintService.getAllComplaints();
       
-      // Use mock data instead of API call
-      setComplaints(mockPendingComplaints);
-    } catch (error) {
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+      
+      // Transform API data and filter for pending complaints
+      const transformedComplaints = result.data?.map(complaint => ({
+        ...complaint,
+        status: complaint.statusName || 'Unknown',
+        category: complaint.categoryName || 'Unknown',
+        userName: 'Unknown User', // API doesn't provide user name
+        createdAt: complaint.createdOn,
+        imageUrl: complaint.mediaUrl || undefined
+      })).filter(complaint => complaint.status.toLowerCase() === 'pending') || [];
+      
+      setComplaints(transformedComplaints);
+    } catch (error: any) {
       console.error('Error loading pending complaints:', error);
-      setError('Failed to load pending complaints');
+      setError(error.message || 'Failed to load pending complaints');
     } finally {
       setLoading(false);
     }
@@ -108,7 +59,7 @@ export default function PendingComplaintsPage() {
   const filteredComplaints = complaints.filter(complaint =>
     complaint.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     complaint.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    complaint.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (complaint.userName && complaint.userName.toLowerCase().includes(searchTerm.toLowerCase())) ||
     complaint.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 

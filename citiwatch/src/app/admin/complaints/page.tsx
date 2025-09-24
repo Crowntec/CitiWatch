@@ -60,6 +60,8 @@ export default function ComplaintsPage() {
         imageUrl: complaint.mediaUrl || undefined
       })) || [];
       
+      console.log('Loaded complaints with IDs:', transformedComplaints.map(c => ({ id: c.id, title: c.title })));
+      
       setComplaints(transformedComplaints);
       setStatuses(statusesResult.data || []);
     } catch (error: any) {

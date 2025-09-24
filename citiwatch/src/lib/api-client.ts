@@ -23,6 +23,8 @@ class ApiClient {
       ...options,
     };
 
+    console.log('API Request:', { url, method: config.method || 'GET', hasToken: !!token });
+
     try {
       const response = await fetch(url, config);
       
@@ -40,7 +42,9 @@ class ApiClient {
         throw new Error(errorMessage);
       }
 
-      return await response.json();
+      const result = await response.json();
+      console.log('API Response:', result);
+      return result;
     } catch (error) {
       console.error('API request failed:', error);
       throw error;

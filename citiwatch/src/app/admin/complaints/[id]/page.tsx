@@ -5,15 +5,15 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { LoadingCard } from '@/components/Loading';
 import AdminLayout from '@/components/AdminLayout';
+import { ComplaintService, type Complaint as APIComplaint } from '@/services/complaint';
+import { StatusService, type Status } from '@/services/status';
 
-interface Complaint {
-  id: string;
-  title: string;
-  description: string;
+// Extended interface for UI with additional fields
+interface ComplaintDetails extends APIComplaint {
   status: string;
-  category: string;
-  userName: string;
-  userEmail: string;
+  category: string;  
+  userName?: string;
+  userEmail?: string;
   createdAt: string;
   updatedAt?: string;
   imageUrl?: string;
@@ -26,11 +26,12 @@ interface Complaint {
 
 export default function ComplaintDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const [complaint, setComplaint] = useState<Complaint | null>(null);
+  const [complaint, setComplaint] = useState<ComplaintDetails | null>(null);
+  const [statuses, setStatuses] = useState<Status[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [updating, setUpdating] = useState(false);
-  const [newStatus, setNewStatus] = useState('');
+  const [newStatusId, setNewStatusId] = useState('');
   const [showStatusModal, setShowStatusModal] = useState(false);
 
   const loadComplaint = useCallback(async () => {
@@ -38,35 +39,56 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
     setError('');
     
     try {
-      // TODO: Implement actual API call for single complaint
-      // const data = await makeAuthenticatedRequest<Complaint>(`/api/Complaint/GetById/${resolvedParams.id}`);
+      console.log('Loading complaint with ID:', resolvedParams.id);
       
-      // Mock data for now
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const [complaintResult, statusesResult] = await Promise.all([
+        ComplaintService.getComplaintById(resolvedParams.id),
+        StatusService.getAllStatuses()
+      ]);
       
-      const mockComplaint: Complaint = {
-        id: resolvedParams.id,
-        title: 'Broken Street Light on Main Street',
-        description: 'The street light on Main Street near the intersection with Oak Avenue has been broken for several days. It\'s causing safety concerns for pedestrians and drivers, especially during evening hours. The light appears to be flickering intermittently before going completely dark.',
-        status: 'pending',
-        category: 'Infrastructure',
-        userName: 'John Doe',
-        userEmail: 'john.doe@email.com',
-        createdAt: '2024-01-15T10:30:00Z',
-        updatedAt: '2024-01-15T10:30:00Z',
-        imageUrl: '/placeholder-complaint.jpg',
-        location: {
-          latitude: 40.7128,
-          longitude: -74.0060,
-          address: 'Main Street & Oak Avenue, City Center'
-        }
+      console.log('Complaint API result:', complaintResult);
+      console.log('Statuses API result:', statusesResult);
+      
+      if (!complaintResult.success) {
+        throw new Error(complaintResult.message);
+      }
+      
+      if (!statusesResult.success) {
+        console.warn('Failed to load statuses:', statusesResult.message);
+      }
+      
+      if (!complaintResult.data) {
+        throw new Error('Complaint not found');
+      }
+      
+      // Transform the API data to match UI expectations
+      const transformedComplaint: ComplaintDetails = {
+        ...complaintResult.data,
+        status: complaintResult.data.statusName || 'Unknown',
+        category: complaintResult.data.categoryName || 'Unknown',
+        userName: 'Unknown User', // API doesn't provide user info in current structure
+        userEmail: 'unknown@email.com',
+        createdAt: complaintResult.data.createdOn,
+        updatedAt: complaintResult.data.lastModifiedOn,
+        imageUrl: complaintResult.data.mediaUrl || undefined,
+        location: complaintResult.data.latitude && complaintResult.data.longitude ? {
+          latitude: parseFloat(complaintResult.data.latitude),
+          longitude: parseFloat(complaintResult.data.longitude),
+          address: undefined // API doesn't provide address
+        } : undefined
       };
 
-      setComplaint(mockComplaint);
-      setNewStatus(mockComplaint.status);
-    } catch (error) {
+      console.log('Transformed complaint data:', transformedComplaint);
+
+      setComplaint(transformedComplaint);
+      setStatuses(statusesResult.data || []);
+      
+      // Set initial status for modal
+      const currentStatus = statusesResult.data?.find(s => s.name.toLowerCase() === transformedComplaint.status.toLowerCase());
+      setNewStatusId(currentStatus?.id || '');
+    } catch (error: any) {
       console.error('Error loading complaint:', error);
-      setError('Failed to load complaint details');
+      setError(error.message || 'Failed to load complaint details');
     } finally {
       setLoading(false);
     }
@@ -77,27 +99,36 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
   }, [loadComplaint]);
 
   const handleStatusUpdate = async () => {
-    if (!complaint || newStatus === complaint.status) {
+    if (!complaint || !newStatusId) {
+      setShowStatusModal(false);
+      return;
+    }
+    
+    // Check if status is actually changing
+    const currentStatus = statuses.find(s => s.name.toLowerCase() === complaint.status.toLowerCase());
+    if (currentStatus?.id === newStatusId) {
       setShowStatusModal(false);
       return;
     }
     
     setUpdating(true);
     try {
-      // TODO: Implement actual API call
-      // await makeAuthenticatedRequest(`/api/Complaint/UpdateStatus/${complaint.id}`, {
-      //   method: 'PUT',
-      //   body: JSON.stringify({ status: newStatus })
-      // });
+      const result = await ComplaintService.updateComplaintStatus(complaint.id, { statusId: newStatusId });
       
-      // Mock implementation
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!result.success) {
+        throw new Error(result.message);
+      }
       
-      setComplaint({ ...complaint, status: newStatus, updatedAt: new Date().toISOString() });
+      // Find the status name for UI update
+      const statusName = statuses.find(s => s.id === newStatusId)?.name || 'Unknown';
+      
+      setComplaint({ ...complaint, status: statusName, updatedAt: new Date().toISOString() });
       setShowStatusModal(false);
-    } catch (error) {
+      
+      console.log(`Updated complaint ${complaint.id} status to ${statusName}`);
+    } catch (error: any) {
       console.error('Error updating complaint status:', error);
-      alert('Failed to update complaint status');
+      setError(error.message || 'Failed to update complaint status');
     } finally {
       setUpdating(false);
     }
@@ -295,12 +326,12 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
                 <div className="flex items-center space-x-3">
                   <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-600 flex items-center justify-center">
                     <span className="text-sm font-medium text-white">
-                      {complaint.userName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                      {complaint.userName ? complaint.userName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U'}
                     </span>
                   </div>
                   <div>
-                    <p className="text-white font-medium">{complaint.userName}</p>
-                    <p className="text-gray-400 text-sm">{complaint.userEmail}</p>
+                    <p className="text-white font-medium">{complaint.userName || 'Unknown User'}</p>
+                    <p className="text-gray-400 text-sm">{complaint.userEmail || 'Unknown Email'}</p>
                   </div>
                 </div>
               </div>
@@ -350,14 +381,14 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
               </label>
               <select
                 id="status"
-                value={newStatus}
-                onChange={(e) => setNewStatus(e.target.value)}
+                value={newStatusId}
+                onChange={(e) => setNewStatusId(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="pending">Pending</option>
-                <option value="in progress">In Progress</option>
-                <option value="resolved">Resolved</option>
-                <option value="rejected">Rejected</option>
+                <option value="">Select a status</option>
+                {statuses.map(status => (
+                  <option key={status.id} value={status.id}>{status.name}</option>
+                ))}
               </select>
             </div>
             
@@ -370,7 +401,7 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
               </button>
               <button
                 onClick={handleStatusUpdate}
-                disabled={updating || newStatus === complaint.status}
+                disabled={updating || !newStatusId}
                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
               >
                 {updating ? (

@@ -20,7 +20,7 @@ namespace CitiWatch.Host.Controllers
         }
 
         [HttpGet("GetAllUserComplaints")]
-        [Authorize(Roles ="User,Admin")]
+        [Authorize(Roles ="User")]
         public async Task<IActionResult> GetAllUserComplaints()
         {
             var response = await _complaintService.GetAllUserComplaints();
