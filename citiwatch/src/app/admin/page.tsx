@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { LoadingCard } from '@/components/Loading';
 import AdminLayout from '@/components/AdminLayout';
+import { useAuth } from '@/auth/AuthContext';
 
 interface Complaint {
   id: string;
@@ -77,6 +79,8 @@ const mockComplaints: Complaint[] = [
 ];
 
 export default function AdminDashboard() {
+  const { user, isAuthenticated, isAdmin, isLoading: authLoading } = useAuth();
+  const router = useRouter();
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
@@ -90,6 +94,21 @@ export default function AdminDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Admin role verification
+  useEffect(() => {
+    if (!authLoading) {
+      if (!isAuthenticated) {
+        router.push('/login');
+        return;
+      }
+      
+      if (!isAdmin) {
+        router.push('/dashboard');
+        return;
+      }
+    }
+  }, [isAuthenticated, isAdmin, authLoading, router]);
 
   const loadData = async () => {
     setLoading(true);
@@ -160,6 +179,28 @@ export default function AdminDashboard() {
       .slice(0, 5);
   };
 
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <AdminLayout>
+        <div className="p-8">
+          <LoadingCard message="Checking authentication..." />
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  // Don't render anything if not authenticated or not admin (will redirect)
+  if (!isAuthenticated || !isAdmin) {
+    return (
+      <AdminLayout>
+        <div className="p-8">
+          <LoadingCard message="Redirecting..." />
+        </div>
+      </AdminLayout>
+    );
+  }
+
   if (loading) {
     return (
       <AdminLayout>
@@ -198,6 +239,13 @@ export default function AdminDashboard() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white">Dashboard Overview</h1>
           <p className="text-gray-400 mt-2">Monitor your CitiWatch platform performance and statistics</p>
+          
+          {/* Welcome message for admin */}
+          <div className="mt-4 p-4 bg-green-900/20 border border-green-600 rounded-lg">
+            <p className="text-green-200 text-sm">
+              <strong>Welcome, {user?.email}!</strong> You have administrative access to the CitiWatch platform.
+            </p>
+          </div>
         </div>
 
         {/* KPI Cards */}

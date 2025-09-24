@@ -196,7 +196,7 @@ export default function Login() {
               <h3 className="text-sm font-medium text-gray-300 mb-2">Demo Credentials:</h3>
               <div className="space-y-2 text-xs text-gray-400">
                 <div>
-                  <span className="text-blue-400">Admin:</span> admin@citiwatch.com / admin123
+                  <span className="text-blue-400">Admin:</span> admin@citiwatch.com / Admin123
                 </div>
                 <div>
                   <span className="text-green-400">User:</span> user@citiwatch.com / user123

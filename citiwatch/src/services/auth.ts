@@ -8,19 +8,28 @@ export class AuthService {
       const loginResponse = await apiClient.post<LoginResponse>('/User/Login', credentials);
       
       if (loginResponse.token) {
-        // Store token temporarily
+        // Store token in localStorage
         localStorage.setItem('token', loginResponse.token);
+        
+        // Also store token in cookies for middleware
+        document.cookie = `token=${loginResponse.token}; path=/; max-age=${3 * 60 * 60}`; // 3 hours
         
         // Decode JWT to get user info (simplified - in production use a proper JWT library)
         const tokenPayload = JSON.parse(atob(loginResponse.token.split('.')[1]));
+        
+        // Debug: Log the token payload to see what claims are available
+        console.log('JWT Token Payload:', tokenPayload);
         
         // Create user object from token
         const userData = {
           id: tokenPayload.sub || tokenPayload.nameid,
           email: tokenPayload.email || credentials.email,
-          role: tokenPayload.role || 'User',
+          role: tokenPayload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || tokenPayload.role || 'User',
           fullName: tokenPayload.name || credentials.email // fallback
         };
+        
+        // Debug: Log the extracted user data
+        console.log('Extracted User Data:', userData);
         
         localStorage.setItem('user', JSON.stringify(userData));
         
@@ -65,6 +74,8 @@ export class AuthService {
   static logout(): void {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    // Also remove token from cookies
+    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
   }
 
   static getToken(): string | null {
