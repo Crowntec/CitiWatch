@@ -16,31 +16,15 @@ namespace CitiWatch.Host.Controllers
         [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
-            Console.WriteLine($"Login attempt for email: {loginDto.Email}");
-            
             var response = await _userService.Login(loginDto);
-            
-            Console.WriteLine($"Login response status: {response.Status}");
-            if (response.Data != null)
-            {
-                Console.WriteLine($"User found - Email: {response.Data.Email}, Role: {response.Data.Role}");
-            }
-            
             if (response.Status == false || response.Data == null)
             {
-                Console.WriteLine($"Login failed: {response.Message}");
                 return BadRequest(response);
             }
 
             if (response.Data != null)
             {
-                var roleString = response.Data.Role.ToString();
-                Console.WriteLine($"Generating token with role: {roleString}");
-                
-                var token = _jwtHelper.GenerateToken(response.Data.Email, roleString, response.Data.Id);
-                
-                Console.WriteLine($"Token generated successfully");
-                
+                var token = _jwtHelper.GenerateToken(response.Data.Email, response.Data.Role.ToString(), response.Data.Id);
                 return Ok(new
                 {
                     Token = token

@@ -17,9 +17,6 @@ export class AuthService {
         // Decode JWT to get user info (simplified - in production use a proper JWT library)
         const tokenPayload = JSON.parse(atob(loginResponse.token.split('.')[1]));
         
-        // Debug: Log the token payload to see what claims are available
-        console.log('JWT Token Payload:', tokenPayload);
-        
         // Create user object from token
         const userData = {
           id: tokenPayload.sub || tokenPayload.nameid,
@@ -28,8 +25,7 @@ export class AuthService {
           fullName: tokenPayload.name || credentials.email // fallback
         };
         
-        // Debug: Log the extracted user data
-        console.log('Extracted User Data:', userData);
+        console.log('Login successful for:', userData.email, 'Role:', userData.role);
         
         localStorage.setItem('user', JSON.stringify(userData));
         

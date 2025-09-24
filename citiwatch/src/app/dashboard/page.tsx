@@ -6,50 +6,16 @@ import Navigation from '@/components/Navigation';
 import { LoadingCard } from '@/components/Loading';
 import { useAuth } from '@/auth/AuthContext';
 import { ProtectedRoute } from '@/auth/ProtectedRoute';
-
-interface Complaint {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  category: string;
-  createdAt: string;
-  imageUrl?: string;
-}
-
-// Mock user complaints data
-const mockUserComplaints: Complaint[] = [
-  {
-    id: '1',
-    title: 'Broken Street Light on Oak Avenue',
-    description: 'The street light has been flickering for days and went out completely last night.',
-    status: 'pending',
-    category: 'Infrastructure',
-    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    imageUrl: 'https://media.istockphoto.com/id/184086176/photo/broken-pole.jpg?s=2048x2048&w=is&k=20&c=XyLsnkM1nqQVL8O9kxAvbh9Ib-iTLUJoRHfMEbotC0o='
-  },
-  {
-    id: '2',
-    title: 'Trash Not Collected',
-    description: 'Garbage has not been collected on my street for two weeks.',
-    status: 'in progress',
-    category: 'Environment',
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: '3',
-    title: 'Pothole on Main Street',
-    description: 'Large pothole causing damage to vehicles near the intersection.',
-    status: 'resolved',
-    category: 'Infrastructure',
-    createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()
-  }
-];
+import { ComplaintService, type Complaint } from '@/services/complaint';
 
 export default function Dashboard() {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<'date' | 'status' | 'category'>('date');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
   const { user, isAuthenticated } = useAuth();
 
   useEffect(() => {
@@ -59,16 +25,34 @@ export default function Dashboard() {
     }
   }, [isAuthenticated]);
 
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isModalOpen) {
+        closeModal();
+      }
+      if (event.key === 'r' && event.ctrlKey) {
+        event.preventDefault();
+        loadUserComplaints();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isModalOpen]);
+
   const loadUserComplaints = async () => {
     try {
       setLoading(true);
       setError('');
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 800));
+      const response = await ComplaintService.getUserComplaints();
       
-      // Use mock data instead of API call
-      setComplaints(mockUserComplaints);
+      if (response.success) {
+        setComplaints(response.data || []);
+      } else {
+        setError(response.message);
+      }
     } catch (error) {
       console.error('Error loading complaints:', error);
       setError(error instanceof Error ? error.message : 'Failed to load complaints');
@@ -79,18 +63,75 @@ export default function Dashboard() {
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'pending':
+      case 'submitted':
         return 'bg-yellow-900/50 text-yellow-300 border border-yellow-700';
       case 'in progress':
         return 'bg-blue-900/50 text-blue-300 border border-blue-700';
       case 'resolved':
         return 'bg-green-900/50 text-green-300 border border-green-700';
+      case 'pending':
+        return 'bg-yellow-900/50 text-yellow-300 border border-yellow-700';
       case 'rejected':
         return 'bg-red-900/50 text-red-300 border border-red-700';
       default:
         return 'bg-gray-700/50 text-gray-300 border border-gray-600';
     }
   };
+
+  const getStatusIcon = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'submitted':
+      case 'pending':
+        return 'fas fa-clock';
+      case 'in progress':
+        return 'fas fa-sync-alt';
+      case 'resolved':
+        return 'fas fa-check-circle';
+      case 'rejected':
+        return 'fas fa-times-circle';
+      default:
+        return 'fas fa-question-circle';
+    }
+  };
+
+  const openModal = (complaint: Complaint) => {
+    setSelectedComplaint(complaint);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setSelectedComplaint(null);
+    setIsModalOpen(false);
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // Filter and sort complaints
+  const filteredAndSortedComplaints = complaints
+    .filter(complaint => filterStatus === 'all' || complaint.statusName?.toLowerCase() === filterStatus.toLowerCase())
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'date':
+          return new Date(b.createdOn).getTime() - new Date(a.createdOn).getTime();
+        case 'status':
+          return (a.statusName || '').localeCompare(b.statusName || '');
+        case 'category':
+          return (a.categoryName || '').localeCompare(b.categoryName || '');
+        default:
+          return 0;
+      }
+    });
+
+  const uniqueStatuses = Array.from(new Set(complaints.map(c => c.statusName))).filter(Boolean);
 
   return (
     <ProtectedRoute>
@@ -138,7 +179,7 @@ export default function Dashboard() {
               </div>
               <div className="ml-4">
                 <p className="text-2xl font-semibold text-white">
-                  {complaints.filter(c => c.status.toLowerCase() === 'pending').length}
+                  {complaints.filter(c => c.statusName?.toLowerCase().includes('submitted')).length}
                 </p>
                 <p className="text-gray-400">Pending</p>
               </div>
@@ -151,7 +192,7 @@ export default function Dashboard() {
               </div>
               <div className="ml-4">
                 <p className="text-2xl font-semibold text-white">
-                  {complaints.filter(c => c.status.toLowerCase() === 'in progress').length}
+                  {complaints.filter(c => c.statusName?.toLowerCase().includes('progress')).length}
                 </p>
                 <p className="text-gray-400">In Progress</p>
               </div>
@@ -164,7 +205,7 @@ export default function Dashboard() {
               </div>
               <div className="ml-4">
                 <p className="text-2xl font-semibold text-white">
-                  {complaints.filter(c => c.status.toLowerCase() === 'resolved').length}
+                  {complaints.filter(c => c.statusName?.toLowerCase().includes('resolved')).length}
                 </p>
                 <p className="text-gray-400">Resolved</p>
               </div>
@@ -175,14 +216,71 @@ export default function Dashboard() {
         {/* Complaints List */}
         <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-lg border border-gray-700">
           <div className="px-6 py-4 border-b border-gray-700 flex justify-between items-center">
-            <h2 className="text-lg font-medium text-white">My Complaints</h2>
-            <Link
-              href="/dashboard/submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-            >
-              New Complaint
-            </Link>
+            <div className="flex items-center space-x-4">
+              <h2 className="text-lg font-medium text-white">My Complaints</h2>
+              <span className="text-sm text-gray-400">({complaints.length} total)</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={loadUserComplaints}
+                disabled={loading}
+                className="text-gray-400 hover:text-white transition-colors px-2 py-1 rounded"
+                title="Refresh complaints"
+              >
+                <i className={`fas fa-refresh ${loading ? 'animate-spin' : ''}`}></i>
+              </button>
+              <Link
+                href="/dashboard/submit"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                <i className="fas fa-plus mr-2"></i>
+                New Complaint
+              </Link>
+            </div>
           </div>
+
+          {/* Filter and Sort Controls */}
+          {complaints.length > 0 && (
+            <div className="px-6 py-3 border-b border-gray-700 bg-gray-700/30">
+              <div className="flex flex-wrap items-center gap-4">
+                {/* Status Filter */}
+                <div className="flex items-center space-x-2">
+                  <label htmlFor="statusFilter" className="text-sm text-gray-300">Filter by:</label>
+                  <select
+                    id="statusFilter"
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="text-sm bg-gray-600 text-white border border-gray-500 rounded px-2 py-1"
+                  >
+                    <option value="all">All Status</option>
+                    {uniqueStatuses.map(status => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Sort */}
+                <div className="flex items-center space-x-2">
+                  <label htmlFor="sortBy" className="text-sm text-gray-300">Sort by:</label>
+                  <select
+                    id="sortBy"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as 'date' | 'status' | 'category')}
+                    className="text-sm bg-gray-600 text-white border border-gray-500 rounded px-2 py-1"
+                  >
+                    <option value="date">Date (Newest First)</option>
+                    <option value="status">Status</option>
+                    <option value="category">Category</option>
+                  </select>
+                </div>
+
+                {/* Results count */}
+                <div className="text-sm text-gray-400 ml-auto">
+                  Showing {filteredAndSortedComplaints.length} of {complaints.length} complaints
+                </div>
+              </div>
+            </div>
+          )}
 
           {loading ? (
             <LoadingCard message="Loading your complaints..." />
@@ -199,7 +297,7 @@ export default function Dashboard() {
                 </button>
               </div>
             </div>
-          ) : complaints.length === 0 ? (
+          ) : filteredAndSortedComplaints.length === 0 && complaints.length === 0 ? (
             <div className="p-6 text-center">
               <i className="fas fa-clipboard-list text-4xl mb-4 block text-gray-500"></i>
               <p className="text-gray-400 mb-4">No complaints submitted yet</p>
@@ -210,28 +308,82 @@ export default function Dashboard() {
                 Submit Your First Complaint
               </Link>
             </div>
+          ) : filteredAndSortedComplaints.length === 0 ? (
+            <div className="p-6 text-center">
+              <i className="fas fa-filter text-4xl mb-4 block text-gray-500"></i>
+              <p className="text-gray-400 mb-4">No complaints match your current filters</p>
+              <button
+                onClick={() => {setFilterStatus('all'); setSortBy('date');}}
+                className="text-blue-400 hover:text-blue-300 text-sm"
+              >
+                Clear all filters
+              </button>
+            </div>
           ) : (
             <div className="divide-y divide-gray-700">
-              {complaints.map((complaint) => (
-                <div key={complaint.id} className="p-6 hover:bg-gray-700/50 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-medium text-white mb-1">
-                        {complaint.title}
-                      </h3>
-                      <p className="text-gray-300 mb-2 line-clamp-2">
-                        {complaint.description}
-                      </p>
-                      <div className="flex items-center space-x-4 text-sm text-gray-400">
-                        <span>Category: {complaint.category}</span>
-                        <span>•</span>
-                        <span>Submitted: {new Date(complaint.createdAt).toLocaleDateString()}</span>
-                      </div>
+              {filteredAndSortedComplaints.map((complaint) => (
+                <div key={complaint.id} className="p-6 hover:bg-gray-700/30 transition-colors cursor-pointer" onClick={() => openModal(complaint)}>
+                  <div className="flex items-start space-x-4">
+                    {/* Complaint Image or Icon */}
+                    <div className="flex-shrink-0">
+                      {complaint.mediaUrl ? (
+                        <img
+                          src={complaint.mediaUrl}
+                          alt="Complaint evidence"
+                          className="w-16 h-16 rounded-lg object-cover border border-gray-600"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 bg-gray-700 rounded-lg flex items-center justify-center border border-gray-600">
+                          <i className="fas fa-image text-gray-400 text-xl"></i>
+                        </div>
+                      )}
                     </div>
-                    <div className="ml-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(complaint.status)}`}>
-                        {complaint.status}
-                      </span>
+
+                    {/* Complaint Details */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-medium text-white mb-1 truncate">
+                            {complaint.title}
+                          </h3>
+                          <p className="text-gray-300 text-sm mb-3 line-clamp-2">
+                            {complaint.description}
+                          </p>
+                          
+                          {/* Metadata */}
+                          <div className="flex flex-wrap items-center gap-4 text-xs text-gray-400">
+                            <span className="flex items-center">
+                              <i className="fas fa-tag mr-1"></i>
+                              {complaint.categoryName}
+                            </span>
+                            <span className="flex items-center">
+                              <i className="fas fa-calendar mr-1"></i>
+                              {formatDate(complaint.createdOn)}
+                            </span>
+                            {complaint.latitude && complaint.longitude && (
+                              <span className="flex items-center">
+                                <i className="fas fa-map-marker-alt mr-1"></i>
+                                Location provided
+                              </span>
+                            )}
+                            {complaint.lastModifiedOn !== complaint.createdOn && (
+                              <span className="flex items-center">
+                                <i className="fas fa-edit mr-1"></i>
+                                Updated {formatDate(complaint.lastModifiedOn)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Status Badge */}
+                        <div className="flex flex-col items-end ml-4">
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(complaint.statusName || '')}`}>
+                            <i className={`${getStatusIcon(complaint.statusName || '')} mr-1`}></i>
+                            {complaint.statusName}
+                          </span>
+                          <span className="text-xs text-gray-500 mt-1">Click to view details</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -240,6 +392,111 @@ export default function Dashboard() {
           )}
         </div>
         </div>
+
+        {/* Complaint Detail Modal */}
+        {isModalOpen && selectedComplaint && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+              {/* Background overlay */}
+              <div className="fixed inset-0 bg-black bg-opacity-75 transition-opacity" onClick={closeModal}></div>
+
+              {/* Modal content */}
+              <div className="inline-block align-bottom bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-gray-700">
+                {/* Header */}
+                <div className="bg-gray-700/50 px-6 py-4 border-b border-gray-600">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-medium text-white">Complaint Details</h3>
+                    <button
+                      onClick={closeModal}
+                      className="text-gray-400 hover:text-white transition-colors"
+                    >
+                      <i className="fas fa-times text-xl"></i>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="px-6 py-4 max-h-96 overflow-y-auto">
+                  {/* Status and ID */}
+                  <div className="flex items-center justify-between mb-4">
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedComplaint.statusName || '')}`}>
+                      <i className={`${getStatusIcon(selectedComplaint.statusName || '')} mr-2`}></i>
+                      {selectedComplaint.statusName}
+                    </span>
+                    <span className="text-xs text-gray-400">ID: {selectedComplaint.id.substring(0, 8)}...</span>
+                  </div>
+
+                  {/* Title */}
+                  <h4 className="text-xl font-semibold text-white mb-3">{selectedComplaint.title}</h4>
+
+                  {/* Image */}
+                  {selectedComplaint.mediaUrl && (
+                    <div className="mb-4">
+                      <img
+                        src={selectedComplaint.mediaUrl}
+                        alt="Complaint evidence"
+                        className="w-full h-48 object-cover rounded-lg border border-gray-600"
+                      />
+                    </div>
+                  )}
+
+                  {/* Description */}
+                  <div className="mb-4">
+                    <h5 className="text-sm font-medium text-gray-300 mb-2">Description</h5>
+                    <p className="text-gray-200 whitespace-pre-wrap">{selectedComplaint.description}</p>
+                  </div>
+
+                  {/* Details Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <h5 className="font-medium text-gray-300 mb-1">Category</h5>
+                      <p className="text-gray-200">{selectedComplaint.categoryName}</p>
+                    </div>
+                    <div>
+                      <h5 className="font-medium text-gray-300 mb-1">Submitted</h5>
+                      <p className="text-gray-200">{formatDate(selectedComplaint.createdOn)}</p>
+                    </div>
+                    {selectedComplaint.lastModifiedOn !== selectedComplaint.createdOn && (
+                      <div className="md:col-span-2">
+                        <h5 className="font-medium text-gray-300 mb-1">Last Updated</h5>
+                        <p className="text-gray-200">{formatDate(selectedComplaint.lastModifiedOn)}</p>
+                      </div>
+                    )}
+                    {selectedComplaint.latitude && selectedComplaint.longitude && (
+                      <div className="md:col-span-2">
+                        <h5 className="font-medium text-gray-300 mb-1">Location</h5>
+                        <div className="flex items-center space-x-2">
+                          <p className="text-gray-200">
+                            {selectedComplaint.latitude}, {selectedComplaint.longitude}
+                          </p>
+                          <a
+                            href={`https://www.google.com/maps?q=${selectedComplaint.latitude},${selectedComplaint.longitude}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-400 hover:text-blue-300 text-xs"
+                          >
+                            <i className="fas fa-external-link-alt mr-1"></i>
+                            View on Maps
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="bg-gray-700/50 px-6 py-3 border-t border-gray-600 flex justify-end">
+                  <button
+                    onClick={closeModal}
+                    className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-md text-sm font-medium transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </ProtectedRoute>
   );

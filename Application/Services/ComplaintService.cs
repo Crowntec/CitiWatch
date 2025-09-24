@@ -76,20 +76,28 @@ namespace CitiWatch.Application.Services
             var response = new BaseResponse<IEnumerable<ComplaintResponseDto>>();
 
             var userId = _validatorHelper.GetUserId();
+            var userRole = _validatorHelper.GetUserRole();
+
             if (userId == Guid.Empty)
             {
                 response.Message = "User not found";
                 return response;
             }
 
-            var complaints = await _context.Complaints.Where(c => c.UserId == userId && !c.IsDeleted).Include(c => c.Category)
-               .Include(c => c.Status).ToListAsync();
-            if (!complaints.Any())
+            // If user is Admin, return an empty list with success message
+            // Since admins don't have personal complaints, they use the admin dashboard
+            if (userRole?.Equals("Admin", StringComparison.OrdinalIgnoreCase) == true)
             {
-                response.Message = "Not found!";
+                response.Data = [];
+                response.Message = "No complaints found for admin user";
+                response.Status = true;
                 return response;
             }
 
+            var complaints = await _context.Complaints.Where(c => c.UserId == userId && !c.IsDeleted).Include(c => c.Category)
+               .Include(c => c.Status).ToListAsync();
+            
+            // Return empty list with success status instead of error for better UX
             response.Data = [..complaints.Select(c => new ComplaintResponseDto
             {
                 Id = c.Id,
@@ -102,7 +110,7 @@ namespace CitiWatch.Application.Services
                 MediaUrl = c.MediaUrl,
                 CreatedOn = c.Createdon
             })];
-            response.Message = "Success";
+            response.Message = complaints.Any() ? "Success" : "No complaints found";
             response.Status = true;
             return response;
         }

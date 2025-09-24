@@ -4,37 +4,9 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { LoadingButton } from '@/components/Loading';
-// Mock validation function
 import Navigation from '@/components/Navigation';
-
-interface Category {
-  id: string;
-  name: string;
-}
-
-// Mock categories data
-const mockCategories: Category[] = [
-  {
-    id: '1',
-    name: 'Infrastructure'
-  },
-  {
-    id: '2',
-    name: 'Public Safety'
-  },
-  {
-    id: '3',
-    name: 'Environment'
-  },
-  {
-    id: '4',
-    name: 'Transportation'
-  },
-  {
-    id: '5',
-    name: 'Healthcare'
-  }
-];
+import { CategoryService, type Category } from '@/services/category';
+import { ComplaintService } from '@/services/complaint';
 
 export default function SubmitComplaint() {
   const [formData, setFormData] = useState({
@@ -65,11 +37,13 @@ export default function SubmitComplaint() {
 
   const loadCategories = async () => {
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 300));
+      const response = await CategoryService.getAllCategories();
       
-      // Use mock data instead of API call
-      setCategories(mockCategories);
+      if (response.success) {
+        setCategories(response.data || []);
+      } else {
+        setError('Failed to load categories: ' + response.message);
+      }
     } catch (error) {
       console.error('Error loading categories:', error);
       setError('Failed to load categories');
@@ -148,35 +122,35 @@ export default function SubmitComplaint() {
     }
 
     try {
-      // File uploads require FormData - don't set Content-Type header manually
-      const formDataToSend = new FormData();
-      
-      formDataToSend.append('title', formData.title);
-      formDataToSend.append('description', formData.description);
-      formDataToSend.append('categoryId', formData.categoryId);
-      if (formData.latitude) formDataToSend.append('latitude', formData.latitude);
-      if (formData.longitude) formDataToSend.append('longitude', formData.longitude);
-      if (selectedFile) formDataToSend.append('formFile', selectedFile);
+      const complaintData = {
+        title: formData.title,
+        description: formData.description,
+        categoryId: formData.categoryId,
+        latitude: formData.latitude || undefined,
+        longitude: formData.longitude || undefined,
+      };
 
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await ComplaintService.submitComplaint(complaintData, selectedFile || undefined);
 
-      // Mock successful submission
-      setSuccess('Complaint submitted successfully!');
-      // Reset form
-      setFormData({
-        title: '',
-        description: '',
-        categoryId: '',
-        latitude: '',
-        longitude: '',
-      });
-      setSelectedFile(null);
-      
-      // Redirect to dashboard after 2 seconds
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 2000);
+      if (response.success) {
+        setSuccess('Complaint submitted successfully!');
+        // Reset form
+        setFormData({
+          title: '',
+          description: '',
+          categoryId: '',
+          latitude: '',
+          longitude: '',
+        });
+        setSelectedFile(null);
+        
+        // Redirect to dashboard after 2 seconds
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 2000);
+      } else {
+        setError(response.message || 'Failed to submit complaint');
+      }
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to submit complaint');
     } finally {

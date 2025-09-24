@@ -6,17 +6,9 @@ import { useRouter } from 'next/navigation';
 import { LoadingCard } from '@/components/Loading';
 import AdminLayout from '@/components/AdminLayout';
 import { useAuth } from '@/auth/AuthContext';
-
-interface Complaint {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  category: string;
-  userName: string;
-  createdAt: string;
-  imageUrl?: string;
-}
+import { ComplaintService, type Complaint } from '@/services/complaint';
+import { UserService, type User } from '@/services/user';
+import { CategoryService, type Category } from '@/services/category';
 
 interface DashboardStats {
   totalUsers: number;
@@ -28,55 +20,6 @@ interface DashboardStats {
   complaintsThisMonth: number;
   newUsersThisMonth: number;
 }
-
-// Mock data
-const mockComplaints: Complaint[] = [
-  {
-    id: '1',
-    title: 'Broken Street Light on Main Street',
-    description: 'The street light near the intersection of Main Street and Oak Avenue has been broken for over a week.',
-    status: 'pending',
-    category: 'Infrastructure',
-    userName: 'John Smith',
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: '2',
-    title: 'Pothole on Highway 101',
-    description: 'Large pothole causing damage to vehicles.',
-    status: 'in progress',
-    category: 'Infrastructure',
-    userName: 'Sarah Johnson',
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: '3',
-    title: 'Noise Complaint - Construction Site',
-    description: 'Construction work starting at 5 AM, violating city noise ordinances.',
-    status: 'resolved',
-    category: 'Public Safety',
-    userName: 'Mike Davis',
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: '4',
-    title: 'Illegal Dumping in Park',
-    description: 'Someone has been dumping trash and old furniture in Central Park.',
-    status: 'pending',
-    category: 'Environment',
-    userName: 'Lisa Chen',
-    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: '5',
-    title: 'Bus Stop Vandalism',
-    description: 'Bus stop shelter has been vandalized with graffiti and broken glass.',
-    status: 'resolved',
-    category: 'Transportation',
-    userName: 'Robert Wilson',
-    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-  }
-];
 
 export default function AdminDashboard() {
   const { user, isAuthenticated, isAdmin, isLoading: authLoading } = useAuth();
@@ -115,32 +58,59 @@ export default function AdminDashboard() {
     setError('');
     
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // Load real data from APIs
+      const [complaintsResponse, usersResponse, categoriesResponse] = await Promise.all([
+        ComplaintService.getAllComplaints(),
+        UserService.getAllUsers(),
+        CategoryService.getAllCategories()
+      ]);
+
+      if (!complaintsResponse.success) {
+        throw new Error(complaintsResponse.message);
+      }
       
-      // Use mock data instead of API calls
-      setComplaints(mockComplaints);
+      const complaintsData = complaintsResponse.data || [];
+      setComplaints(complaintsData);
       
-      // Calculate stats from mock data
-      const totalComplaints = mockComplaints.length;
-      const pendingComplaints = mockComplaints.filter(c => c.status?.toLowerCase() === 'pending').length;
-      const inProgressComplaints = mockComplaints.filter(c => c.status?.toLowerCase() === 'in progress').length;
-      const resolvedComplaints = mockComplaints.filter(c => c.status?.toLowerCase() === 'resolved').length;
+      // Calculate stats from real data
+      const totalComplaints = complaintsData.length;
+      const pendingComplaints = complaintsData.filter(c => c.statusName?.toLowerCase().includes('submitted') || c.statusName?.toLowerCase().includes('pending')).length;
+      const inProgressComplaints = complaintsData.filter(c => c.statusName?.toLowerCase().includes('progress')).length;
+      const resolvedComplaints = complaintsData.filter(c => c.statusName?.toLowerCase().includes('resolved')).length;
       
+      // Calculate complaints this month
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      const complaintsThisMonth = complaintsData.filter(c => {
+        const complaintDate = new Date(c.createdOn);
+        return complaintDate.getMonth() === currentMonth && complaintDate.getFullYear() === currentYear;
+      }).length;
+
+      // Calculate new users this month (if users data is available)
+      let newUsersThisMonth = 0;
+      let totalUsers = 0;
+      if (usersResponse.success && usersResponse.data) {
+        totalUsers = usersResponse.data.length;
+        newUsersThisMonth = usersResponse.data.filter(u => {
+          const userDate = new Date(u.createdOn);
+          return userDate.getMonth() === currentMonth && userDate.getFullYear() === currentYear;
+        }).length;
+      }
+
       setStats({
-        totalUsers: 245, // Mock users count
+        totalUsers,
         totalComplaints,
         pendingComplaints,
-        inProgressComplaints,
+        inProgressComplaints, 
         resolvedComplaints,
-        totalCategories: 6, // Mock categories count
-        complaintsThisMonth: 18, // Mock complaints this month
-        newUsersThisMonth: 32 // Mock new users this month
+        totalCategories: categoriesResponse.success ? (categoriesResponse.data?.length || 0) : 0,
+        complaintsThisMonth,
+        newUsersThisMonth
       });
       
     } catch (error) {
       console.error('Error loading dashboard data:', error);
-      setError('Failed to load dashboard data. Please try again.');
+      setError(error instanceof Error ? error.message : 'Failed to load dashboard data. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -152,12 +122,14 @@ export default function AdminDashboard() {
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'pending':
+      case 'submitted':
         return 'bg-yellow-900/50 text-yellow-300 border border-yellow-700';
       case 'in progress':
         return 'bg-blue-900/50 text-blue-300 border border-blue-700';
       case 'resolved':
         return 'bg-green-900/50 text-green-300 border border-green-700';
+      case 'pending':
+        return 'bg-yellow-900/50 text-yellow-300 border border-yellow-700';
       case 'rejected':
         return 'bg-red-900/50 text-red-300 border border-red-700';
       default:
@@ -168,14 +140,15 @@ export default function AdminDashboard() {
   const getComplaintsByCategory = () => {
     const categoryCount: { [key: string]: number } = {};
     complaints.forEach(complaint => {
-      categoryCount[complaint.category] = (categoryCount[complaint.category] || 0) + 1;
+      const category = complaint.categoryName || 'Unknown';
+      categoryCount[category] = (categoryCount[category] || 0) + 1;
     });
     return Object.entries(categoryCount).map(([name, count]) => ({ name, count }));
   };
 
   const getRecentComplaints = () => {
     return complaints
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .sort((a, b) => new Date(b.createdOn).getTime() - new Date(a.createdOn).getTime())
       .slice(0, 5);
   };
 
@@ -467,18 +440,18 @@ export default function AdminDashboard() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                          {complaint.userName}
+                          Unknown User
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                          {complaint.category}
+                          {complaint.categoryName}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(complaint.status)}`}>
-                            {complaint.status}
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(complaint.statusName || '')}`}>
+                            {complaint.statusName}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                          {new Date(complaint.createdAt).toLocaleDateString()}
+                          {new Date(complaint.createdOn).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <Link

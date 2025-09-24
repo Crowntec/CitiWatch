@@ -45,18 +45,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await AuthService.login({ email, password });
       
       if (response.success) {
-        console.log('Login successful, user data:', response.data);
-        console.log('User role:', response.data?.role);
-        console.log('Is admin check:', response.data?.role?.toLowerCase() === 'admin');
-        
         setUser(response.data);
         
         // Redirect based on role
         if (response.data?.role?.toLowerCase() === 'admin') {
-          console.log('Redirecting to admin dashboard');
           router.push('/admin');
         } else {
-          console.log('Redirecting to user dashboard');
           router.push('/dashboard');
         }
         
