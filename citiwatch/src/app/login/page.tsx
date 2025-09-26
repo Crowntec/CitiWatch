@@ -166,22 +166,6 @@ function LoginForm() {
                 Sign in
               </LoadingButton>
             </div>
-
-            {/* Demo Credentials */}
-            <div className="mt-6 bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-              <h3 className="text-sm font-medium text-gray-300 mb-2">Demo Credentials:</h3>
-              <div className="space-y-2 text-xs text-gray-400">
-                <div>
-                  <span className="text-blue-400">Admin:</span> admin@citiwatch.com / Admin123
-                </div>
-                <div>
-                  <span className="text-green-400">User:</span> user@citiwatch.com / user123
-                </div>
-                <div>
-                  <span className="text-yellow-400">Demo:</span> demo@citiwatch.com / password123
-                </div>
-              </div>
-            </div>
           </form>
         </div>
       </div>
