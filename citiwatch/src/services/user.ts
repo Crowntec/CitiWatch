@@ -4,7 +4,7 @@ export interface User {
   id: string;
   fullName: string;
   email: string;
-  role: string;
+  role: string | number; // Backend might return enum as number or string
   createdOn: string;
   lastModifiedOn: string;
 }
@@ -25,6 +25,15 @@ export class UserService {
   static async getAllUsers(): Promise<{ success: boolean; data?: User[]; message: string }> {
     try {
       const response = await apiClient.get<{ status: boolean; data: User[]; message: string }>('/User/GetAll');
+      
+      // Debug logging
+      if (process.env.NODE_ENV === 'development' && response.data) {
+        console.log('Raw user data from API:', response.data);
+        response.data.forEach(user => {
+          console.log(`User: ${user.email}, Role: ${user.role} (type: ${typeof user.role})`);
+        });
+      }
+      
       return {
         success: response.status,
         data: response.data,

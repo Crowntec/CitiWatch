@@ -51,7 +51,9 @@ namespace CitiWatch.Application.Services
                 Id = x.Id,
                 FullName = x.FullName,
                 Email = x.Email,
-                Role = x.Role
+                Role = x.Role,
+                CreatedOn = x.Createdon,
+                LastModifiedOn = x.LastModifiedOn
             });
             response.Status = true;
             response.Message = "Users retrieved successfully.";
