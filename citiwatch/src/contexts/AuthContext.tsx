@@ -4,12 +4,18 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@/types/api';
 import { AuthService } from '@/services/auth';
 
+interface RegisterData {
+  fullName: string;
+  email: string;
+  password: string;
+}
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
-  register: (userData: any) => Promise<{ success: boolean; message: string }>;
+  register: (userData: RegisterData) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
 }
 
@@ -32,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await AuthService.login({ email, password });
       
-      if (response.isSuccessful) {
+      if (response.success && response.data) {
         setUser(response.data);
         return { success: true, message: response.message };
       }
@@ -46,11 +52,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const register = async (userData: any) => {
+  const register = async (userData: RegisterData) => {
     try {
       const response = await AuthService.register(userData);
       
-      if (response.isSuccessful) {
+      if (response.success) {
         return { success: true, message: response.message };
       }
       

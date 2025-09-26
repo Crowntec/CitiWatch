@@ -1,8 +1,8 @@
 import { apiClient } from '@/lib/api-client';
-import { LoginRequest, RegisterRequest, AuthResponse, LoginResponse } from '@/types/api';
+import { LoginRequest, RegisterRequest, AuthResponse, LoginResponse, User } from '@/types/api';
 
 export class AuthService {
-  static async login(credentials: LoginRequest): Promise<{ success: boolean; message: string; data?: any }> {
+  static async login(credentials: LoginRequest): Promise<{ success: boolean; message: string; data?: User }> {
     try {
       // First call login to get token
       const loginResponse = await apiClient.post<LoginResponse>('/User/Login', credentials);
@@ -18,11 +18,13 @@ export class AuthService {
         const tokenPayload = JSON.parse(atob(loginResponse.token.split('.')[1]));
         
         // Create user object from token
-        const userData = {
+        const userData: User = {
           id: tokenPayload.sub || tokenPayload.nameid,
           email: tokenPayload.email || credentials.email,
           role: tokenPayload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || tokenPayload.role || 'User',
-          fullName: tokenPayload.name || credentials.email // fallback
+          fullName: tokenPayload.name || credentials.email, // fallback
+          createdOn: new Date().toISOString(),
+          lastModifiedOn: new Date().toISOString()
         };
         
         console.log('Login successful for:', userData.email, 'Role:', userData.role);
@@ -37,10 +39,10 @@ export class AuthService {
       }
       
       return { success: false, message: 'Login failed' };
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Extract meaningful error message
       let errorMessage = 'Login failed';
-      if (error.message) {
+      if (error instanceof Error && error.message) {
         // Remove "HTTP 400: " prefix if present
         errorMessage = error.message.replace(/^HTTP \d+:\s*/, '');
       }
@@ -59,10 +61,10 @@ export class AuthService {
         success: response.status,
         message: response.message
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        message: error.message || 'Registration failed'
+        message: error instanceof Error ? error.message : 'Registration failed'
       };
     }
   }
@@ -79,7 +81,7 @@ export class AuthService {
     return localStorage.getItem('token');
   }
 
-  static getUser(): any | null {
+  static getUser(): User | null {
     if (typeof window === 'undefined') return null;
     const userStr = localStorage.getItem('user');
     return userStr ? JSON.parse(userStr) : null;

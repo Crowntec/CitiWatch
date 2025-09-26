@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { LoadingCard } from '@/components/Loading';
@@ -32,7 +32,10 @@ export default function ComplaintsPage() {
   const [newStatusId, setNewStatusId] = useState('');
   const [updating, setUpdating] = useState(false);
 
-  const loadComplaints = async () => {
+  // Error handler for API calls (removed to prevent infinite reloading)
+  // const { handleApiError } = useApiErrorHandler();
+
+  const loadComplaints = useCallback(async () => {
     setLoading(true);
     setError('');
     
@@ -55,40 +58,40 @@ export default function ComplaintsPage() {
         ...complaint,
         status: complaint.statusName || 'Unknown',
         category: complaint.categoryName || 'Unknown',
-        userName: 'Unknown User', // API doesn't provide user name in current structure
+        userName: complaint.userName || 'Unknown User',
         createdAt: complaint.createdOn,
         imageUrl: complaint.mediaUrl || undefined
       })) || [];
       
-      console.log('Loaded complaints with IDs:', transformedComplaints.map(c => ({ id: c.id, title: c.title })));
-      
       setComplaints(transformedComplaints);
       setStatuses(statusesResult.data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading complaints:', error);
-      setError(error.message || 'Failed to load complaints');
+      setError(error instanceof Error ? error.message : 'Failed to load complaints');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadComplaints();
-  }, []);
+  }, [loadComplaints]);
 
-  const filteredComplaints = complaints.filter(complaint => {
-    const matchesSearch = complaint.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         complaint.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (complaint.userName && complaint.userName.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesStatus = selectedStatus === 'all' || 
-                         complaint.status.toLowerCase() === selectedStatus.toLowerCase();
-    
-    const matchesCategory = selectedCategory === 'all' ||
-                           complaint.category === selectedCategory;
-    
-    return matchesSearch && matchesStatus && matchesCategory;
-  });
+  const filteredComplaints = useMemo(() => {
+    return complaints.filter(complaint => {
+      const matchesSearch = complaint.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           complaint.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           (complaint.userName && complaint.userName.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      const matchesStatus = selectedStatus === 'all' || 
+                           complaint.status.toLowerCase() === selectedStatus.toLowerCase();
+      
+      const matchesCategory = selectedCategory === 'all' ||
+                             complaint.category === selectedCategory;
+      
+      return matchesSearch && matchesStatus && matchesCategory;
+    });
+  }, [complaints, searchTerm, selectedStatus, selectedCategory]);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -120,33 +123,35 @@ export default function ComplaintsPage() {
     }
   };
 
-  const getUniqueCategories = () => {
+  const uniqueCategories = useMemo(() => {
     return Array.from(new Set(complaints.map(c => c.category)));
-  };
+  }, [complaints]);
 
-  const getStats = () => {
+  const stats = useMemo(() => {
     return {
       total: complaints.length,
       pending: complaints.filter(c => c.status.toLowerCase() === 'pending').length,
       inProgress: complaints.filter(c => c.status.toLowerCase() === 'in progress').length,
       resolved: complaints.filter(c => c.status.toLowerCase() === 'resolved').length,
     };
-  };
+  }, [complaints]);
 
   // Modal functions
-  const openStatusModal = (complaint: ComplaintWithUser) => {
+  const openStatusModal = useCallback((complaint: ComplaintWithUser) => {
     setSelectedComplaint(complaint);
     // Find the status ID for the current status
     const currentStatus = statuses.find(s => s.name.toLowerCase() === complaint.status.toLowerCase());
     setNewStatusId(currentStatus?.id || '');
     setShowStatusModal(true);
-  };
+  }, [statuses]);
 
-  const updateComplaintStatus = async (id: string, statusId: string) => {
+  const updateComplaintStatus = useCallback(async (id: string, statusId: string) => {
     try {
       setUpdating(true);
       
-      const result = await ComplaintService.updateComplaintStatus(id, { statusId });
+      console.log('Updating complaint status:', { complaintId: id, statusId });
+      
+      const result = await ComplaintService.updateComplaintStatus(id, { id: statusId });
       
       if (!result.success) {
         throw new Error(result.message);
@@ -154,6 +159,8 @@ export default function ComplaintsPage() {
       
       // Find the status name for UI update
       const statusName = statuses.find(s => s.id === statusId)?.name || 'Unknown';
+      
+      console.log('Status update successful:', { statusId, statusName });
       
       setComplaints(prev => 
         prev.map(complaint => 
@@ -164,24 +171,22 @@ export default function ComplaintsPage() {
       );
       
       console.log(`Updated complaint ${id} status to ${statusName}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating status:', error);
-      setError(error.message || 'Failed to update complaint status');
+      setError(error instanceof Error ? error.message : 'Failed to update complaint status');
     } finally {
       setUpdating(false);
     }
-  };
+  }, [statuses]);
 
-  const handleStatusUpdate = async () => {
+  const handleStatusUpdate = useCallback(async () => {
     if (!selectedComplaint || !newStatusId) return;
     
     await updateComplaintStatus(selectedComplaint.id, newStatusId);
     setShowStatusModal(false);
     setSelectedComplaint(null);
     setNewStatusId('');
-  };
-
-  const stats = getStats();
+  }, [selectedComplaint, newStatusId, updateComplaintStatus]);
 
   if (loading) {
     return (
@@ -360,7 +365,7 @@ export default function ComplaintsPage() {
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
                 <option value="all">All Categories</option>
-                {getUniqueCategories().map(category => (
+                {uniqueCategories.map((category: string) => (
                   <option key={category} value={category}>{category}</option>
                 ))}
               </select>
@@ -408,13 +413,13 @@ export default function ComplaintsPage() {
 
                   {/* Image */}
                   {complaint.imageUrl && (
-                    <div className="mb-4">
+                    <div className="mb-4 relative h-48">
                       <Image 
-                        className="w-full h-48 rounded-lg object-cover border border-gray-600" 
+                        className="rounded-lg object-cover border border-gray-600" 
                         src={complaint.imageUrl} 
                         alt="Complaint"
-                        width={400}
-                        height={192}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       />
                     </div>
                   )}

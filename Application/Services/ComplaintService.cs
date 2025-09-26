@@ -17,7 +17,9 @@ namespace CitiWatch.Application.Services
         {
             var response = new BaseResponse<IEnumerable<ComplaintResponseDto>>();
             var complaints = await _context.Complaints.Include(c => c.Category)
-               .Include(c => c.Status).ToListAsync();
+               .Include(c => c.Status)
+               .Include(c => c.User)
+               .ToListAsync();
 
             if (!complaints.Any())
             {
@@ -32,6 +34,8 @@ namespace CitiWatch.Application.Services
                 Description = c.Description,
                 CategoryName = c.Category?.Name,
                 StatusName = c.Status?.Name,
+                UserName = c.User?.FullName,
+                UserEmail = c.User?.Email,
                 Latitude = c.Latitude,
                 Longitude = c.Longitude,
                 MediaUrl = c.MediaUrl,
@@ -47,7 +51,9 @@ namespace CitiWatch.Application.Services
             var response = new BaseResponse<ComplaintResponseDto>();
 
             var complaint = await _context.Complaints.Include(c => c.Category)
-               .Include(c => c.Status).FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted);
+               .Include(c => c.Status)
+               .Include(c => c.User)
+               .FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted);
             if (complaint is null)
             {
                 response.Message = "Not found!";
@@ -61,6 +67,8 @@ namespace CitiWatch.Application.Services
                 Description = complaint.Description,
                 CategoryName = complaint.Category?.Name,
                 StatusName = complaint.Status?.Name,
+                UserName = complaint.User?.FullName,
+                UserEmail = complaint.User?.Email,
                 Latitude = complaint.Latitude,
                 Longitude = complaint.Longitude,
                 MediaUrl = complaint.MediaUrl,
@@ -83,7 +91,9 @@ namespace CitiWatch.Application.Services
             }
 
             var complaints = await _context.Complaints.Where(c => c.UserId == userId && !c.IsDeleted).Include(c => c.Category)
-               .Include(c => c.Status).ToListAsync();
+               .Include(c => c.Status)
+               .Include(c => c.User)
+               .ToListAsync();
             if (!complaints.Any())
             {
                 response.Message = "Not found!";
@@ -97,6 +107,8 @@ namespace CitiWatch.Application.Services
                 Description = c.Description,
                 CategoryName = c.Category?.Name,
                 StatusName = c.Status?.Name,
+                UserName = c.User?.FullName,
+                UserEmail = c.User?.Email,
                 Latitude = c.Latitude,
                 Longitude = c.Longitude,
                 MediaUrl = c.MediaUrl,

@@ -6,6 +6,8 @@ export interface Complaint {
   description: string;
   categoryName: string;
   statusName: string;
+  userName?: string;
+  userEmail?: string;
   latitude?: string;
   longitude?: string;
   mediaUrl?: string;
@@ -22,7 +24,7 @@ export interface ComplaintCreateRequest {
 }
 
 export interface ComplaintStatusUpdateRequest {
-  statusId: string;
+  id: string;
 }
 
 export class ComplaintService {
@@ -35,10 +37,10 @@ export class ComplaintService {
         data: response.data,
         message: response.message
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        message: error.message || 'Failed to fetch complaints'
+        message: error instanceof Error ? error.message : 'Failed to fetch complaints'
       };
     }
   }
@@ -52,10 +54,10 @@ export class ComplaintService {
         data: response.data,
         message: response.message
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        message: error.message || 'Failed to fetch user complaints'
+        message: error instanceof Error ? error.message : 'Failed to fetch user complaints'
       };
     }
   }
@@ -69,10 +71,10 @@ export class ComplaintService {
         data: response.data,
         message: response.message
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        message: error.message || 'Failed to fetch complaint'
+        message: error instanceof Error ? error.message : 'Failed to fetch complaint'
       };
     }
   }
@@ -100,10 +102,10 @@ export class ComplaintService {
         success: response.status,
         message: response.message
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        message: error.message || 'Failed to submit complaint'
+        message: error instanceof Error ? error.message : 'Failed to submit complaint'
       };
     }
   }
@@ -116,10 +118,10 @@ export class ComplaintService {
         success: response.status,
         message: response.message
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        message: error.message || 'Failed to update complaint status'
+        message: error instanceof Error ? error.message : 'Failed to update complaint status'
       };
     }
   }

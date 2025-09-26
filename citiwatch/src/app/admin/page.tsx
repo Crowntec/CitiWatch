@@ -7,8 +7,8 @@ import { LoadingCard } from '@/components/Loading';
 import AdminLayout from '@/components/AdminLayout';
 import { useAuth } from '@/auth/AuthContext';
 import { ComplaintService, type Complaint } from '@/services/complaint';
-import { UserService, type User } from '@/services/user';
-import { CategoryService, type Category } from '@/services/category';
+import { UserService } from '@/services/user';
+import { CategoryService } from '@/services/category';
 
 interface DashboardStats {
   totalUsers: number;

@@ -23,30 +23,87 @@ class ApiClient {
       ...options,
     };
 
-    console.log('API Request:', { url, method: config.method || 'GET', hasToken: !!token });
+    // Safe logging for development only
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🌐 API Request:', {
+        method: options.method || 'GET',
+        endpoint: endpoint,
+        url: url.replace(this.baseUrl, ''), // Just show the endpoint path
+        hasAuth: !!token,
+        // Never log the actual token or sensitive headers
+      });
+    }
 
     try {
       const response = await fetch(url, config);
       
       if (!response.ok) {
-        // Try to parse the error response as JSON first
+        // Handle 401 Unauthorized - redirect to login
+        if (response.status === 401) {
+          // Only log in development
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('🔒 Authentication required - redirecting to login');
+          }
+          
+          // Clear any existing auth data
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            
+            // Clear auth cookie
+            document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+            
+            // Store current path for redirect after login
+            const currentPath = window.location.pathname;
+            
+            // Redirect to login page with return URL
+            setTimeout(() => {
+              window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
+            }, 1000); // Brief delay to show any loading states
+          }
+          
+          throw new Error('Session expired. Please log in again.');
+        }
+        
+        // Clone response to read body without consuming the stream
+        const responseClone = response.clone();
         let errorMessage = `HTTP ${response.status}`;
+        
         try {
-          const errorData = await response.json();
+          const errorData = await responseClone.json();
           errorMessage = errorData.message || errorData.Message || errorMessage;
         } catch {
-          // If parsing as JSON fails, try as text
-          const errorText = await response.text();
-          errorMessage = errorText || errorMessage;
+          // If parsing as JSON fails, try as text on the original response
+          try {
+            const errorText = await response.text();
+            errorMessage = errorText || errorMessage;
+          } catch {
+            // If both fail, use the status message
+            errorMessage = response.statusText || errorMessage;
+          }
         }
         throw new Error(errorMessage);
       }
 
-      const result = await response.json();
-      console.log('API Response:', result);
-      return result;
+      // Check if response has content before trying to parse JSON
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        return await response.json();
+      } else {
+        // For non-JSON responses, return empty object or handle accordingly
+        const text = await response.text();
+        return (text ? JSON.parse(text) : {}) as T;
+      }
     } catch (error) {
-      console.error('API request failed:', error);
+      // Safe error logging - only in development
+      if (process.env.NODE_ENV === 'development') {
+        console.error('❌ API Error:', {
+          endpoint: endpoint,
+          method: options.method || 'GET',
+          message: error instanceof Error ? error.message : 'Unknown error',
+          // Never log the full error object which might contain sensitive data
+        });
+      }
       throw error;
     }
   }
@@ -55,14 +112,14 @@ class ApiClient {
     return this.request<T>(endpoint, { method: 'GET' });
   }
 
-  async post<T>(endpoint: string, data?: any): Promise<T> {
+  async post<T>(endpoint: string, data?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
     });
   }
 
-  async put<T>(endpoint: string, data?: any): Promise<T> {
+  async put<T>(endpoint: string, data?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
@@ -107,7 +164,13 @@ class ApiClient {
 
       return await response.json();
     } catch (error) {
-      console.error('API request failed:', error);
+      // Safe error logging - only in development
+      if (process.env.NODE_ENV === 'development') {
+        console.error('❌ API Form Error:', {
+          endpoint: endpoint,
+          message: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
       throw error;
     }
   }

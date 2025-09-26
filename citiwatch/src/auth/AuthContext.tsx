@@ -13,12 +13,18 @@ interface User {
   lastModifiedOn?: string;
 }
 
+interface RegisterData {
+  fullName: string;
+  email: string;
+  password: string;
+}
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
-  register: (userData: any) => Promise<{ success: boolean; message: string }>;
+  login: (email: string, password: string, redirectTo?: string) => Promise<{ success: boolean; message: string }>;
+  register: (userData: RegisterData) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
   isAdmin?: boolean;
 }
@@ -39,16 +45,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, redirectTo?: string) => {
     setIsLoading(true);
     try {
       const response = await AuthService.login({ email, password });
       
-      if (response.success) {
+      if (response.success && response.data) {
         setUser(response.data);
         
-        // Redirect based on role
-        if (response.data?.role?.toLowerCase() === 'admin') {
+        // Redirect to intended page or default based on role
+        if (redirectTo) {
+          router.push(redirectTo);
+        } else if (response.data?.role?.toLowerCase() === 'admin') {
           router.push('/admin');
         } else {
           router.push('/dashboard');
@@ -69,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const register = async (userData: any) => {
+  const register = async (userData: RegisterData) => {
     try {
       const response = await AuthService.register(userData);
       return response;

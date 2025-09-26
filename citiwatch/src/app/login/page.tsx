@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import { LoadingButton } from '@/components/Loading';
 import { useAuth } from '@/auth/AuthContext';
 
-export default function Login() {
+function LoginForm() {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -15,17 +15,22 @@ export default function Login() {
   const [error, setError] = useState('');
   const { login, isLoading, isAuthenticated, isAdmin } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     // Redirect if already authenticated
     if (isAuthenticated) {
-      if (isAdmin) {
+      // Check if there's a redirect parameter
+      const redirectTo = searchParams.get('redirect');
+      if (redirectTo) {
+        router.push(redirectTo);
+      } else if (isAdmin) {
         router.push('/admin');
       } else {
         router.push('/dashboard');
       }
     }
-  }, [isAuthenticated, isAdmin, router]);
+  }, [isAuthenticated, isAdmin, router, searchParams]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -50,7 +55,8 @@ export default function Login() {
     }
 
     try {
-      const result = await login(formData.email, formData.password);
+      const redirectTo = searchParams.get('redirect');
+      const result = await login(formData.email, formData.password, redirectTo || undefined);
       if (!result.success) {
         setError(result.message);
       }
@@ -211,5 +217,13 @@ export default function Login() {
       </div>
       </div>
     </div>
+  );
+}
+
+export default function Login() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

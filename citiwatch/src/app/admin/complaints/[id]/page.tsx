@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, use } from 'react';
+import { useState, useEffect, useCallback, use, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { LoadingCard } from '@/components/Loading';
@@ -26,6 +26,7 @@ interface ComplaintDetails extends APIComplaint {
 
 export default function ComplaintDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
+  const complaintId = useMemo(() => resolvedParams.id, [resolvedParams.id]);
   const [complaint, setComplaint] = useState<ComplaintDetails | null>(null);
   const [statuses, setStatuses] = useState<Status[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,18 +40,13 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
     setError('');
     
     try {
-      console.log('Loading complaint with ID:', resolvedParams.id);
-      
       const [complaintResult, statusesResult] = await Promise.all([
-        ComplaintService.getComplaintById(resolvedParams.id),
+        ComplaintService.getComplaintById(complaintId),
         StatusService.getAllStatuses()
       ]);
       
-      console.log('Complaint API result:', complaintResult);
-      console.log('Statuses API result:', statusesResult);
-      
       if (!complaintResult.success) {
-        throw new Error(complaintResult.message);
+        throw new Error(`Failed to load complaint: ${complaintResult.message}`);
       }
       
       if (!statusesResult.success) {
@@ -66,8 +62,8 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
         ...complaintResult.data,
         status: complaintResult.data.statusName || 'Unknown',
         category: complaintResult.data.categoryName || 'Unknown',
-        userName: 'Unknown User', // API doesn't provide user info in current structure
-        userEmail: 'unknown@email.com',
+        userName: complaintResult.data.userName || 'Unknown User',
+        userEmail: complaintResult.data.userEmail || 'unknown@email.com',
         createdAt: complaintResult.data.createdOn,
         updatedAt: complaintResult.data.lastModifiedOn,
         imageUrl: complaintResult.data.mediaUrl || undefined,
@@ -78,21 +74,19 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
         } : undefined
       };
 
-      console.log('Transformed complaint data:', transformedComplaint);
-
       setComplaint(transformedComplaint);
       setStatuses(statusesResult.data || []);
       
       // Set initial status for modal
       const currentStatus = statusesResult.data?.find(s => s.name.toLowerCase() === transformedComplaint.status.toLowerCase());
       setNewStatusId(currentStatus?.id || '');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading complaint:', error);
-      setError(error.message || 'Failed to load complaint details');
+      setError(error instanceof Error ? error.message : 'Failed to load complaint details');
     } finally {
       setLoading(false);
     }
-  }, [resolvedParams.id]);
+  }, [complaintId]);
 
   useEffect(() => {
     loadComplaint();
@@ -113,7 +107,9 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
     
     setUpdating(true);
     try {
-      const result = await ComplaintService.updateComplaintStatus(complaint.id, { statusId: newStatusId });
+      console.log('Updating complaint status:', { complaintId: complaint.id, statusId: newStatusId });
+      
+      const result = await ComplaintService.updateComplaintStatus(complaint.id, { id: newStatusId });
       
       if (!result.success) {
         throw new Error(result.message);
@@ -122,13 +118,15 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
       // Find the status name for UI update
       const statusName = statuses.find(s => s.id === newStatusId)?.name || 'Unknown';
       
+      console.log('Status update successful:', { statusId: newStatusId, statusName });
+      
       setComplaint({ ...complaint, status: statusName, updatedAt: new Date().toISOString() });
       setShowStatusModal(false);
       
       console.log(`Updated complaint ${complaint.id} status to ${statusName}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating complaint status:', error);
-      setError(error.message || 'Failed to update complaint status');
+      setError(error instanceof Error ? error.message : 'Failed to update complaint status');
     } finally {
       setUpdating(false);
     }

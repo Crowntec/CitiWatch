@@ -25,10 +25,10 @@ export class CategoryService {
         data: response.data,
         message: response.message
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        message: error.message || 'Failed to fetch categories'
+        message: error instanceof Error ? error.message : 'Failed to fetch categories'
       };
     }
   }
@@ -42,10 +42,10 @@ export class CategoryService {
         data: response.data,
         message: response.message
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        message: error.message || 'Failed to fetch category'
+        message: error instanceof Error ? error.message : 'Failed to fetch category'
       };
     }
   }
@@ -58,10 +58,10 @@ export class CategoryService {
         success: response.status,
         message: response.message
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        message: error.message || 'Failed to create category'
+        message: error instanceof Error ? error.message : 'Failed to create category'
       };
     }
   }
@@ -74,10 +74,10 @@ export class CategoryService {
         success: response.status,
         message: response.message
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        message: error.message || 'Failed to update category'
+        message: error instanceof Error ? error.message : 'Failed to update category'
       };
     }
   }
@@ -90,10 +90,10 @@ export class CategoryService {
         success: response.status,
         message: response.message
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        message: error.message || 'Failed to delete category'
+        message: error instanceof Error ? error.message : 'Failed to delete category'
       };
     }
   }

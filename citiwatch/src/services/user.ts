@@ -30,10 +30,10 @@ export class UserService {
         data: response.data,
         message: response.message
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        message: error.message || 'Failed to fetch users'
+        message: error instanceof Error ? error.message : 'Failed to fetch users'
       };
     }
   }
@@ -46,10 +46,10 @@ export class UserService {
         success: response.status,
         message: response.message
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        message: error.message || 'Failed to create user'
+        message: error instanceof Error ? error.message : 'Failed to create user'
       };
     }
   }
@@ -62,10 +62,10 @@ export class UserService {
         success: response.status,
         message: response.message
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        message: error.message || 'Failed to create admin user'
+        message: error instanceof Error ? error.message : 'Failed to create admin user'
       };
     }
   }
@@ -78,10 +78,10 @@ export class UserService {
         success: response.status,
         message: response.message
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        message: error.message || 'Failed to update user'
+        message: error instanceof Error ? error.message : 'Failed to update user'
       };
     }
   }
@@ -94,10 +94,10 @@ export class UserService {
         success: response.status,
         message: response.message
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        message: error.message || 'Failed to delete user'
+        message: error instanceof Error ? error.message : 'Failed to delete user'
       };
     }
   }

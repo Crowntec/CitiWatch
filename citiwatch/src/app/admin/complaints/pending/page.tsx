@@ -38,15 +38,15 @@ export default function PendingComplaintsPage() {
         ...complaint,
         status: complaint.statusName || 'Unknown',
         category: complaint.categoryName || 'Unknown',
-        userName: 'Unknown User', // API doesn't provide user name
+        userName: complaint.userName || 'Unknown User',
         createdAt: complaint.createdOn,
         imageUrl: complaint.mediaUrl || undefined
       })).filter(complaint => complaint.status.toLowerCase() === 'pending') || [];
       
       setComplaints(transformedComplaints);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading pending complaints:', error);
-      setError(error.message || 'Failed to load pending complaints');
+      setError(error instanceof Error ? error.message : 'Failed to load pending complaints');
     } finally {
       setLoading(false);
     }

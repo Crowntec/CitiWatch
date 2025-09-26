@@ -43,6 +43,8 @@ namespace CitiWatch.Application.DTOs
         public string? Description { get; set; }
         public string? CategoryName { get; set; }
         public string? StatusName { get; set; }
+        public string? UserName { get; set; }
+        public string? UserEmail { get; set; }
         public string? Latitude { get; set; }
         public string? Longitude { get; set; }
         public string? MediaUrl { get; set; }
