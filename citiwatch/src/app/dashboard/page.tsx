@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import Navigation from '@/components/Navigation';
 import { LoadingCard } from '@/components/Loading';
 import { useAuth } from '@/auth/AuthContext';
@@ -328,9 +329,11 @@ export default function Dashboard() {
                     {/* Complaint Image or Icon */}
                     <div className="flex-shrink-0">
                       {complaint.mediaUrl ? (
-                        <img
+                        <Image
                           src={complaint.mediaUrl}
                           alt="Complaint evidence"
+                          width={64}
+                          height={64}
                           className="w-16 h-16 rounded-lg object-cover border border-gray-600"
                         />
                       ) : (
@@ -431,9 +434,12 @@ export default function Dashboard() {
                   {/* Image */}
                   {selectedComplaint.mediaUrl && (
                     <div className="mb-4">
-                      <img
+                      <Image
                         src={selectedComplaint.mediaUrl}
                         alt="Complaint evidence"
+                        width={0}
+                        height={192}
+                        sizes="100vw"
                         className="w-full h-48 object-cover rounded-lg border border-gray-600"
                       />
                     </div>

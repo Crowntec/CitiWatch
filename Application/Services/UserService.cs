@@ -52,8 +52,12 @@ namespace CitiWatch.Application.Services
                 FullName = x.FullName,
                 Email = x.Email,
                 Role = x.Role,
-                CreatedOn = x.Createdon,
-                LastModifiedOn = x.LastModifiedOn
+                // Handle both default datetime (0001-01-01) and properly set dates
+                CreatedOn = x.Createdon == default(DateTime) ? DateTime.UtcNow : x.Createdon,
+                // If LastModifiedOn is default/unset, use CreatedOn as fallback
+                LastModifiedOn = x.LastModifiedOn == default(DateTime) ? 
+                    (x.Createdon == default(DateTime) ? DateTime.UtcNow : x.Createdon) : 
+                    x.LastModifiedOn
             });
             response.Status = true;
             response.Message = "Users retrieved successfully.";
@@ -100,7 +104,10 @@ namespace CitiWatch.Application.Services
                 FullName = userCreateDto.FullName,
                 Email = userCreateDto.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(userCreateDto.Password),
-                Role = UserRole.User
+                Role = UserRole.User,
+                CreatedBy = Guid.NewGuid(), // You might want to get this from the current user context
+                LastModifiedOn = DateTime.UtcNow,
+                LastModifiedBy = Guid.NewGuid() // You might want to get this from the current user context
             };
 
             await _context.Users.AddAsync(user);
@@ -129,7 +136,10 @@ namespace CitiWatch.Application.Services
                 FullName = userCreateDto.FullName,
                 Email = userCreateDto.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(userCreateDto.Password),
-                Role = UserRole.Admin
+                Role = UserRole.Admin,
+                CreatedBy = Guid.NewGuid(), // You might want to get this from the current user context
+                LastModifiedOn = DateTime.UtcNow,
+                LastModifiedBy = Guid.NewGuid() // You might want to get this from the current user context
             };
 
             await _context.Users.AddAsync(user);

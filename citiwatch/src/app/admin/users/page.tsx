@@ -30,18 +30,23 @@ export default function UsersPage() {
     try {
       const result = await UserService.getAllUsers();
       
-      if (result.success && result.data) {
-        // Transform the data to match our display interface
-        const transformedUsers: UserDisplay[] = result.data.map(user => {
-          // Debug logging to see what we're getting
-          console.log('User data for', user.email, ':', {
-            role: user.role,
-            roleType: typeof user.role,
-            createdOn: user.createdOn,
-            lastModifiedOn: user.lastModifiedOn
-          });
-          
-          // Handle both string and number role values from backend
+    if (result.success && result.data) {
+      // Enhanced debugging to see the raw API response
+      console.log('Raw API response:', result.data);
+      
+      // Transform the data to match our display interface
+      const transformedUsers: UserDisplay[] = result.data.map(user => {
+        // Debug logging to see what we're getting
+        console.log('User data for', user.email, ':', {
+          role: user.role,
+          roleType: typeof user.role,
+          createdOn: user.createdOn,
+          createdOnType: typeof user.createdOn,
+          lastModifiedOn: user.lastModifiedOn,
+          lastModifiedOnType: typeof user.lastModifiedOn,
+          // Log all properties to see what's available
+          allProperties: Object.keys(user)
+        });          // Handle both string and number role values from backend
           let roleNumber: number;
           if (typeof user.role === 'string') {
             // Handle string values: "Admin", "admin", "User", "user"
@@ -148,6 +153,33 @@ export default function UsersPage() {
 
   useEffect(() => {
     loadUsers();
+    
+    // Add debugging function to test API directly
+    (window as Window & { testUserAPI?: () => Promise<void> }).testUserAPI = async () => {
+      try {
+        const result = await UserService.getAllUsers();
+        console.log('=== USER API TEST ===');
+        console.log('Success:', result.success);
+        console.log('Message:', result.message);
+        console.log('Data:', result.data);
+        if (result.data) {
+          result.data.forEach((user, index) => {
+            console.log(`User ${index + 1}:`, {
+              id: user.id,
+              fullName: user.fullName,
+              email: user.email,
+              role: user.role,
+              createdOn: user.createdOn,
+              lastModifiedOn: user.lastModifiedOn,
+              rawUser: user
+            });
+          });
+        }
+        console.log('=== END USER API TEST ===');
+      } catch (error) {
+        console.error('Test error:', error);
+      }
+    };
   }, []);
 
   const filteredUsers = users.filter(user => {
@@ -469,7 +501,7 @@ export default function UsersPage() {
                 <div className="text-center py-8">
                   <i className="fas fa-user-shield text-4xl text-purple-400 mb-4"></i>
                   <p className="text-gray-400 text-lg">This user is an administrator</p>
-                  <p className="text-gray-500 text-sm mt-2">Administrators don't submit complaints</p>
+                  <p className="text-gray-500 text-sm mt-2">Administrators don&apos;t submit complaints</p>
                 </div>
               )}
             </div>

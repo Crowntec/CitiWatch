@@ -95,37 +95,7 @@ function LoginForm() {
           </p>
         </div>
         <div className="bg-gray-800/50 backdrop-blur-sm py-8 px-6 shadow-xl rounded-lg border border-gray-700">
-          {/* Development Login Info */}
-          <div className="bg-blue-900/30 border border-blue-600 text-blue-200 px-4 py-3 rounded-md mb-6">
-            <p className="text-sm mb-2">
-              <strong>Test Credentials:</strong> Use these credentials or create a new account.
-            </p>
-            <div className="mt-2 space-y-2">
-              <div className="border-l-2 border-green-500 pl-3">
-                <p className="text-sm font-semibold text-green-300">👑 Admin Account</p>
-                <p className="text-sm">
-                  Email: <code className="bg-green-800/50 px-1 rounded">admin@citiwatch.com</code>
-                </p>
-                <p className="text-sm">
-                  Password: <code className="bg-green-800/50 px-1 rounded">Admin123</code>
-                </p>
-              </div>
-              <div className="border-l-2 border-blue-500 pl-3">
-                <p className="text-sm font-semibold text-blue-300">👤 Regular User</p>
-                <p className="text-sm">
-                  Email: <code className="bg-blue-800/50 px-1 rounded">demo@citiwatch.com</code>
-                </p>
-                <p className="text-sm">
-                  Password: <code className="bg-blue-800/50 px-1 rounded">password123</code>
-                </p>
-              </div>
-            </div>
-            <p className="text-sm text-green-300 mt-3">
-              ✅ Connected to CitiWatch API at localhost:5182
-            </p>
-          </div>
-          
-          <form className="space-y-6" onSubmit={handleSubmit}>
+        <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
               <div className="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-md">
                 {error}
