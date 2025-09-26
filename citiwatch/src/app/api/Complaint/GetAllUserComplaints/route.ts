@@ -45,9 +45,14 @@ export async function GET(request: NextRequest) {
       }
     ];
 
+    // Sort complaints by creation date (newest first)
+    const sortedComplaints = dummyComplaints.sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
     return NextResponse.json({
       status: 'success',
-      data: dummyComplaints,
+      data: sortedComplaints,
       message: 'Complaints retrieved successfully'
     });
 

@@ -43,7 +43,12 @@ export default function PendingComplaintsPage() {
         imageUrl: complaint.mediaUrl || undefined
       })).filter(complaint => complaint.status.toLowerCase() === 'pending') || [];
       
-      setComplaints(transformedComplaints);
+      // Sort complaints by creation date (newest first)
+      const sortedComplaints = transformedComplaints.sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      
+      setComplaints(sortedComplaints);
     } catch (error: unknown) {
       console.error('Error loading pending complaints:', error);
       setError(error instanceof Error ? error.message : 'Failed to load pending complaints');

@@ -19,6 +19,7 @@ namespace CitiWatch.Application.Services
             var complaints = await _context.Complaints.Include(c => c.Category)
                .Include(c => c.Status)
                .Include(c => c.User)
+               .OrderByDescending(c => c.Createdon)
                .ToListAsync();
 
             if (!complaints.Any())
@@ -93,6 +94,7 @@ namespace CitiWatch.Application.Services
             var complaints = await _context.Complaints.Where(c => c.UserId == userId && !c.IsDeleted).Include(c => c.Category)
                .Include(c => c.Status)
                .Include(c => c.User)
+               .OrderByDescending(c => c.Createdon)
                .ToListAsync();
             if (!complaints.Any())
             {

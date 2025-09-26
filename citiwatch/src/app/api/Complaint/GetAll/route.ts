@@ -68,9 +68,14 @@ export async function GET(request: NextRequest) {
     // In real app, verify admin role from token
     // For demo, assume user is admin if they have a token
 
+    // Sort complaints by creation date (newest first)
+    const sortedComplaints = mockAllComplaints.sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
     return NextResponse.json({
       status: 'success',
-      data: mockAllComplaints,
+      data: sortedComplaints,
       message: 'All complaints retrieved successfully'
     });
 

@@ -98,7 +98,13 @@ export default function UsersPage() {
           const userSpecificComplaints = result.data.filter(
             complaint => complaint.userEmail === user.email
           );
-          setUserComplaints(userSpecificComplaints);
+          
+          // Sort complaints by creation date (newest first)
+          const sortedComplaints = userSpecificComplaints.sort((a, b) => 
+            new Date(b.createdOn).getTime() - new Date(a.createdOn).getTime()
+          );
+          
+          setUserComplaints(sortedComplaints);
         }
       }
     } catch (error) {

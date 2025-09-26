@@ -63,7 +63,12 @@ export default function ComplaintsPage() {
         imageUrl: complaint.mediaUrl || undefined
       })) || [];
       
-      setComplaints(transformedComplaints);
+      // Sort complaints by creation date (newest first)
+      const sortedComplaints = transformedComplaints.sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      
+      setComplaints(sortedComplaints);
       setStatuses(statusesResult.data || []);
     } catch (error: unknown) {
       console.error('Error loading complaints:', error);
