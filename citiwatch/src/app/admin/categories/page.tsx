@@ -3,41 +3,7 @@
 import { useState, useEffect } from 'react';
 import { LoadingCard } from '@/components/Loading';
 import AdminLayout from '@/components/AdminLayout';
-
-interface Category {
-  id: string;
-  name: string;
-  createdAt: string;
-}
-
-// Mock categories data
-const mockCategories: Category[] = [
-  {
-    id: '1',
-    name: 'Infrastructure',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '2',
-    name: 'Public Safety',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '3',
-    name: 'Environment',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '4',
-    name: 'Transportation',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '5',
-    name: 'Healthcare',
-    createdAt: new Date().toISOString()
-  }
-];
+import { CategoryService, Category } from '@/services/category';
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -54,11 +20,13 @@ export default function CategoriesPage() {
     setError('');
     
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const result = await CategoryService.getAllCategories();
       
-      // Use mock data instead of API call
-      setCategories(mockCategories);
+      if (result.success && result.data) {
+        setCategories(result.data);
+      } else {
+        setError(result.message || 'Failed to load categories');
+      }
     } catch (error) {
       console.error('Error loading categories:', error);
       setError('Failed to load categories');
@@ -80,21 +48,22 @@ export default function CategoriesPage() {
     
     setActionLoading('add');
     try {
-      // TODO: Implement actual API call
-      // const result = await makeAuthenticatedRequest('/api/Category/Create', {
-      //   method: 'POST',
-      //   body: JSON.stringify({ name: newCategoryName.trim() })
-      // });
+      const result = await CategoryService.createCategory({ 
+        name: newCategoryName.trim() 
+      });
       
-      // Mock implementation for now
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setNewCategoryName('');
-      setShowAddModal(false);
-      await loadCategories();
+      if (result.success) {
+        setNewCategoryName('');
+        setShowAddModal(false);
+        await loadCategories();
+      } else {
+        setError(result.message || 'Failed to add category');
+        setTimeout(() => setError(''), 5000); // Clear error after 5 seconds
+      }
     } catch (error) {
       console.error('Error adding category:', error);
-      alert('Failed to add category');
+      setError('Failed to add category');
+      setTimeout(() => setError(''), 5000); // Clear error after 5 seconds
     } finally {
       setActionLoading(null);
     }
@@ -105,21 +74,22 @@ export default function CategoriesPage() {
     
     setActionLoading(`edit-${editingCategory.id}`);
     try {
-      // TODO: Implement actual API call
-      // const result = await makeAuthenticatedRequest(`/api/Category/Update/${editingCategory.id}`, {
-      //   method: 'PUT',
-      //   body: JSON.stringify({ name: newCategoryName.trim() })
-      // });
+      const result = await CategoryService.updateCategory(editingCategory.id, { 
+        name: newCategoryName.trim() 
+      });
       
-      // Mock implementation for now
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setEditingCategory(null);
-      setNewCategoryName('');
-      await loadCategories();
+      if (result.success) {
+        setEditingCategory(null);
+        setNewCategoryName('');
+        await loadCategories();
+      } else {
+        setError(result.message || 'Failed to update category');
+        setTimeout(() => setError(''), 5000); // Clear error after 5 seconds
+      }
     } catch (error) {
       console.error('Error updating category:', error);
-      alert('Failed to update category');
+      setError('Failed to update category');
+      setTimeout(() => setError(''), 5000); // Clear error after 5 seconds
     } finally {
       setActionLoading(null);
     }
@@ -132,18 +102,18 @@ export default function CategoriesPage() {
     
     setActionLoading(`delete-${categoryId}`);
     try {
-      // TODO: Implement actual API call
-      // const result = await makeAuthenticatedRequest(`/api/Category/Delete/${categoryId}`, {
-      //   method: 'DELETE'
-      // });
+      const result = await CategoryService.deleteCategory(categoryId);
       
-      // Mock implementation for now
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      await loadCategories();
+      if (result.success) {
+        await loadCategories();
+      } else {
+        setError(result.message || 'Failed to delete category');
+        setTimeout(() => setError(''), 5000); // Clear error after 5 seconds
+      }
     } catch (error) {
       console.error('Error deleting category:', error);
-      alert('Failed to delete category');
+      setError('Failed to delete category');
+      setTimeout(() => setError(''), 5000); // Clear error after 5 seconds
     } finally {
       setActionLoading(null);
     }
@@ -233,7 +203,8 @@ export default function CategoriesPage() {
               <div className="ml-4">
                 <p className="text-3xl font-bold text-white">
                   {categories.filter(c => {
-                    const createdDate = new Date(c.createdAt);
+                    if (!c.createdOn) return false;
+                    const createdDate = new Date(c.createdOn);
                     const now = new Date();
                     return createdDate.getMonth() === now.getMonth() && createdDate.getFullYear() === now.getFullYear();
                   }).length}
@@ -331,7 +302,7 @@ export default function CategoriesPage() {
                     </div>
                     
                     <p className="text-sm text-gray-400 mb-4">
-                      Created: {new Date(category.createdAt).toLocaleDateString()}
+                      Created: {category.createdOn ? new Date(category.createdOn).toLocaleDateString() : 'Unknown'}
                     </p>
                     
                     <div className="flex justify-end space-x-2">
