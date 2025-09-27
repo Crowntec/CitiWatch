@@ -108,6 +108,12 @@ export default function Dashboard() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
+    
+    // Check for invalid dates or dates that are too old (like year 1)
+    if (isNaN(date.getTime()) || date.getFullYear() < 1900) {
+      return 'Invalid date';
+    }
+    
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -370,7 +376,9 @@ export default function Dashboard() {
                                 Location provided
                               </span>
                             )}
-                            {complaint.lastModifiedOn !== complaint.createdOn && (
+                            {complaint.lastModifiedOn && 
+                             complaint.lastModifiedOn !== complaint.createdOn && 
+                             new Date(complaint.lastModifiedOn).getFullYear() > 1900 && (
                               <span className="flex items-center">
                                 <i className="fas fa-edit mr-1"></i>
                                 Updated {formatDate(complaint.lastModifiedOn)}
@@ -461,7 +469,9 @@ export default function Dashboard() {
                       <h5 className="font-medium text-gray-300 mb-1">Submitted</h5>
                       <p className="text-gray-200">{formatDate(selectedComplaint.createdOn)}</p>
                     </div>
-                    {selectedComplaint.lastModifiedOn !== selectedComplaint.createdOn && (
+                    {selectedComplaint.lastModifiedOn && 
+                     selectedComplaint.lastModifiedOn !== selectedComplaint.createdOn && 
+                     new Date(selectedComplaint.lastModifiedOn).getFullYear() > 1900 && (
                       <div className="md:col-span-2">
                         <h5 className="font-medium text-gray-300 mb-1">Last Updated</h5>
                         <p className="text-gray-200">{formatDate(selectedComplaint.lastModifiedOn)}</p>
@@ -470,15 +480,16 @@ export default function Dashboard() {
                     {selectedComplaint.latitude && selectedComplaint.longitude && (
                       <div className="md:col-span-2">
                         <h5 className="font-medium text-gray-300 mb-1">Location</h5>
-                        <div className="flex items-center space-x-2">
-                          <p className="text-gray-200">
-                            {selectedComplaint.latitude}, {selectedComplaint.longitude}
-                          </p>
+                        <div className="flex items-center space-x-3">
+                          <div className="flex items-center text-gray-200">
+                            <i className="fas fa-map-marker-alt mr-2 text-blue-400"></i>
+                            <span>Location coordinates available</span>
+                          </div>
                           <a
                             href={`https://www.google.com/maps?q=${selectedComplaint.latitude},${selectedComplaint.longitude}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-400 hover:text-blue-300 text-xs"
+                            className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-400 hover:text-blue-300 border border-blue-600 hover:border-blue-500 rounded-md transition-colors"
                           >
                             <i className="fas fa-external-link-alt mr-1"></i>
                             View on Maps

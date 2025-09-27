@@ -40,7 +40,8 @@ namespace CitiWatch.Application.Services
                 Latitude = c.Latitude,
                 Longitude = c.Longitude,
                 MediaUrl = c.MediaUrl,
-                CreatedOn = c.Createdon
+                CreatedOn = c.Createdon,
+                LastModifiedOn = c.LastModifiedOn
             })];
             response.Status = true;
             response.Message = "Success";
@@ -73,7 +74,8 @@ namespace CitiWatch.Application.Services
                 Latitude = complaint.Latitude,
                 Longitude = complaint.Longitude,
                 MediaUrl = complaint.MediaUrl,
-                CreatedOn = complaint.Createdon
+                CreatedOn = complaint.Createdon,
+                LastModifiedOn = complaint.LastModifiedOn
             };
             response.Message = "Success";
             response.Status = true;
@@ -114,7 +116,8 @@ namespace CitiWatch.Application.Services
                 Latitude = c.Latitude,
                 Longitude = c.Longitude,
                 MediaUrl = c.MediaUrl,
-                CreatedOn = c.Createdon
+                CreatedOn = c.Createdon,
+                LastModifiedOn = c.LastModifiedOn
             })];
             response.Message = "Success";
             response.Status = true;
@@ -157,7 +160,10 @@ namespace CitiWatch.Application.Services
                 StatusId = status.Id,
                 Latitude = createDto.Latitude,
                 Longitude = createDto.Longitude,
-                MediaUrl = mediaUrl
+                MediaUrl = mediaUrl,
+                CreatedBy = _validatorHelper.GetUserId(),
+                LastModifiedBy = _validatorHelper.GetUserId(),
+                LastModifiedOn = DateTime.UtcNow
             };
 
             await _context.Complaints.AddAsync(complaint);
