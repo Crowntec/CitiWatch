@@ -152,6 +152,47 @@ export default function AdminDashboard() {
       .slice(0, 5);
   };
 
+  const getDirectionsToComplaint = (complaint: Complaint) => {
+    if (!complaint.latitude || !complaint.longitude) {
+      alert('Location information is not available for this complaint.');
+      return;
+    }
+
+    const destination = `${complaint.latitude},${complaint.longitude}`;
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude: currentLat, longitude: currentLng } = position.coords;
+          const origin = `${currentLat},${currentLng}`;
+          
+          // Open Google Maps with directions
+          const mapsUrl = `https://www.google.com/maps/dir/${origin}/${destination}`;
+          window.open(mapsUrl, '_blank');
+        },
+        (error) => {
+          console.error('Error getting current location:', error);
+          // Fallback: Open Google Maps with just the destination
+          const mapsUrl = `https://www.google.com/maps/search/${destination}`;
+          window.open(mapsUrl, '_blank');
+          
+          // Show user-friendly error message
+          alert('Could not get your current location. Opening destination location instead.');
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000 // 5 minutes
+        }
+      );
+    } else {
+      // Geolocation not supported
+      const mapsUrl = `https://www.google.com/maps/search/${destination}`;
+      window.open(mapsUrl, '_blank');
+      alert('Geolocation is not supported by your browser. Opening destination location.');
+    }
+  };
+
   // Show loading while checking authentication
   if (authLoading) {
     return (
@@ -432,15 +473,18 @@ export default function AdminDashboard() {
                     {getRecentComplaints().map((complaint) => (
                       <tr key={complaint.id} className="hover:bg-gray-700/30 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-white">
+                          <div className="text-sm font-medium text-white flex items-center">
                             {complaint.title}
+                            {complaint.latitude && complaint.longitude && (
+                              <i className="fas fa-map-marker-alt ml-2 text-blue-400" title="Has location data"></i>
+                            )}
                           </div>
                           <div className="text-sm text-gray-400 max-w-xs truncate">
                             {complaint.description}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                          Unknown User
+                          {complaint.userName || complaint.userEmail || 'Unknown User'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                           {complaint.categoryName}
@@ -453,13 +497,23 @@ export default function AdminDashboard() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
                           {new Date(complaint.createdOn).toLocaleDateString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                           <Link
                             href={`/admin/complaints/${complaint.id}`}
-                            className="text-blue-400 hover:text-blue-300 mr-3 transition-colors"
+                            className="text-blue-400 hover:text-blue-300 transition-colors"
                           >
                             View
                           </Link>
+                          {complaint.latitude && complaint.longitude && (
+                            <button
+                              onClick={() => getDirectionsToComplaint(complaint)}
+                              className="text-purple-400 hover:text-purple-300 transition-colors"
+                              title="Get directions to complaint location"
+                            >
+                              <i className="fas fa-directions mr-1"></i>
+                              Route
+                            </button>
+                          )}
                           <button className="text-green-400 hover:text-green-300 transition-colors">
                             Update Status
                           </button>

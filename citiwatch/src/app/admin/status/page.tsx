@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { LoadingCard } from '@/components/Loading';
 import AdminLayout from '@/components/AdminLayout';
+import { StatusService, type Status as ApiStatus } from '@/services/status';
 
-interface Status {
-  id: string;
-  name: string;
+// Extended Status interface for UI display
+interface Status extends ApiStatus {
   description: string;
   color: string;
   icon: string;
@@ -14,6 +14,51 @@ interface Status {
   isActive: boolean;
   createdAt: string;
 }
+
+// Helper functions for mapping status properties
+const getStatusColor = (name: string): string => {
+  switch (name.toLowerCase()) {
+    case 'pending':
+    case 'submitted':
+      return 'yellow';
+    case 'in progress':
+    case 'processing':
+      return 'blue';
+    case 'resolved':
+    case 'completed':
+      return 'green';
+    case 'rejected':
+    case 'cancelled':
+      return 'red';
+    case 'under review':
+    case 'reviewing':
+      return 'purple';
+    default:
+      return 'gray';
+  }
+};
+
+const getStatusIcon = (name: string): string => {
+  switch (name.toLowerCase()) {
+    case 'pending':
+    case 'submitted':
+      return 'fas fa-clock';
+    case 'in progress':
+    case 'processing':
+      return 'fas fa-spinner';
+    case 'resolved':
+    case 'completed':
+      return 'fas fa-check-circle';
+    case 'rejected':
+    case 'cancelled':
+      return 'fas fa-times-circle';
+    case 'under review':
+    case 'reviewing':
+      return 'fas fa-search';
+    default:
+      return 'fas fa-circle';
+  }
+};
 
 export default function StatusManagementPage() {
   const [statuses, setStatuses] = useState<Status[]>([]);
@@ -25,66 +70,24 @@ export default function StatusManagementPage() {
     setError('');
     
     try {
-      // TODO: Implement actual API call
-      // const data = await makeAuthenticatedRequest<Status[]>('/api/Status/GetAll');
+      const response = await StatusService.getAllStatuses();
       
-      // Mock data for now
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockStatuses: Status[] = [
-        {
-          id: '1',
-          name: 'Pending',
-          description: 'Complaint has been submitted and is awaiting review',
-          color: 'yellow',
-          icon: 'fas fa-clock',
-          order: 1,
+      if (response.success && response.data) {
+        // Map API status data to the extended interface expected by the UI
+        const mappedStatuses = response.data.map((status, index) => ({
+          ...status,
+          description: `Status: ${status.name}`,
+          color: getStatusColor(status.name),
+          icon: getStatusIcon(status.name),
+          order: index + 1,
           isActive: true,
-          createdAt: '2024-01-01T00:00:00Z'
-        },
-        {
-          id: '2',
-          name: 'In Progress',
-          description: 'Complaint is being actively worked on by the relevant department',
-          color: 'blue',
-          icon: 'fas fa-spinner',
-          order: 2,
-          isActive: true,
-          createdAt: '2024-01-01T00:00:00Z'
-        },
-        {
-          id: '3',
-          name: 'Resolved',
-          description: 'Complaint has been successfully addressed and closed',
-          color: 'green',
-          icon: 'fas fa-check-circle',
-          order: 3,
-          isActive: true,
-          createdAt: '2024-01-01T00:00:00Z'
-        },
-        {
-          id: '4',
-          name: 'Rejected',
-          description: 'Complaint does not meet criteria or cannot be addressed',
-          color: 'red',
-          icon: 'fas fa-times-circle',
-          order: 4,
-          isActive: true,
-          createdAt: '2024-01-01T00:00:00Z'
-        },
-        {
-          id: '5',
-          name: 'Under Review',
-          description: 'Complaint requires additional investigation or approval',
-          color: 'purple',
-          icon: 'fas fa-search',
-          order: 5,
-          isActive: false,
-          createdAt: '2024-01-01T00:00:00Z'
-        }
-      ];
-      
-      setStatuses(mockStatuses);
+          createdAt: status.createdOn || new Date().toISOString()
+        }));
+        
+        setStatuses(mappedStatuses);
+      } else {
+        setError(response.message || 'Failed to load statuses');
+      }
     } catch (error) {
       console.error('Error loading statuses:', error);
       setError('Failed to load status information');

@@ -193,6 +193,47 @@ export default function ComplaintsPage() {
     setNewStatusId('');
   }, [selectedComplaint, newStatusId, updateComplaintStatus]);
 
+  const getDirectionsToComplaint = (complaint: ComplaintWithUser) => {
+    if (!complaint.latitude || !complaint.longitude) {
+      alert('Location information is not available for this complaint.');
+      return;
+    }
+
+    const destination = `${complaint.latitude},${complaint.longitude}`;
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude: currentLat, longitude: currentLng } = position.coords;
+          const origin = `${currentLat},${currentLng}`;
+          
+          // Open Google Maps with directions
+          const mapsUrl = `https://www.google.com/maps/dir/${origin}/${destination}`;
+          window.open(mapsUrl, '_blank');
+        },
+        (error) => {
+          console.error('Error getting current location:', error);
+          // Fallback: Open Google Maps with just the destination
+          const mapsUrl = `https://www.google.com/maps/search/${destination}`;
+          window.open(mapsUrl, '_blank');
+          
+          // Show user-friendly error message
+          alert('Could not get your current location. Opening destination location instead.');
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000 // 5 minutes
+        }
+      );
+    } else {
+      // Geolocation not supported
+      const mapsUrl = `https://www.google.com/maps/search/${destination}`;
+      window.open(mapsUrl, '_blank');
+      alert('Geolocation is not supported by your browser. Opening destination location.');
+    }
+  };
+
   if (loading) {
     return (
       <AdminLayout>
@@ -402,8 +443,11 @@ export default function ComplaintsPage() {
                         </div>
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-white leading-tight">
+                        <h3 className="text-lg font-semibold text-white leading-tight flex items-center">
                           {complaint.title}
+                          {complaint.latitude && complaint.longitude && (
+                            <i className="fas fa-map-marker-alt ml-2 text-blue-400" title="Has location data"></i>
+                          )}
                         </h3>
                         <p className="text-sm text-gray-400">
                           ID: #{complaint.id}
@@ -508,6 +552,15 @@ export default function ComplaintsPage() {
                       >
                         <i className="fas fa-edit"></i>
                       </button>
+                      {complaint.latitude && complaint.longitude && (
+                        <button 
+                          className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors"
+                          onClick={() => getDirectionsToComplaint(complaint)}
+                          title="Get Directions to Location"
+                        >
+                          <i className="fas fa-directions"></i>
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

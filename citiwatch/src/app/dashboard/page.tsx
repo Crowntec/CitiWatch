@@ -3,11 +3,22 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import Navigation from '@/components/Navigation';
 import { LoadingCard } from '@/components/Loading';
 import { useAuth } from '@/auth/AuthContext';
 import { ProtectedRoute } from '@/auth/ProtectedRoute';
 import { ComplaintService, type Complaint } from '@/services/complaint';
+
+// Dynamically import MapDisplay to avoid SSR issues
+const MapDisplay = dynamic(() => import('@/components/MapDisplay'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-48 w-full rounded-lg bg-gray-600/50 flex items-center justify-center">
+      <p className="text-gray-400">Loading map...</p>
+    </div>
+  )
+});
 
 export default function Dashboard() {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
@@ -479,21 +490,29 @@ export default function Dashboard() {
                     )}
                     {selectedComplaint.latitude && selectedComplaint.longitude && (
                       <div className="md:col-span-2">
-                        <h5 className="font-medium text-gray-300 mb-1">Location</h5>
-                        <div className="flex items-center space-x-3">
-                          <div className="flex items-center text-gray-200">
-                            <i className="fas fa-map-marker-alt mr-2 text-blue-400"></i>
-                            <span>Location coordinates available</span>
+                        <h5 className="font-medium text-gray-300 mb-3">Location</h5>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center text-gray-200">
+                              <i className="fas fa-map-marker-alt mr-2 text-blue-400"></i>
+                              <span>Coordinates: {selectedComplaint.latitude}, {selectedComplaint.longitude}</span>
+                            </div>
+                            <a
+                              href={`https://www.google.com/maps?q=${selectedComplaint.latitude},${selectedComplaint.longitude}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-400 hover:text-blue-300 border border-blue-600 hover:border-blue-500 rounded-md transition-colors"
+                            >
+                              <i className="fas fa-external-link-alt mr-1"></i>
+                              Open in Maps
+                            </a>
                           </div>
-                          <a
-                            href={`https://www.google.com/maps?q=${selectedComplaint.latitude},${selectedComplaint.longitude}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-400 hover:text-blue-300 border border-blue-600 hover:border-blue-500 rounded-md transition-colors"
-                          >
-                            <i className="fas fa-external-link-alt mr-1"></i>
-                            View on Maps
-                          </a>
+                          <div className="w-full">
+                            <MapDisplay 
+                              latitude={parseFloat(selectedComplaint.latitude)}
+                              longitude={parseFloat(selectedComplaint.longitude)}
+                            />
+                          </div>
                         </div>
                       </div>
                     )}

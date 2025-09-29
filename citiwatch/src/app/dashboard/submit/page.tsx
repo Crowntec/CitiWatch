@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { LoadingButton } from '@/components/Loading';
 import Navigation from '@/components/Navigation';
-import LocationMap from '@/components/LocationMap';
+import LocationMiniApp from '@/components/LocationMiniApp';
 import { CategoryService, type Category } from '@/services/category';
 import { ComplaintService } from '@/services/complaint';
 
@@ -22,13 +22,7 @@ export default function SubmitComplaint() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [locationLoading, setLocationLoading] = useState(false);
-  const [showLocationMap, setShowLocationMap] = useState(false);
-  const [tempLocation, setTempLocation] = useState<{
-    latitude: number;
-    longitude: number;
-    address?: string;
-  } | null>(null);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -86,87 +80,14 @@ export default function SubmitComplaint() {
     }
   };
 
-  const getCurrentLocation = () => {
-    setLocationLoading(true);
-    setError('');
-    
-    // Check if geolocation is supported
-    if (!navigator.geolocation) {
-      setError('Geolocation is not supported by this browser.');
-      setLocationLoading(false);
-      return;
-    }
 
-    // Get position with proper error handling
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        console.log('Location obtained successfully:', position.coords);
-        // Store temporary location and show map for confirmation
-        setTempLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
-        setShowLocationMap(true);
-        setLocationLoading(false);
-      },
-      (error) => {
-        // Log the full error object for debugging
-        console.error('Geolocation error details:', {
-          code: error.code,
-          message: error.message,
-          fullError: error
-        });
-        
-        let errorMessage = 'Unable to get location. ';
-        
-        // Check if running on secure context
-        if (!window.isSecureContext) {
-          errorMessage += 'Location access requires a secure context (HTTPS or localhost).';
-        } else if (error && error.code) {
-          switch (error.code) {
-            case GeolocationPositionError.PERMISSION_DENIED:
-              errorMessage += 'Location access was denied. Please click the location icon in your browser\'s address bar and allow location access, then try again.';
-              break;
-            case GeolocationPositionError.POSITION_UNAVAILABLE:
-              errorMessage += 'Location information is unavailable. Please check your device\'s location settings or enter coordinates manually.';
-              break;
-            case GeolocationPositionError.TIMEOUT:
-              errorMessage += 'Location request timed out. Please try again.';
-              break;
-            default:
-              errorMessage += 'An unknown error occurred. Please try again or enter coordinates manually.';
-              break;
-          }
-        } else {
-          errorMessage += 'Location access may be blocked by your browser settings or device privacy settings. Please check your browser permissions.';
-        }
-        
-        setError(errorMessage);
-        setLocationLoading(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 300000 // 5 minutes
-      }
-    );
-  };
 
-  const handleLocationConfirm = () => {
-    if (tempLocation) {
-      setFormData({
-        ...formData,
-        latitude: tempLocation.latitude.toString(),
-        longitude: tempLocation.longitude.toString(),
-      });
-      setShowLocationMap(false);
-      setTempLocation(null);
-    }
-  };
-
-  const handleLocationCancel = () => {
-    setShowLocationMap(false);
-    setTempLocation(null);
+  const handleLocationMiniAppChange = (lat: string, lng: string) => {
+    setFormData({
+      ...formData,
+      latitude: lat,
+      longitude: lng,
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -180,6 +101,7 @@ export default function SubmitComplaint() {
     if (!formData.title.trim()) validationErrors.push('Title is required');
     if (!formData.description.trim()) validationErrors.push('Description is required');
     if (!formData.categoryId) validationErrors.push('Category is required');
+    if (!formData.latitude || !formData.longitude) validationErrors.push('Location is required');
 
     if (validationErrors.length > 0) {
       setError(validationErrors.join(', '));
@@ -356,83 +278,12 @@ export default function SubmitComplaint() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Location (Optional)
-              </label>
-              
-              {showLocationMap && tempLocation ? (
-                <LocationMap
-                  latitude={tempLocation.latitude}
-                  longitude={tempLocation.longitude}
-                  onConfirm={handleLocationConfirm}
-                  onCancel={handleLocationCancel}
-                  address={tempLocation.address}
-                />
-              ) : (
-                <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label htmlFor="latitude" className="block text-xs font-medium text-gray-400 mb-1">
-                        Latitude
-                      </label>
-                      <input
-                        type="text"
-                        id="latitude"
-                        name="latitude"
-                        value={formData.latitude}
-                        onChange={handleChange}
-                        className="block w-full px-3 py-2 border border-gray-600 bg-gray-700/50 text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
-                        placeholder="e.g., 40.7128"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="longitude" className="block text-xs font-medium text-gray-400 mb-1">
-                        Longitude
-                      </label>
-                      <input
-                        type="text"
-                        id="longitude"
-                        name="longitude"
-                        value={formData.longitude}
-                        onChange={handleChange}
-                        className="block w-full px-3 py-2 border border-gray-600 bg-gray-700/50 text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
-                        placeholder="e.g., -74.0060"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center">
-                    <button
-                      type="button"
-                      onClick={getCurrentLocation}
-                      disabled={locationLoading}
-                      className="inline-flex items-center px-4 py-2 border border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-300 bg-gray-700/50 hover:bg-gray-600/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-800 disabled:opacity-50 transition-colors"
-                    >
-                      {locationLoading ? (
-                        <>
-                          <div className="animate-spin -ml-1 mr-2 h-4 w-4 border-2 border-gray-500 border-t-blue-400 rounded-full"></div>
-                          Getting location...
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          Use Current Location
-                        </>
-                      )}
-                    </button>
-                    {formData.latitude && formData.longitude && (
-                      <span className="ml-3 text-sm text-green-400">
-                        ✓ Location set
-                      </span>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
+            <LocationMiniApp
+              latitude={formData.latitude}
+              longitude={formData.longitude}
+              onLocationChange={handleLocationMiniAppChange}
+              loading={loading}
+            />
 
             <div className="flex justify-end space-x-4">
               <Link

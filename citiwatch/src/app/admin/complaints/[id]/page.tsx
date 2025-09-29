@@ -3,10 +3,21 @@
 import { useState, useEffect, useCallback, use, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { LoadingCard } from '@/components/Loading';
 import AdminLayout from '@/components/AdminLayout';
 import { ComplaintService, type Complaint as APIComplaint } from '@/services/complaint';
 import { StatusService, type Status } from '@/services/status';
+
+// Dynamically import MapDisplay to avoid SSR issues
+const MapDisplay = dynamic(() => import('@/components/MapDisplay'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-64 w-full rounded-lg bg-gray-600/50 flex items-center justify-center">
+      <p className="text-gray-400">Loading map...</p>
+    </div>
+  )
+});
 
 // Extended interface for UI with additional fields
 interface ComplaintDetails extends APIComplaint {
@@ -147,6 +158,64 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
     }
   };
 
+  const getDirectionsToLocation = (latitude: number, longitude: number) => {
+    const destination = `${latitude},${longitude}`;
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude: currentLat, longitude: currentLng } = position.coords;
+          const origin = `${currentLat},${currentLng}`;
+          
+          // Detect user's platform and provide appropriate mapping service
+          const userAgent = navigator.userAgent;
+          let mapsUrl: string;
+          
+          if (/iPhone|iPad|iPod/i.test(userAgent)) {
+            // iOS - Apple Maps
+            mapsUrl = `maps://maps.apple.com/?saddr=${currentLat},${currentLng}&daddr=${destination}`;
+            // Fallback to Google Maps if Apple Maps not available
+            setTimeout(() => {
+              window.open(`https://www.google.com/maps/dir/${origin}/${destination}`, '_blank');
+            }, 1000);
+            window.location.href = mapsUrl;
+          } else if (/Android/i.test(userAgent)) {
+            // Android - Google Maps
+            mapsUrl = `google.navigation:q=${destination}&mode=d`;
+            // Fallback to web Google Maps
+            setTimeout(() => {
+              window.open(`https://www.google.com/maps/dir/${origin}/${destination}`, '_blank');
+            }, 1000);
+            window.location.href = mapsUrl;
+          } else {
+            // Desktop - Open Google Maps in new tab
+            mapsUrl = `https://www.google.com/maps/dir/${origin}/${destination}`;
+            window.open(mapsUrl, '_blank');
+          }
+        },
+        (error) => {
+          console.error('Error getting current location:', error);
+          // Fallback: Open Google Maps with just the destination
+          const mapsUrl = `https://www.google.com/maps/search/${destination}`;
+          window.open(mapsUrl, '_blank');
+          
+          // Show user-friendly error message
+          alert('Could not get your current location. Opening destination location instead.');
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000 // 5 minutes
+        }
+      );
+    } else {
+      // Geolocation not supported
+      const mapsUrl = `https://www.google.com/maps/search/${destination}`;
+      window.open(mapsUrl, '_blank');
+      alert('Geolocation is not supported by your browser. Opening destination location.');
+    }
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
       case 'pending':
@@ -260,15 +329,35 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
                           {complaint.location.address}
                         </p>
                       )}
-                      <p className="text-gray-400 text-sm">
-                        Coordinates: {complaint.location.latitude}, {complaint.location.longitude}
-                      </p>
-                      {/* TODO: Add map integration */}
-                      <div className="mt-3 bg-gray-600/50 rounded-lg h-32 flex items-center justify-center">
-                        <p className="text-gray-400">
-                          <i className="fas fa-map mr-2"></i>
-                          Map integration coming soon
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-gray-400 text-sm">
+                          Coordinates: {complaint.location.latitude}, {complaint.location.longitude}
                         </p>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => complaint.location && getDirectionsToLocation(complaint.location.latitude, complaint.location.longitude)}
+                            className="inline-flex items-center px-3 py-1 text-sm font-medium text-purple-400 hover:text-purple-300 border border-purple-600 hover:border-purple-500 rounded-md transition-colors"
+                          >
+                            <i className="fas fa-directions mr-2"></i>
+                            Get Directions
+                          </button>
+                          <a
+                            href={`https://www.google.com/maps/search/${complaint.location?.latitude},${complaint.location?.longitude}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center px-3 py-1 text-sm font-medium text-blue-400 hover:text-blue-300 border border-blue-600 hover:border-blue-500 rounded-md transition-colors"
+                          >
+                            <i className="fas fa-external-link-alt mr-2"></i>
+                            Open in Maps
+                          </a>
+                        </div>
+                      </div>
+                      <div className="mt-3">
+                        <MapDisplay 
+                          latitude={complaint.location.latitude}
+                          longitude={complaint.location.longitude}
+                          address={complaint.location.address}
+                        />
                       </div>
                     </div>
                   </div>

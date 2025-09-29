@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AdminLayout from '@/components/AdminLayout';
+import { UserService } from '@/services/user';
 
 export default function ManageUsersPage() {
   const [formData, setFormData] = useState({
@@ -73,24 +74,28 @@ export default function ManageUsersPage() {
         role: formData.role
       };
       
-      // Mock user creation - simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Create user via API
+      const result = formData.role === 1 
+        ? await UserService.createAdminUser(userData)
+        : await UserService.createUser(userData);
       
-      // Simulate successful user creation
-      console.log('Mock user created:', userData);
-      setSuccess('User created successfully!');
-      setFormData({
-        fullName: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        role: 0
-      });
-      
-      // Redirect after a brief delay
-      setTimeout(() => {
-        router.push('/admin/users');
-      }, 2000);
+      if (result.success) {
+        setSuccess(result.message || 'User created successfully!');
+        setFormData({
+          fullName: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+          role: 0
+        });
+        
+        // Redirect after a brief delay
+        setTimeout(() => {
+          router.push('/admin/users');
+        }, 2000);
+      } else {
+        setError(result.message || 'Failed to create user');
+      }
     } catch (error) {
       console.error('Error creating user:', error);
       setError('An error occurred while creating the user');

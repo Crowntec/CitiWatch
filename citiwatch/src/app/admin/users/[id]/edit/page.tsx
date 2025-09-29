@@ -5,65 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AdminLayout from '@/components/AdminLayout';
 import { LoadingCard } from '@/components/Loading';
-
-interface User {
-  id: string;
-  fullName: string;
-  email: string;
-  role: number;
-  phone?: string;
-  address?: string;
-  createdAt: string;
-}
-
-// Mock users data
-const mockUsers: User[] = [
-  {
-    id: '1',
-    fullName: 'John Smith',
-    email: 'john.smith@email.com',
-    phone: '+1 (555) 123-4567',
-    address: '123 Main St, City, State 12345',
-    role: 0, // User
-    createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: '2',
-    fullName: 'Sarah Johnson',
-    email: 'sarah.johnson@email.com',
-    phone: '+1 (555) 987-6543',
-    address: '456 Oak Ave, City, State 12345',
-    role: 0, // User
-    createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: '3',
-    fullName: 'Mike Davis',
-    email: 'mike.davis@email.com',
-    phone: '+1 (555) 246-8135',
-    address: '789 Pine St, City, State 12345',
-    role: 0, // User
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: '4',
-    fullName: 'Lisa Chen',
-    email: 'lisa.chen@email.com',
-    phone: '+1 (555) 369-2580',
-    address: '321 Elm St, City, State 12345',
-    role: 1, // Admin
-    createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: '5',
-    fullName: 'Robert Wilson',
-    email: 'robert.wilson@email.com',
-    phone: '+1 (555) 147-2589',
-    address: '654 Maple Ave, City, State 12345',
-    role: 0, // User
-    createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString()
-  }
-];
+import { UserService, type User } from '@/services/user';
 
 export default function EditUserPage() {
   const params = useParams();
@@ -71,43 +13,69 @@ export default function EditUserPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
-    phone: '',
-    address: '',
-    role: 0
+    role: 0 as number
   });
 
   useEffect(() => {
-    const userId = params.id as string;
-    // Simulate API call
-    setTimeout(() => {
-      const foundUser = mockUsers.find(u => u.id === userId);
-      if (foundUser) {
-        setUser(foundUser);
-        setFormData({
-          fullName: foundUser.fullName,
-          email: foundUser.email,
-          phone: foundUser.phone || '',
-          address: foundUser.address || '',
-          role: foundUser.role
-        });
+    const loadUser = async () => {
+      const userId = params.id as string;
+      
+      try {
+        const response = await UserService.getAllUsers();
+        if (response.success && response.data) {
+          const foundUser = response.data.find(u => u.id === userId);
+          if (foundUser) {
+            setUser(foundUser);
+            setFormData({
+              fullName: foundUser.fullName,
+              email: foundUser.email,
+              role: typeof foundUser.role === 'number' ? foundUser.role : parseInt(foundUser.role as string)
+            });
+          }
+        } else {
+          setError(response.message || 'Failed to load user');
+        }
+      } catch (error) {
+        console.error('Error loading user:', error);
+        setError('An error occurred while loading user details');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    }, 500);
+    };
+
+    loadUser();
   }, [params.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    setError('');
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log('Saving user:', { ...formData, id: user?.id });
+    try {
+      if (!user?.id) {
+        throw new Error('User ID is required');
+      }
+
+      const result = await UserService.updateUser(user.id, {
+        fullName: formData.fullName,
+        email: formData.email
+      });
+
+      if (result.success) {
+        router.push(`/admin/users/${user.id}`);
+      } else {
+        setError(result.message || 'Failed to update user');
+      }
+    } catch (error) {
+      console.error('Error updating user:', error);
+      setError(error instanceof Error ? error.message : 'An error occurred while updating the user');
+    } finally {
       setSaving(false);
-      router.push(`/admin/users/${user?.id}`);
-    }, 1000);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -123,6 +91,27 @@ export default function EditUserPage() {
       <AdminLayout>
         <div className="space-y-6">
           <LoadingCard />
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout>
+        <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-8 text-center">
+          <div className="text-6xl text-red-400 mb-4">
+            <i className="fas fa-exclamation-triangle"></i>
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-4">Error Loading User</h2>
+          <p className="text-red-300 mb-6">{error}</p>
+          <Link
+            href="/admin/users"
+            className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors inline-flex items-center"
+          >
+            <i className="fas fa-arrow-left mr-2"></i>
+            Back to Users
+          </Link>
         </div>
       </AdminLayout>
     );
@@ -214,20 +203,7 @@ export default function EditUserPage() {
                   />
                 </div>
 
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-400 mb-2">
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400"
-                    placeholder="Enter phone number"
-                  />
-                </div>
+
               </div>
 
               {/* Right Column */}
@@ -248,27 +224,12 @@ export default function EditUserPage() {
                   </select>
                 </div>
 
-                <div>
-                  <label htmlFor="address" className="block text-sm font-medium text-gray-400 mb-2">
-                    Address
-                  </label>
-                  <input
-                    type="text"
-                    id="address"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400"
-                    placeholder="Enter address"
-                  />
-                </div>
-
                 {/* Account Info */}
                 <div className="bg-gray-700 rounded-lg p-4">
                   <h3 className="text-sm font-medium text-gray-300 mb-2">Account Information</h3>
                   <div className="space-y-2 text-sm text-gray-400">
                     <p><span className="font-medium">User ID:</span> {user.id}</p>
-                    <p><span className="font-medium">Created:</span> {new Date(user.createdAt).toLocaleDateString()}</p>
+                    <p><span className="font-medium">Created:</span> {new Date(user.createdOn).toLocaleDateString()}</p>
                   </div>
                 </div>
               </div>

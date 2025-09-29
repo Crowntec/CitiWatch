@@ -5,86 +5,36 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AdminLayout from '@/components/AdminLayout';
 import { LoadingCard } from '@/components/Loading';
-
-interface User {
-  id: string;
-  fullName: string;
-  email: string;
-  role: number;
-  createdAt: string;
-  phone?: string;
-  address?: string;
-  lastLogin?: string;
-}
-
-// Mock users data
-const mockUsers: User[] = [
-  {
-    id: '1',
-    fullName: 'John Smith',
-    email: 'john.smith@email.com',
-    phone: '+1 (555) 123-4567',
-    address: '123 Main St, City, State 12345',
-    role: 0, // User
-    createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-    lastLogin: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: '2',
-    fullName: 'Sarah Johnson',
-    email: 'sarah.johnson@email.com',
-    phone: '+1 (555) 987-6543',
-    address: '456 Oak Ave, City, State 12345',
-    role: 0, // User
-    createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-    lastLogin: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: '3',
-    fullName: 'Mike Davis',
-    email: 'mike.davis@email.com',
-    phone: '+1 (555) 246-8135',
-    address: '789 Pine St, City, State 12345',
-    role: 0, // User
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    lastLogin: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: '4',
-    fullName: 'Lisa Chen',
-    email: 'lisa.chen@email.com',
-    phone: '+1 (555) 369-2580',
-    address: '321 Elm St, City, State 12345',
-    role: 1, // Admin
-    createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
-    lastLogin: new Date(Date.now() - 30 * 60 * 1000).toISOString()
-  },
-  {
-    id: '5',
-    fullName: 'Robert Wilson',
-    email: 'robert.wilson@email.com',
-    phone: '+1 (555) 147-2589',
-    address: '654 Maple Ave, City, State 12345',
-    role: 0, // User
-    createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-    lastLogin: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-  }
-];
+import { UserService, type User } from '@/services/user';
 
 export default function UserDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    const userId = params.id as string;
-    // Simulate API call
-    setTimeout(() => {
-      const foundUser = mockUsers.find(u => u.id === userId);
-      setUser(foundUser || null);
-      setLoading(false);
-    }, 500);
+    const loadUser = async () => {
+      const userId = params.id as string;
+      
+      try {
+        const response = await UserService.getAllUsers();
+        if (response.success && response.data) {
+          const foundUser = response.data.find(u => u.id === userId);
+          setUser(foundUser || null);
+        } else {
+          setError(response.message || 'Failed to load user');
+        }
+      } catch (error) {
+        console.error('Error loading user:', error);
+        setError('An error occurred while loading user details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUser();
   }, [params.id]);
 
   const getRoleText = (role: number) => {
@@ -110,6 +60,27 @@ export default function UserDetailsPage() {
       <AdminLayout>
         <div className="space-y-6">
           <LoadingCard />
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout>
+        <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-8 text-center">
+          <div className="text-6xl text-red-400 mb-4">
+            <i className="fas fa-exclamation-triangle"></i>
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-4">Error Loading User</h2>
+          <p className="text-red-300 mb-6">{error}</p>
+          <Link
+            href="/admin/users"
+            className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors inline-flex items-center"
+          >
+            <i className="fas fa-arrow-left mr-2"></i>
+            Back to Users
+          </Link>
         </div>
       </AdminLayout>
     );
@@ -200,13 +171,9 @@ export default function UserDetailsPage() {
                   <p className="text-white">{user.email}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Phone</label>
-                  <p className="text-white">{user.phone || 'Not provided'}</p>
-                </div>
-                <div>
                   <label className="block text-sm font-medium text-gray-400 mb-2">Role</label>
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getRoleBadgeClass(user.role)}`}>
-                    {getRoleText(user.role)}
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getRoleBadgeClass(typeof user.role === 'number' ? user.role : parseInt(user.role as string))}`}>
+                    {getRoleText(typeof user.role === 'number' ? user.role : parseInt(user.role as string))}
                   </span>
                 </div>
               </div>
@@ -214,12 +181,8 @@ export default function UserDetailsPage() {
               {/* Additional Information */}
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Address</label>
-                  <p className="text-white">{user.address || 'Not provided'}</p>
-                </div>
-                <div>
                   <label className="block text-sm font-medium text-gray-400 mb-2">Account Created</label>
-                  <p className="text-white">{new Date(user.createdAt).toLocaleDateString('en-US', {
+                  <p className="text-white">{new Date(user.createdOn).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
@@ -228,19 +191,14 @@ export default function UserDetailsPage() {
                   })}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Last Login</label>
-                  <p className="text-white">
-                    {user.lastLogin 
-                      ? new Date(user.lastLogin).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })
-                      : 'Never'
-                    }
-                  </p>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Last Modified</label>
+                  <p className="text-white">{new Date(user.lastModifiedOn).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-2">User ID</label>
