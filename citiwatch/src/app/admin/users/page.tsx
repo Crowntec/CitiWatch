@@ -16,12 +16,22 @@ export default function UsersPage() {
   const [users, setUsers] = useState<UserDisplay[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<'all' | 'user' | 'admin'>('all');
   const [selectedUser, setSelectedUser] = useState<UserDisplay | null>(null);
   const [userComplaints, setUserComplaints] = useState<Complaint[]>([]);
   const [complaintsLoading, setComplaintsLoading] = useState(false);
   const [loadingUserId, setLoadingUserId] = useState<string | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    show: boolean;
+    user: UserDisplay | null;
+    loading: boolean;
+  }>({
+    show: false,
+    user: null,
+    loading: false
+  });
 
   const loadUsers = async () => {
     setLoading(true);
@@ -121,6 +131,55 @@ export default function UsersPage() {
     setLoadingUserId(null);
   };
 
+  const handleDeleteUser = async (user: UserDisplay) => {
+    setDeleteConfirmation({
+      show: true,
+      user: user,
+      loading: false
+    });
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!deleteConfirmation.user) return;
+
+    setDeleteConfirmation(prev => ({ ...prev, loading: true }));
+
+    try {
+      const result = await UserService.deleteUser(deleteConfirmation.user.id);
+      
+      if (result.success) {
+        // Remove user from the list
+        setUsers(prev => prev.filter(u => u.id !== deleteConfirmation.user!.id));
+        
+        // Close modal if it's the same user being viewed
+        if (selectedUser && selectedUser.id === deleteConfirmation.user.id) {
+          closeUserDetails();
+        }
+        
+        // Close confirmation dialog
+        setDeleteConfirmation({ show: false, user: null, loading: false });
+        
+        // Show success message
+        setSuccess(`User "${deleteConfirmation.user.fullName}" has been deleted successfully.`);
+        setError('');
+        
+        // Clear success message after 5 seconds
+        setTimeout(() => setSuccess(''), 5000);
+      } else {
+        setError(result.message || 'Failed to delete user');
+        setDeleteConfirmation(prev => ({ ...prev, loading: false }));
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      setError('Failed to delete user');
+      setDeleteConfirmation(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const cancelDeleteUser = () => {
+    setDeleteConfirmation({ show: false, user: null, loading: false });
+  };
+
   const getRoleText = (role: number) => {
     return role === 1 ? 'Admin' : 'User';
   };
@@ -187,6 +246,26 @@ export default function UsersPage() {
       }
     };
   }, []);
+
+  // Handle keyboard shortcuts for delete confirmation modal
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (deleteConfirmation.show) {
+        if (event.key === 'Escape') {
+          cancelDeleteUser();
+        } else if (event.key === 'Enter' && !deleteConfirmation.loading) {
+          confirmDeleteUser();
+        }
+      }
+    };
+
+    if (deleteConfirmation.show) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [deleteConfirmation.show, deleteConfirmation.loading]);
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.fullName.toLowerCase().includes(searchTerm.toLowerCase());
@@ -305,7 +384,11 @@ export default function UsersPage() {
                   className="block w-full pl-10 pr-3 py-2 border border-gray-600 rounded-md leading-5 bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Search by name..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    if (error) setError('');
+                    if (success) setSuccess('');
+                  }}
                 />
               </div>
             </div>
@@ -317,7 +400,11 @@ export default function UsersPage() {
                 id="role"
                 className="block w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={selectedRole}
-                onChange={(e) => setSelectedRole(e.target.value as 'all' | 'user' | 'admin')}
+                onChange={(e) => {
+                  setSelectedRole(e.target.value as 'all' | 'user' | 'admin');
+                  if (error) setError('');
+                  if (success) setSuccess('');
+                }}
               >
                 <option value="all">All Roles</option>
                 <option value="admin">Administrators</option>
@@ -326,6 +413,16 @@ export default function UsersPage() {
             </div>
           </div>
         </div>
+
+        {/* Success Display */}
+        {success && (
+          <div className="mb-6 bg-green-900/20 border border-green-500/30 rounded-lg p-4">
+            <div className="flex items-center">
+              <i className="fas fa-check-circle text-green-400 mr-2"></i>
+              <p className="text-green-300">{success}</p>
+            </div>
+          </div>
+        )}
 
         {/* Error Display */}
         {error && (
@@ -360,34 +457,52 @@ export default function UsersPage() {
                 {filteredUsers.map((user) => (
                   <div 
                     key={user.id} 
-                    className="bg-gray-700/50 border border-gray-600 rounded-lg p-6 hover:bg-gray-700/70 hover:border-gray-500 transition-all duration-200 cursor-pointer transform hover:scale-[1.02]"
-                    onClick={() => handleUserClick(user)}
-                    title="Click to view user details"
+                    className="bg-gray-700/50 border border-gray-600 rounded-lg p-6 hover:bg-gray-700/70 hover:border-gray-500 transition-all duration-200 relative group"
                   >
-                    <div className="flex items-center space-x-4">
-                      <div className="flex-shrink-0 h-12 w-12">
-                        <div className="h-12 w-12 rounded-full bg-gray-600 flex items-center justify-center">
-                          <span className="text-base font-medium text-white">
-                            {user.fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
-                          </span>
+                    <div 
+                      className="cursor-pointer"
+                      onClick={() => handleUserClick(user)}
+                      title="Click to view user details"
+                    >
+                      <div className="flex items-center space-x-4">
+                        <div className="flex-shrink-0 h-12 w-12">
+                          <div className="h-12 w-12 rounded-full bg-gray-600 flex items-center justify-center">
+                            <span className="text-base font-medium text-white">
+                              {user.fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-base font-medium text-white truncate flex items-center">
+                            {user.fullName}
+                            {loadingUserId === user.id && (
+                              <i className="fas fa-spinner fa-spin ml-2 text-blue-400"></i>
+                            )}
+                          </div>
+                          <div className="text-sm text-gray-400 truncate">
+                            {user.email}
+                          </div>
+                          <div className="mt-2">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getRoleBadgeClass(user.role)}`}>
+                              {getRoleText(user.role)}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-base font-medium text-white truncate flex items-center">
-                          {user.fullName}
-                          {loadingUserId === user.id && (
-                            <i className="fas fa-spinner fa-spin ml-2 text-blue-400"></i>
-                          )}
-                        </div>
-                        <div className="text-sm text-gray-400 truncate">
-                          {user.email}
-                        </div>
-                        <div className="mt-2">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getRoleBadgeClass(user.role)}`}>
-                            {getRoleText(user.role)}
-                          </span>
-                        </div>
-                      </div>
+                    </div>
+                    
+                    {/* Delete Button */}
+                    <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteUser(user);
+                        }}
+                        className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-full text-sm transition-colors shadow-lg"
+                        title="Delete user"
+                      >
+                        <i className="fas fa-trash"></i>
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -414,18 +529,38 @@ export default function UsersPage() {
             <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(95vh-120px)] sm:max-h-[calc(90vh-120px)]">
               {/* User Information */}
               <div className="mb-6 sm:mb-8">
-                <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
-                  <div className="h-16 w-16 sm:h-16 sm:w-16 rounded-full bg-gray-600 flex items-center justify-center mx-auto sm:mx-0">
-                    <span className="text-lg sm:text-xl font-medium text-white">
-                      {selectedUser.fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
-                    </span>
+                <div className="flex flex-col space-y-6 mb-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                    <div className="h-16 w-16 sm:h-16 sm:w-16 rounded-full bg-gray-600 flex items-center justify-center mx-auto sm:mx-0">
+                      <span className="text-lg sm:text-xl font-medium text-white">
+                        {selectedUser.fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="text-center sm:text-left flex-1">
+                      <h4 className="text-xl sm:text-2xl font-bold text-white">{selectedUser.fullName}</h4>
+                      <p className="text-gray-400 text-sm sm:text-base break-all">{selectedUser.email}</p>
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border mt-2 ${getRoleBadgeClass(selectedUser.role)}`}>
+                        {getRoleText(selectedUser.role)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-center sm:text-left">
-                    <h4 className="text-xl sm:text-2xl font-bold text-white">{selectedUser.fullName}</h4>
-                    <p className="text-gray-400 text-sm sm:text-base break-all">{selectedUser.email}</p>
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border mt-2 ${getRoleBadgeClass(selectedUser.role)}`}>
-                      {getRoleText(selectedUser.role)}
-                    </span>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center sm:justify-start">
+                    <Link
+                      href={`/admin/users/${selectedUser.id}/edit`}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors flex items-center justify-center"
+                    >
+                      <i className="fas fa-edit mr-2"></i>
+                      Edit User
+                    </Link>
+                    <button
+                      onClick={() => handleDeleteUser(selectedUser)}
+                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition-colors flex items-center justify-center"
+                    >
+                      <i className="fas fa-trash mr-2"></i>
+                      Delete User
+                    </button>
                   </div>
                 </div>
 
@@ -510,6 +645,87 @@ export default function UsersPage() {
                   <p className="text-gray-500 text-sm mt-2">Administrators don&apos;t submit complaints</p>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmation.show && deleteConfirmation.user && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          onClick={cancelDeleteUser}
+        >
+          <div 
+            className="bg-gray-800 rounded-lg shadow-xl max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                  <i className="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                </div>
+              </div>
+              <div className="text-center">
+                <h3 className="text-lg font-medium text-white mb-2">
+                  Delete User Account
+                </h3>
+                <p className="text-sm text-gray-400 mb-4">
+                  Are you sure you want to delete <strong className="text-white">{deleteConfirmation.user.fullName}</strong>&apos;s account? 
+                  This action cannot be undone and will permanently remove:
+                </p>
+                <div className="text-left bg-gray-700/50 rounded-lg p-3 mb-4">
+                  <ul className="text-sm text-gray-300 space-y-1">
+                    <li>• User account and profile information</li>
+                    <li>• All submitted complaints and attachments</li>
+                    <li>• User activity history and logs</li>
+                    <li>• Access to the platform</li>
+                  </ul>
+                </div>
+                {deleteConfirmation.user.role === 1 && (
+                  <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-3 mb-4">
+                    <div className="flex items-center">
+                      <i className="fas fa-exclamation-triangle text-yellow-400 mr-2"></i>
+                      <p className="text-yellow-300 text-sm">
+                        <strong>Warning:</strong> You are deleting an administrator account. 
+                        This will remove all admin privileges immediately.
+                      </p>
+                    </div>
+                  </div>
+                )}
+                <p className="text-sm text-red-400 mb-6">
+                  <i className="fas fa-warning mr-1"></i>
+                  This action is irreversible!
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row-reverse gap-3">
+                <button
+                  type="button"
+                  onClick={confirmDeleteUser}
+                  disabled={deleteConfirmation.loading}
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto sm:text-sm"
+                >
+                  {deleteConfirmation.loading ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin mr-2"></i>
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-trash mr-2"></i>
+                      Delete User
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={cancelDeleteUser}
+                  disabled={deleteConfirmation.loading}
+                  className="w-full inline-flex justify-center rounded-md border border-gray-600 shadow-sm px-4 py-2 bg-gray-700 text-base font-medium text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto sm:text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>
