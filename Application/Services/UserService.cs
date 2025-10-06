@@ -79,6 +79,7 @@ namespace CitiWatch.Application.Services
             response.Data = new UserResponseDto
             {
                 Id = user.Id,
+                FullName = user.FullName,
                 Email = user.Email,
                 Role = user.Role,
             };
@@ -163,7 +164,7 @@ namespace CitiWatch.Application.Services
                 return response;
             }
 
-            user.FullName = userUpdateDto.FullName;
+            user.FullName = userUpdateDto.FullName ?? user.FullName;
             user.Email = userUpdateDto.Email;
             user.LastModifiedBy = _validatorHelper.GetUserId();
             user.LastModifiedOn = DateTime.UtcNow;

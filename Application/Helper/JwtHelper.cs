@@ -8,13 +8,14 @@ namespace CitiWatch.Application.Helper
     public class JwtHelper(IConfiguration configuration)
     {
         private readonly IConfiguration _configuration = configuration;
-        public string GenerateToken(string email, string role, Guid userId)
+        public string GenerateToken(string email, string role, Guid userId, string fullName)
         {
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, email),
                 new Claim(JwtRegisteredClaimNames.Jti, userId.ToString()),
-                new Claim(ClaimTypes.Role, role)
+                new Claim(ClaimTypes.Role, role),
+                new Claim(ClaimTypes.Name, fullName)
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Key"] ?? Environment.GetEnvironmentVariable("JWT_KEY")

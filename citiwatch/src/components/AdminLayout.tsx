@@ -132,12 +132,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   </div>
                   <span className="text-xl font-bold text-white sidebar-text">CitiWatch</span>
                 </Link>
-                <button
-                  onClick={toggleSidebar}
-                  className="hidden md:block text-gray-400 hover:text-white p-1"
-                >
-                  <i className={`ri-${sidebarCollapsed ? 'menu-unfold' : 'menu-fold'}-line`}></i>
-                </button>
               </div>
             </div>
 

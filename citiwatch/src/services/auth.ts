@@ -21,11 +21,12 @@ export class AuthService {
         
         // Create user object from token
         const roleString = tokenPayload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || tokenPayload.role || 'User';
+        const fullNameClaim = tokenPayload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || tokenPayload.name;
         const userData: User = {
           id: tokenPayload.sub || tokenPayload.nameid,
           email: tokenPayload.email || credentials.email,
           role: roleString.toLowerCase() === 'admin' ? 'admin' : 'user',
-          fullName: tokenPayload.name || credentials.email, // fallback
+          fullName: fullNameClaim || 'User', // Use the name claim from JWT
           createdAt: new Date().toISOString(),
           isActive: true
         };

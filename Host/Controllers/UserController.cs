@@ -22,9 +22,9 @@ namespace CitiWatch.Host.Controllers
                 return BadRequest(response);
             }
 
-            if (response.Data != null)
+            if (response.Data != null && !string.IsNullOrEmpty(response.Data.Email) && !string.IsNullOrEmpty(response.Data.FullName))
             {
-                var token = _jwtHelper.GenerateToken(response.Data.Email, response.Data.Role.ToString(), response.Data.Id);
+                var token = _jwtHelper.GenerateToken(response.Data.Email, response.Data.Role.ToString(), response.Data.Id, response.Data.FullName);
                 return Ok(new
                 {
                     Token = token
