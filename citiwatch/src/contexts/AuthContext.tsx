@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User } from '@/types/api';
+import { User } from '@/types/auth';
 import { AuthService } from '@/services/auth';
 
 interface RegisterData {

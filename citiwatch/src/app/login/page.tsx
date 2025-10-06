@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import { LoadingButton } from '@/components/Loading';
 import { useAuth } from '@/auth/AuthContext';
+import { ValidationHelper } from '@/utils/validation';
 
 function LoginForm() {
   const [formData, setFormData] = useState({
@@ -43,14 +44,14 @@ function LoginForm() {
     e.preventDefault();
     setError('');
 
-    // Simple validation
-    const validationErrors = [];
-    if (!formData.email.trim()) validationErrors.push('Email is required');
-    if (!/\S+@\S+\.\S+/.test(formData.email)) validationErrors.push('Please enter a valid email');
-    if (!formData.password) validationErrors.push('Password is required');
+    // Use comprehensive validation
+    const validation = ValidationHelper.validateLogin({
+      email: formData.email,
+      password: formData.password
+    });
 
-    if (validationErrors.length > 0) {
-      setError(validationErrors.join(', '));
+    if (!validation.isValid) {
+      setError(ValidationHelper.formatErrors(validation.errors));
       return;
     }
 

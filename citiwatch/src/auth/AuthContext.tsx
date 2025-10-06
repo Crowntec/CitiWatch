@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthService } from '@/services/auth';
+import { SecureTokenStorage } from '@/utils/secureStorage';
 
 interface User {
   id: string;
@@ -38,8 +39,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Check if user is logged in on app start
-    const savedUser = AuthService.getUser();
-    if (savedUser) {
+    const savedUser = SecureTokenStorage.getUser();
+    if (savedUser && SecureTokenStorage.hasToken()) {
       setUser(savedUser);
     }
     setIsLoading(false);

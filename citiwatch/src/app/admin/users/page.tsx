@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { LoadingCard } from '@/components/Loading';
 import AdminLayout from '@/components/AdminLayout';
@@ -139,7 +139,7 @@ export default function UsersPage() {
     });
   };
 
-  const confirmDeleteUser = async () => {
+  const confirmDeleteUser = useCallback(async () => {
     if (!deleteConfirmation.user) return;
 
     setDeleteConfirmation(prev => ({ ...prev, loading: true }));
@@ -174,7 +174,7 @@ export default function UsersPage() {
       setError('Failed to delete user');
       setDeleteConfirmation(prev => ({ ...prev, loading: false }));
     }
-  };
+  }, [deleteConfirmation.user, selectedUser, setUsers, setError, setSuccess]);
 
   const cancelDeleteUser = () => {
     setDeleteConfirmation({ show: false, user: null, loading: false });
@@ -265,7 +265,7 @@ export default function UsersPage() {
         document.removeEventListener('keydown', handleKeyDown);
       };
     }
-  }, [deleteConfirmation.show, deleteConfirmation.loading]);
+  }, [deleteConfirmation.show, deleteConfirmation.loading, confirmDeleteUser]);
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.fullName.toLowerCase().includes(searchTerm.toLowerCase());

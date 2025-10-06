@@ -1,3 +1,5 @@
+import { SecureTokenStorage } from '@/utils/secureStorage';
+
 class ApiClient {
   private baseUrl: string;
 
@@ -11,8 +13,8 @@ class ApiClient {
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     
-    // Get token from localStorage if available
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    // Get token from secure storage
+    const token = typeof window !== 'undefined' ? SecureTokenStorage.getToken() : null;
     
     const config: RequestInit = {
       headers: {
@@ -47,8 +49,7 @@ class ApiClient {
           
           // Clear any existing auth data
           if (typeof window !== 'undefined') {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
+            SecureTokenStorage.clearAuth();
             
             // Clear auth cookie
             document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';

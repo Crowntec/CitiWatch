@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { LoadingCard } from '@/components/Loading';
 import AdminLayout from '@/components/AdminLayout';
 import { CategoryService, Category } from '@/services/category';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -14,6 +15,9 @@ export default function CategoriesPage() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  
+  // Use role-based access control
+  const { canCreateCategory, canUpdateCategory, canDeleteCategory } = useRoleAccess();
 
   const loadCategories = async () => {
     setLoading(true);
@@ -171,13 +175,15 @@ export default function CategoriesPage() {
               <p className="text-gray-400 mt-2">Manage complaint categories for better organization</p>
             </div>
             <div className="flex space-x-3">
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
-              >
-                <i className="fas fa-plus mr-2"></i>
-                Add Category
-              </button>
+              {canCreateCategory && (
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
+                >
+                  <i className="fas fa-plus mr-2"></i>
+                  Add Category
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -329,23 +335,27 @@ export default function CategoriesPage() {
                         </>
                       ) : (
                         <>
-                          <button
-                            onClick={() => startEdit(category)}
-                            className="text-blue-400 hover:text-blue-300 transition-colors p-2"
-                          >
-                            <i className="fas fa-edit"></i>
-                          </button>
-                          <button
-                            onClick={() => handleDeleteCategory(category.id, category.name)}
-                            disabled={actionLoading === `delete-${category.id}`}
-                            className="text-red-400 hover:text-red-300 disabled:text-gray-500 transition-colors p-2"
-                          >
-                            {actionLoading === `delete-${category.id}` ? (
-                              <i className="fas fa-spinner fa-spin"></i>
-                            ) : (
-                              <i className="fas fa-trash"></i>
-                            )}
-                          </button>
+                          {canUpdateCategory && (
+                            <button
+                              onClick={() => startEdit(category)}
+                              className="text-blue-400 hover:text-blue-300 transition-colors p-2"
+                            >
+                              <i className="fas fa-edit"></i>
+                            </button>
+                          )}
+                          {canDeleteCategory && (
+                            <button
+                              onClick={() => handleDeleteCategory(category.id, category.name)}
+                              disabled={actionLoading === `delete-${category.id}`}
+                              className="text-red-400 hover:text-red-300 disabled:text-gray-500 transition-colors p-2"
+                            >
+                              {actionLoading === `delete-${category.id}` ? (
+                                <i className="fas fa-spinner fa-spin"></i>
+                              ) : (
+                                <i className="fas fa-trash"></i>
+                              )}
+                            </button>
+                          )}
                         </>
                       )}
                     </div>

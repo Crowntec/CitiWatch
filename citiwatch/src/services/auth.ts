@@ -1,5 +1,7 @@
 import { apiClient } from '@/lib/api-client';
-import { LoginRequest, RegisterRequest, AuthResponse, LoginResponse, User } from '@/types/api';
+import { LoginRequest, RegisterRequest, AuthResponse, LoginResponse } from '@/types/api';
+import { User } from '@/types/auth';
+import { SecureTokenStorage } from '@/utils/secureStorage';
 
 export class AuthService {
   static async login(credentials: LoginRequest): Promise<{ success: boolean; message: string; data?: User }> {
@@ -8,8 +10,8 @@ export class AuthService {
       const loginResponse = await apiClient.post<LoginResponse>('/User/Login', credentials);
       
       if (loginResponse.token) {
-        // Store token in localStorage
-        localStorage.setItem('token', loginResponse.token);
+        // Store token securely
+        SecureTokenStorage.setToken(loginResponse.token);
         
         // Also store token in cookies for middleware
         document.cookie = `token=${loginResponse.token}; path=/; max-age=${3 * 60 * 60}`; // 3 hours
@@ -18,18 +20,19 @@ export class AuthService {
         const tokenPayload = JSON.parse(atob(loginResponse.token.split('.')[1]));
         
         // Create user object from token
+        const roleString = tokenPayload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || tokenPayload.role || 'User';
         const userData: User = {
           id: tokenPayload.sub || tokenPayload.nameid,
           email: tokenPayload.email || credentials.email,
-          role: tokenPayload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || tokenPayload.role || 'User',
+          role: roleString.toLowerCase() === 'admin' ? 'admin' : 'user',
           fullName: tokenPayload.name || credentials.email, // fallback
-          createdOn: new Date().toISOString(),
-          lastModifiedOn: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          isActive: true
         };
         
         console.log('Login successful for:', userData.email, 'Role:', userData.role);
         
-        localStorage.setItem('user', JSON.stringify(userData));
+        SecureTokenStorage.setUser(userData);
         
         return {
           success: true,
@@ -70,24 +73,22 @@ export class AuthService {
   }
 
   static logout(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    SecureTokenStorage.clearAuth();
     // Also remove token from cookies
     document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
   }
 
   static getToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem('token');
+    return SecureTokenStorage.getToken();
   }
 
   static getUser(): User | null {
     if (typeof window === 'undefined') return null;
-    const userStr = localStorage.getItem('user');
-    return userStr ? JSON.parse(userStr) : null;
+    return SecureTokenStorage.getUser();
   }
 
   static isAuthenticated(): boolean {
-    return !!this.getToken();
+    return SecureTokenStorage.hasToken();
   }
 }

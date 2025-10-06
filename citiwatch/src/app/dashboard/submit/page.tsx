@@ -8,6 +8,8 @@ import Navigation from '@/components/Navigation';
 import LocationMiniApp from '@/components/LocationMiniApp';
 import { CategoryService, type Category } from '@/services/category';
 import { ComplaintService } from '@/services/complaint';
+import { ValidationHelper } from '@/utils/validation';
+import { SecureTokenStorage } from '@/utils/secureStorage';
 
 export default function SubmitComplaint() {
   const [formData, setFormData] = useState({
@@ -27,7 +29,7 @@ export default function SubmitComplaint() {
 
   useEffect(() => {
     // Check if user is authenticated
-    const token = localStorage.getItem('token');
+    const token = SecureTokenStorage.getToken();
     if (!token) {
       router.push('/login');
       return;
@@ -62,16 +64,11 @@ export default function SubmitComplaint() {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       
-      // Check file size (10MB limit)
-      if (file.size > 10 * 1024 * 1024) {
-        setError('File size must be less than 10MB');
-        return;
-      }
-      
-      // Check file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-      if (!allowedTypes.includes(file.type)) {
-        setError('Please select a valid image file (JPG, JPEG, PNG, GIF)');
+      // Use validation helper for file validation
+      const validation = ValidationHelper.validateFile(file);
+      if (!validation.isValid) {
+        setError(ValidationHelper.formatErrors(validation.errors));
+        setSelectedFile(null);
         return;
       }
       
@@ -96,15 +93,22 @@ export default function SubmitComplaint() {
     setError('');
     setSuccess('');
 
-    // Simple validation
-    const validationErrors = [];
-    if (!formData.title.trim()) validationErrors.push('Title is required');
-    if (!formData.description.trim()) validationErrors.push('Description is required');
-    if (!formData.categoryId) validationErrors.push('Category is required');
-    if (!formData.latitude || !formData.longitude) validationErrors.push('Location is required');
+    // Use comprehensive validation
+    const validation = ValidationHelper.validateComplaint({
+      title: formData.title,
+      description: formData.description,
+      categoryId: formData.categoryId,
+      location: `${formData.latitude}, ${formData.longitude}`
+    });
 
-    if (validationErrors.length > 0) {
-      setError(validationErrors.join(', '));
+    // Check location separately (required for complaints)
+    if (!formData.latitude || !formData.longitude) {
+      validation.errors.push('Location is required');
+      validation.isValid = false;
+    }
+
+    if (!validation.isValid) {
+      setError(ValidationHelper.formatErrors(validation.errors));
       setLoading(false);
       return;
     }

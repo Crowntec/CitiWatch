@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AdminLayout from '@/components/AdminLayout';
 import { UserService } from '@/services/user';
+import { ValidationHelper } from '@/utils/validation';
 
 export default function ManageUsersPage() {
   const [formData, setFormData] = useState({
@@ -31,30 +32,18 @@ export default function ManageUsersPage() {
   };
 
   const validateForm = () => {
-    if (!formData.fullName.trim()) {
-      setError('Full name is required');
+    const validation = ValidationHelper.validateUserRegistration({
+      fullName: formData.fullName,
+      email: formData.email,
+      password: formData.password,
+      confirmPassword: formData.confirmPassword
+    });
+
+    if (!validation.isValid) {
+      setError(ValidationHelper.formatErrors(validation.errors));
       return false;
     }
-    if (!formData.email.trim()) {
-      setError('Email is required');
-      return false;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      setError('Please enter a valid email address');
-      return false;
-    }
-    if (!formData.password) {
-      setError('Password is required');
-      return false;
-    }
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      return false;
-    }
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return false;
-    }
+
     return true;
   };
 
