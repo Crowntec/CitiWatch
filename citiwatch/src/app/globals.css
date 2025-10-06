@@ -25,11 +25,39 @@ body {
   /* Support for mobile viewport units */
   height: 100vh;
   height: 100dvh;
+  /* Hide scrollbars globally */
+  -ms-overflow-style: none; /* IE and Edge */
 }
 
 /* Ensure smooth scrolling and proper fixed navigation */
 * {
   box-sizing: border-box;
+  /* Hide scrollbars globally */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide WebKit scrollbars globally */
+*::-webkit-scrollbar {
+  display: none;
+}
+
+::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 html {
@@ -37,6 +65,8 @@ html {
   /* Support for mobile safe areas */
   height: 100vh;
   height: 100dvh;
+  /* Hide scrollbars globally */
+  scrollbar-width: none; /* Firefox */
 }
 
 /* Mobile viewport height fallback */

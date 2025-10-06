@@ -14,17 +14,9 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const darkMode = true; // Force dark mode for admin pages
   const { user, logout, isLoading } = useAuth();
   const pathname = usePathname();
-
-  useEffect(() => {
-    // Dark mode preference
-    const savedDarkMode = localStorage.getItem('darkMode');
-    if (savedDarkMode) {
-      setDarkMode(JSON.parse(savedDarkMode));
-    }
-  }, []);
 
   const navigation = [
     {
@@ -95,7 +87,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           .sidebar-collapsed .flex.items-center { justify-content: center !important; }
           .sidebar-collapsed ul > li > a { justify-content: center !important; padding-left: 1rem !important; padding-right: 1rem !important; }
           .sidebar-collapsed .border-t { padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
-          .sidebar-collapsed .custom-switch { margin-left: 0 !important; }
           .main-expanded { margin-left: 250px !important; transition: margin-left 0.3s ease; }
           .main-collapsed { margin-left: 80px !important; transition: margin-left 0.3s ease; }
           @media (max-width: 768px) {
@@ -104,12 +95,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             .sidebar-mobile-closed { transform: translateX(-100%) !important; }
             .main-expanded, .main-collapsed { margin-left: 0 !important; }
           }
-          .custom-switch { position: relative; display: inline-block; width: 50px; height: 24px; margin-left: auto; }
-          .custom-switch-input { opacity: 0; width: 0; height: 0; }
-          .custom-switch-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #374151; transition: .4s; border-radius: 34px; }
-          .custom-switch-input:checked + .custom-switch-slider { background-color: #3b82f6; }
-          .custom-switch-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-          .custom-switch-input:checked + .custom-switch-slider:before { transform: translateX(26px); }
+
         `}</style>
 
         {/* Mobile backdrop */}
@@ -191,18 +177,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   <p className="text-xs text-gray-400 truncate">{user?.email}</p>
                 </div>
               </div>
-              <div className="flex items-center justify-between sidebar-text">
-                <span className="text-sm text-gray-300">Dark Mode</span>
-                <label className="custom-switch">
-                  <input 
-                    type="checkbox" 
-                    className="custom-switch-input" 
-                    checked={darkMode}
-                    onChange={() => setDarkMode(!darkMode)}
-                  />
-                  <span className="custom-switch-slider"></span>
-                </label>
-              </div>
+              {/* Dark mode is always enabled for admin pages */}
               <div className="mt-4 border-t border-gray-700 pt-4">
                 <button
                   onClick={handleLogout}
@@ -326,14 +301,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   <span className="absolute top-0.5 sm:top-1 right-0.5 sm:right-1 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-500 rounded-full"></span>
                 </button>
 
-                {/* Dark Mode Toggle - Hide on very small screens */}
-                <button
-                  onClick={() => setDarkMode(!darkMode)}
-                  className="hidden xs:flex p-1.5 sm:p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-                  title="Toggle Dark Mode"
-                >
-                  <i className={`ri-${darkMode ? 'sun' : 'moon'}-line text-base sm:text-lg`}></i>
-                </button>
+                {/* Dark mode is always enabled for admin pages */}
 
                 {/* User Avatar - Always visible but smaller on mobile */}
                 <div className="flex items-center space-x-2">
@@ -386,7 +354,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </header>
 
           {/* Main content */}
-          <main className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900 min-h-0">
+          <main className="flex-1 overflow-auto bg-gray-900 min-h-0">
             <div className="p-4 md:p-6">
               {children}
             </div>
