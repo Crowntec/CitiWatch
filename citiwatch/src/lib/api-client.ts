@@ -4,7 +4,8 @@ class ApiClient {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+    // Always use the external API directly - no more localhost fallbacks
+    this.baseUrl = 'http://citiwatch.runasp.net/api';
   }
 
   private async request<T>(
@@ -30,9 +31,7 @@ class ApiClient {
       console.log('🌐 API Request:', {
         method: options.method || 'GET',
         endpoint: endpoint,
-        url: url.replace(this.baseUrl, ''), // Just show the endpoint path
         hasAuth: !!token,
-        // Never log the actual token or sensitive headers
       });
     }
 
