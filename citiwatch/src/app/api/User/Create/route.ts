@@ -38,27 +38,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user already exists (dummy check)
-    if (email === 'demo@citiwatch.com') {
+    // Forward the request to the real API
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5182/api';
+    
+    const response = await fetch(`${apiBaseUrl}/User/Create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        fullName,
+        email,
+        password,
+        role: role || 0, // 0 = User, 1 = Admin
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
       return NextResponse.json(
-        { status: 'error', message: 'User with this email already exists' },
-        { status: 409 }
+        { status: 'error', message: errorData.message || `API request failed: ${response.status}` },
+        { status: response.status }
       );
     }
 
-    // Simulate successful registration
-    const newUser = {
-      id: `user-${Date.now()}`,
-      fullName,
-      email,
-      role: role || 0, // 0 = User, 1 = Admin
-      createdAt: new Date().toISOString()
-    };
+    const data = await response.json();
 
     return NextResponse.json({
       status: 'success',
-      message: 'User registered successfully',
-      user: newUser
+      message: data.message || 'User registered successfully',
+      user: data.user || data.data || data
     });
 
   } catch {

@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CategoryService } from '@/services/category';
+import { CategoryService, Category } from '@/services/category';
 
 export default function CategoryDebugPage() {
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string>('');
 

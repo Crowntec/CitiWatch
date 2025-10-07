@@ -66,22 +66,23 @@ class ApiClient {
           throw new Error('Session expired. Please log in again.');
         }
         
-        // Clone response to read body without consuming the stream
-        const responseClone = response.clone();
+        // Read the response body once as text, then try to parse as JSON
         let errorMessage = `HTTP ${response.status}`;
         
         try {
-          const errorData = await responseClone.json();
-          errorMessage = errorData.message || errorData.Message || errorMessage;
-        } catch {
-          // If parsing as JSON fails, try as text on the original response
-          try {
-            const errorText = await response.text();
-            errorMessage = errorText || errorMessage;
-          } catch {
-            // If both fail, use the status message
-            errorMessage = response.statusText || errorMessage;
+          const responseText = await response.text();
+          if (responseText) {
+            try {
+              const errorData = JSON.parse(responseText);
+              errorMessage = errorData.message || errorData.Message || errorMessage;
+            } catch {
+              // If it's not JSON, use the text as the error message
+              errorMessage = responseText;
+            }
           }
+        } catch {
+          // If we can't read the response, use the status message
+          errorMessage = response.statusText || errorMessage;
         }
         throw new Error(errorMessage);
       }
@@ -137,8 +138,8 @@ class ApiClient {
   async postForm<T>(endpoint: string, formData: FormData): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     
-    // Get token from localStorage if available
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    // Get token from secure storage
+    const token = typeof window !== 'undefined' ? SecureTokenStorage.getToken() : null;
     
     const config: RequestInit = {
       method: 'POST',
@@ -149,31 +150,72 @@ class ApiClient {
       body: formData,
     };
 
+    // Debug log the request in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🌐 API Form Request:', {
+        method: 'POST',
+        url: url,
+        hasAuth: !!token,
+        formDataKeys: Array.from(formData.keys()),
+      });
+    }
+
     try {
       const response = await fetch(url, config);
       
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📡 API Form Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok,
+          headers: Object.fromEntries(response.headers.entries()),
+        });
+      }
+      
       if (!response.ok) {
-        // Try to parse the error response as JSON first
+        // Read the response body once as text, then try to parse as JSON
         let errorMessage = `HTTP ${response.status}`;
         try {
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorData.Message || errorMessage;
+          const responseText = await response.text();
+          if (responseText) {
+            try {
+              const errorData = JSON.parse(responseText);
+              errorMessage = errorData.message || errorData.Message || errorMessage;
+            } catch {
+              // If it's not JSON, use the text as the error message
+              errorMessage = responseText;
+            }
+          }
         } catch {
-          // If parsing as JSON fails, try as text
-          const errorText = await response.text();
-          errorMessage = errorText || errorMessage;
+          // If we can't read the response, use the default error message
         }
         throw new Error(errorMessage);
       }
 
       return await response.json();
     } catch (error) {
-      // Safe error logging - only in development
+      // Enhanced error logging - only in development
       if (process.env.NODE_ENV === 'development') {
         console.error('❌ API Form Error:', {
           endpoint: endpoint,
-          message: error instanceof Error ? error.message : 'Unknown error',
+          url: url,
+          method: 'POST',
+          hasToken: !!token,
+          tokenPreview: token ? `${token.substring(0, 10)}...` : 'No token',
+          error: error,
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+          errorStack: error instanceof Error ? error.stack : undefined,
         });
+        
+        // Log FormData contents for debugging
+        console.log('📋 FormData contents:');
+        for (const [key, value] of formData.entries()) {
+          if (value instanceof File) {
+            console.log(`  ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
+          } else {
+            console.log(`  ${key}: ${value}`);
+          }
+        }
       }
       throw error;
     }

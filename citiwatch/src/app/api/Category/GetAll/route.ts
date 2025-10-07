@@ -1,28 +1,32 @@
 import { NextResponse } from 'next/server';
+
 export async function GET() {
   try {
-    // TODO: Add authentication check here
-    // const authHeader = request.headers.get('authorization');
-    // if (!authHeader) {
-    //   return NextResponse.json(
-    //     { success: false, message: 'Authentication required' },
-    //     { status: 401 }
-    //   );
-    // }
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5182/api';
+    
+    const response = await fetch(`${apiBaseUrl}/Category/GetAll`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-    // TODO: Replace with actual database query
-    // const categories = await prisma.category.findMany({
-    //   orderBy: {
-    //     name: 'asc'
-    //   }
-    // });
+    if (!response.ok) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: `API request failed: ${response.status}` 
+        },
+        { status: response.status }
+      );
+    }
 
-    const categories = mockCategories;
+    const data = await response.json();
 
     return NextResponse.json({
       success: true,
-      data: categories,
-      message: 'Categories retrieved successfully'
+      data: data.data || data,
+      message: data.message || 'Categories retrieved successfully'
     });
 
   } catch (error) {

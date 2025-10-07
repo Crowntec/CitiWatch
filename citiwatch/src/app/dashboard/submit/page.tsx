@@ -44,7 +44,13 @@ export default function SubmitComplaint() {
       
       if (response.success) {
         setCategories(response.data || []);
-        console.log('Loaded categories:', response.data); // Debug log
+        console.log('🔍 Loaded categories:', response.data);
+        console.log('🔍 Category IDs and formats:');
+        response.data?.forEach((cat, index) => {
+          console.log(`  [${index}] ID: "${cat.id}" (type: ${typeof cat.id}, length: ${cat.id?.length})`);
+          console.log(`  [${index}] Name: "${cat.name}"`);
+          console.log(`  [${index}] Is valid GUID?: ${/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(cat.id)}`);
+        });
       } else {
         setError('Failed to load categories: ' + response.message);
       }
@@ -123,9 +129,12 @@ export default function SubmitComplaint() {
         longitude: formData.longitude || undefined,
       };
 
-      console.log('Submitting complaint data:', complaintData); // Debug log
-      console.log('Available categories:', categories); // Debug log
-      console.log('Selected category ID:', formData.categoryId); // Debug log
+      console.log('🔍 Submitting complaint data:', complaintData);
+      console.log('🔍 Available categories:', categories);
+      console.log('🔍 Selected category ID:', formData.categoryId);
+      console.log('🔍 Selected category ID type:', typeof formData.categoryId);
+      console.log('🔍 Selected category ID length:', formData.categoryId.length);
+      console.log('🔍 Is valid GUID format?:', /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(formData.categoryId));
 
       const response = await ComplaintService.submitComplaint(complaintData, selectedFile || undefined);
 

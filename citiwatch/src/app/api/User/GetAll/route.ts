@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 export async function GET(request: NextRequest) {
   try {
     // Check for authorization header
@@ -10,13 +11,29 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // In real app, verify admin role from token
-    // For demo, assume user is admin if they have a token
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5182/api';
+    
+    const response = await fetch(`${apiBaseUrl}/User/GetAll`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': authorization,
+      },
+    });
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { status: 'error', message: `API request failed: ${response.status}` },
+        { status: response.status }
+      );
+    }
+
+    const data = await response.json();
 
     return NextResponse.json({
       status: 'success',
-      data: mockAllUsers,
-      message: 'All users retrieved successfully'
+      data: data.data || data,
+      message: data.message || 'All users retrieved successfully'
     });
 
   } catch {

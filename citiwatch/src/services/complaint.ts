@@ -82,6 +82,9 @@ export class ComplaintService {
   // User: Submit complaint
   static async submitComplaint(complaint: ComplaintCreateRequest, file?: File): Promise<{ success: boolean; message: string }> {
     try {
+      console.log('🔍 ComplaintService - Input data:', complaint);
+      console.log('🔍 ComplaintService - File:', file);
+      
       const formData = new FormData();
       formData.append('Title', complaint.title);
       formData.append('Description', complaint.description);
@@ -97,7 +100,15 @@ export class ComplaintService {
         formData.append('formFile', file);
       }
 
+      // Debug: Log FormData contents
+      console.log('🔍 FormData contents:');
+      for (const [key, value] of formData.entries()) {
+        console.log(`  ${key}:`, value);
+      }
+
       const response = await apiClient.postForm<{ status: boolean; message: string }>('/Complaint/Submit', formData);
+      
+      console.log('🔍 ComplaintService - Backend response:', response);
       return {
         success: response.status,
         message: response.message

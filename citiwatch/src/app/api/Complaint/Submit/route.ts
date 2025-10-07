@@ -60,27 +60,41 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Simulate successful complaint submission
-    const newComplaint = {
-      id: `complaint-${Date.now()}`,
-      title,
-      description,
-      categoryId,
-      latitude: latitude || null,
-      longitude: longitude || null,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-      userId: 'user-1', // In real app, extract from token
-      imageUrl: file ? `/uploads/${file.name}` : null
-    };
+    // Forward the request to the real API
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5182/api';
+    
+    // Create FormData for the API request
+    const apiFormData = new FormData();
+    apiFormData.append('title', title);
+    apiFormData.append('description', description);
+    apiFormData.append('categoryId', categoryId);
+    
+    if (latitude) apiFormData.append('latitude', latitude);
+    if (longitude) apiFormData.append('longitude', longitude);
+    if (file) apiFormData.append('formFile', file);
 
-    // In real app, save to database and upload file
-    console.log('New complaint submitted:', newComplaint);
+    const response = await fetch(`${apiBaseUrl}/Complaint/Submit`, {
+      method: 'POST',
+      headers: {
+        'Authorization': authHeader,
+      },
+      body: apiFormData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      return NextResponse.json(
+        { status: 'error', message: errorData.message || `API request failed: ${response.status}` },
+        { status: response.status }
+      );
+    }
+
+    const data = await response.json();
 
     return NextResponse.json({
       status: 'success',
-      data: newComplaint,
-      message: 'Complaint submitted successfully'
+      data: data.data || data,
+      message: data.message || 'Complaint submitted successfully'
     });
 
   } catch (error) {

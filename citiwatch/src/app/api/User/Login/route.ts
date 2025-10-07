@@ -5,33 +5,33 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { email, password } = body;
 
-    // Dummy credentials for development
-    const dummyCredentials = {
-      email: 'demo@citiwatch.com',
-      password: 'password123',
-    };
+    // Forward the request to the real API
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5182/api';
+    
+    const response = await fetch(`${apiBaseUrl}/User/Login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
 
-    // Check credentials
-    if (email === dummyCredentials.email && password === dummyCredentials.password) {
-      // Return success with dummy token
-      return NextResponse.json({
-        status: 'success',
-        token: `dummy-api-token-${Date.now()}`,
-        user: {
-          id: '1',
-          fullName: 'Demo User',
-          email: 'demo@citiwatch.com',
-          role: 'admin'
-        },
-        message: 'Login successful'
-      });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      return NextResponse.json(
+        { status: 'error', message: errorData.message || 'Invalid email or password' },
+        { status: response.status }
+      );
     }
 
-    // Invalid credentials
-    return NextResponse.json(
-      { status: 'error', message: 'Invalid email or password' },
-      { status: 401 }
-    );
+    const data = await response.json();
+
+    return NextResponse.json({
+      status: 'success',
+      token: data.token,
+      user: data.user || data.data,
+      message: data.message || 'Login successful'
+    });
 
   } catch {
     return NextResponse.json(

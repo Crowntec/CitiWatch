@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { LoadingCard } from '@/components/Loading';
 import AdminLayout from '@/components/AdminLayout';
 import { ComplaintService, type Complaint } from '@/services/complaint';
+import { SecureTokenStorage } from '@/utils/secureStorage';
 
 // Interface for UI
 interface ComplaintWithUser extends Complaint {
@@ -70,13 +71,22 @@ export default function PendingComplaintsPage() {
 
   const handleQuickStatusUpdate = async (complaintId: string, newStatus: string) => {
     try {
-      // TODO: Implement actual API call
-      // await makeAuthenticatedRequest(`/api/Complaint/UpdateStatus/${complaintId}`, {
-      //   method: 'PUT',
-      //   body: JSON.stringify({ status: newStatus })
-      // });
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5182/api';
       
-      // Mock implementation - remove complaint from pending list
+      const response = await fetch(`${apiBaseUrl}/Complaint/UpdateStatus/${complaintId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SecureTokenStorage.getToken()}`,
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update status: ${response.status}`);
+      }
+      
+      // Remove complaint from pending list on success
       setComplaints(complaints.filter(c => c.id !== complaintId));
       
       // Show success message
