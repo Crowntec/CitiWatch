@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Forward the request to the real API
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5182/api';
+    const apiBaseUrl = process.env.BACKEND_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://citiwatch.runasp.net/api';
     
     // Create FormData for the API request
     const apiFormData = new FormData();

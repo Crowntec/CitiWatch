@@ -4,8 +4,9 @@ class ApiClient {
   private baseUrl: string;
 
   constructor() {
-    // Always use the external API directly - using HTTPS for security
-    this.baseUrl = 'https://citiwatch.runasp.net/api';
+    // Use Next.js API routes as HTTPS proxies to the HTTP backend API
+    // This solves the Mixed Content issue by making server-side HTTP calls
+    this.baseUrl = '/api';
   }
 
   private async request<T>(

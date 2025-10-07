@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5182/api';
+    const apiBaseUrl = process.env.BACKEND_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://citiwatch.runasp.net/api';
     
     const response = await fetch(`${apiBaseUrl}/Complaint/GetAll`, {
       method: 'GET',

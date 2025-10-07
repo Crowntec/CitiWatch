@@ -38,8 +38,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Forward the request to the real API
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5182/api';
+    // Forward the request to the real API (server-side, so HTTP is allowed)
+    const apiBaseUrl = process.env.BACKEND_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://citiwatch.runasp.net/api';
     
     const response = await fetch(`${apiBaseUrl}/User/Create`, {
       method: 'POST',
