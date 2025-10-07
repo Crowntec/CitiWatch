@@ -4,8 +4,8 @@ class ApiClient {
   private baseUrl: string;
 
   constructor() {
-    // Always use the external API directly - no more localhost fallbacks
-    this.baseUrl = 'http://citiwatch.runasp.net/api';
+    // Always use the external API directly - using HTTPS for security
+    this.baseUrl = 'https://citiwatch.runasp.net/api';
   }
 
   private async request<T>(
