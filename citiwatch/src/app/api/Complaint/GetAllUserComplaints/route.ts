@@ -12,8 +12,11 @@ export async function GET(request: NextRequest) {
     }
 
     const apiBaseUrl = process.env.BACKEND_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://citiwatch.runasp.net/api';
+    const fullUrl = `${apiBaseUrl}/Complaint/GetAllUserComplaints`;
     
-    const response = await fetch(`${apiBaseUrl}/Complaint/GetAllUserComplaints`, {
+    console.log('Proxying request to:', fullUrl, 'with auth:', authHeader ? 'present' : 'missing');
+    
+    const response = await fetch(fullUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -22,8 +25,21 @@ export async function GET(request: NextRequest) {
     });
 
     if (!response.ok) {
+      // Get the actual error from the backend
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Backend API Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData,
+        url: `${apiBaseUrl}/Complaint/GetAllUserComplaints`
+      });
+      
       return NextResponse.json(
-        { status: 'error', message: `API request failed: ${response.status}` },
+        { 
+          status: 'error', 
+          message: errorData.message || `API request failed: ${response.status} ${response.statusText}`,
+          details: errorData
+        },
         { status: response.status }
       );
     }
