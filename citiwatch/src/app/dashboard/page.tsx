@@ -63,7 +63,14 @@ export default function Dashboard() {
       if (response.success) {
         setComplaints(response.data || []);
       } else {
-        setError(response.message);
+        // Don't show error for "no complaints" case
+        if (response.message?.toLowerCase().includes('not found') || 
+            response.message?.toLowerCase().includes('no complaints')) {
+          setComplaints([]);
+          setError(''); // Clear any previous errors
+        } else {
+          setError(response.message);
+        }
       }
     } catch (error) {
       console.error('Error loading complaints:', error);

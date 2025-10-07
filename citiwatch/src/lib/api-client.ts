@@ -100,8 +100,11 @@ class ApiClient {
       if (process.env.NODE_ENV === 'development') {
         console.error('❌ API Error:', {
           endpoint: endpoint,
+          fullUrl: url,
           method: options.method || 'GET',
           message: error instanceof Error ? error.message : 'Unknown error',
+          errorType: error instanceof Error ? error.constructor.name : typeof error,
+          hasToken: !!SecureTokenStorage.getToken(),
           // Never log the full error object which might contain sensitive data
         });
       }

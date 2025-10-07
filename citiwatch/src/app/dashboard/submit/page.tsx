@@ -44,6 +44,7 @@ export default function SubmitComplaint() {
       
       if (response.success) {
         setCategories(response.data || []);
+        console.log('Loaded categories:', response.data); // Debug log
       } else {
         setError('Failed to load categories: ' + response.message);
       }
@@ -121,6 +122,10 @@ export default function SubmitComplaint() {
         latitude: formData.latitude || undefined,
         longitude: formData.longitude || undefined,
       };
+
+      console.log('Submitting complaint data:', complaintData); // Debug log
+      console.log('Available categories:', categories); // Debug log
+      console.log('Selected category ID:', formData.categoryId); // Debug log
 
       const response = await ComplaintService.submitComplaint(complaintData, selectedFile || undefined);
 

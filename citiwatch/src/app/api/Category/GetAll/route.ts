@@ -1,39 +1,4 @@
 import { NextResponse } from 'next/server';
-
-// Mock category data - replace with actual database queries
-const mockCategories = [
-  {
-    id: '1',
-    name: 'Road Maintenance',
-    createdAt: '2024-01-01T00:00:00Z'
-  },
-  {
-    id: '2',
-    name: 'Street Lighting',
-    createdAt: '2024-01-01T00:00:00Z'
-  },
-  {
-    id: '3',
-    name: 'Waste Management',
-    createdAt: '2024-01-01T00:00:00Z'
-  },
-  {
-    id: '4',
-    name: 'Water & Sewage',
-    createdAt: '2024-01-01T00:00:00Z'
-  },
-  {
-    id: '5',
-    name: 'Public Safety',
-    createdAt: '2024-01-01T00:00:00Z'
-  },
-  {
-    id: '6',
-    name: 'Parks & Recreation',
-    createdAt: '2024-01-01T00:00:00Z'
-  }
-];
-
 export async function GET() {
   try {
     // TODO: Add authentication check here

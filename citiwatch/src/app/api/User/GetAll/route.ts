@@ -1,44 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-// Mock data for all users (admin view)
-const mockAllUsers = [
-  {
-    id: '1',
-    fullName: 'Demo User',
-    email: 'demo@citiwatch.com',
-    role: 1, // 1 = Admin
-    createdAt: '2024-01-01T00:00:00Z'
-  },
-  {
-    id: '2',
-    fullName: 'John Doe',
-    email: 'john.doe@email.com',
-    role: 0, // 0 = User
-    createdAt: '2024-01-15T08:30:00Z'
-  },
-  {
-    id: '3',
-    fullName: 'Jane Smith',
-    email: 'jane.smith@email.com',
-    role: 0, // 0 = User
-    createdAt: '2024-02-01T12:00:00Z'
-  },
-  {
-    id: '4',
-    fullName: 'Mike Johnson',
-    email: 'mike.johnson@email.com',
-    role: 0, // 0 = User
-    createdAt: '2024-02-15T16:45:00Z'
-  },
-  {
-    id: '5',
-    fullName: 'Sarah Wilson',
-    email: 'sarah.wilson@email.com',
-    role: 1, // 1 = Admin
-    createdAt: '2024-03-01T10:20:00Z'
-  }
-];
-
 export async function GET(request: NextRequest) {
   try {
     // Check for authorization header
