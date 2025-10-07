@@ -166,22 +166,22 @@ export default function CategoriesPage() {
 
   return (
     <AdminLayout>
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-white">Category Management</h1>
-              <p className="text-gray-400 mt-2">Manage complaint categories for better organization</p>
+        <div className="mb-6 sm:mb-8">
+          <div className="space-y-4 sm:space-y-0 sm:flex sm:justify-between sm:items-center">
+            <div className="text-center sm:text-left">
+              <h1 className="text-2xl sm:text-3xl font-bold text-white">Category Management</h1>
+              <p className="text-gray-400 mt-1 sm:mt-2 text-sm sm:text-base">Manage complaint categories for better organization</p>
             </div>
-            <div className="flex space-x-3">
+            <div className="flex justify-center sm:justify-end">
               {canCreateCategory && (
                 <button
                   onClick={() => setShowAddModal(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
+                  className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 sm:py-2 rounded-lg transition-colors flex items-center justify-center text-sm font-medium"
                 >
                   <i className="fas fa-plus mr-2"></i>
-                  Add Category
+                  <span>Add Category</span>
                 </button>
               )}
             </div>

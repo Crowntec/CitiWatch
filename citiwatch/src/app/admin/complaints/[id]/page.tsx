@@ -264,11 +264,11 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
 
   return (
     <AdminLayout>
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
+        <div className="mb-6 sm:mb-8">
+          <div className="space-y-4 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
+            <div className="min-w-0 flex-1">
               <Link
                 href="/admin/complaints"
                 className="text-blue-400 hover:text-blue-300 text-sm flex items-center mb-2"
@@ -276,79 +276,100 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
                 <i className="fas fa-arrow-left mr-2"></i>
                 Back to Complaints
               </Link>
-              <h1 className="text-3xl font-bold text-white">{complaint.title}</h1>
-              <p className="text-gray-400 mt-2">Complaint #{complaint.id}</p>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white truncate pr-4">{complaint.title}</h1>
+              <p className="text-gray-400 mt-1 sm:mt-2 text-sm">Complaint #{complaint.id}</p>
             </div>
-            <div className="flex space-x-3">
+            <div className="flex justify-center sm:justify-end">
               <button
                 onClick={() => setShowStatusModal(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
+                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 sm:py-2 rounded-lg transition-colors flex items-center justify-center text-sm font-medium"
               >
                 <i className="fas fa-edit mr-2"></i>
-                Update Status
+                <span>Update Status</span>
               </button>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6 lg:space-y-8">
             {/* Complaint Details */}
-            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6">
-              <h2 className="text-xl font-semibold text-white mb-4">Complaint Details</h2>
+            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">Complaint Details</h2>
               
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <div>
-                  <h3 className="text-lg font-medium text-white mb-2">Description</h3>
-                  <p className="text-gray-300 leading-relaxed">{complaint.description}</p>
+                  <h3 className="text-base sm:text-lg font-medium text-white mb-2">Description</h3>
+                  <p className="text-gray-300 leading-relaxed text-sm sm:text-base">{complaint.description}</p>
                 </div>
 
                 {complaint.imageUrl && (
                   <div>
-                    <h3 className="text-lg font-medium text-white mb-2">Attached Image</h3>
-                    <div className="rounded-lg overflow-hidden">
-                      <Image 
-                        src={complaint.imageUrl} 
-                        alt="Complaint attachment"
-                        className="w-full h-64 object-cover"
-                        width={400}
-                        height={256}
-                      />
+                    <h3 className="text-base sm:text-lg font-medium text-white mb-2">Attached Image</h3>
+                    <div className="rounded-lg overflow-hidden bg-gray-700/30 p-2 sm:p-3">
+                      <div className="relative w-full">
+                        <Image 
+                          src={complaint.imageUrl} 
+                          alt="Complaint attachment"
+                          className="w-full h-auto object-contain rounded-md"
+                          width={800}
+                          height={600}
+                          style={{
+                            maxHeight: window.innerWidth < 640 ? '300px' : '500px',
+                            objectFit: 'contain'
+                          }}
+                          priority
+                        />
+                      </div>
+                      <div className="mt-2 text-center">
+                        <a
+                          href={complaint.imageUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm font-medium text-blue-400 hover:text-blue-300 border border-blue-600 hover:border-blue-500 rounded-md transition-colors"
+                        >
+                          <i className="fas fa-external-link-alt mr-1 sm:mr-2"></i>
+                          <span className="hidden sm:inline">View Full Size</span>
+                          <span className="sm:hidden">Full Size</span>
+                        </a>
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {complaint.location && (
                   <div>
-                    <h3 className="text-lg font-medium text-white mb-2">Location</h3>
-                    <div className="bg-gray-700/50 rounded-lg p-4">
+                    <h3 className="text-base sm:text-lg font-medium text-white mb-2">Location</h3>
+                    <div className="bg-gray-700/50 rounded-lg p-3 sm:p-4">
                       {complaint.location.address && (
-                        <p className="text-gray-300 mb-2">
+                        <p className="text-gray-300 mb-2 text-sm sm:text-base">
                           <i className="fas fa-map-marker-alt mr-2"></i>
                           {complaint.location.address}
                         </p>
                       )}
-                      <div className="flex items-center justify-between mb-3">
-                        <p className="text-gray-400 text-sm">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 space-y-2 sm:space-y-0">
+                        <p className="text-gray-400 text-xs sm:text-sm break-all sm:break-normal">
                           Coordinates: {complaint.location.latitude}, {complaint.location.longitude}
                         </p>
-                        <div className="flex space-x-2">
+                        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                           <button
                             onClick={() => complaint.location && getDirectionsToLocation(complaint.location.latitude, complaint.location.longitude)}
-                            className="inline-flex items-center px-3 py-1 text-sm font-medium text-purple-400 hover:text-purple-300 border border-purple-600 hover:border-purple-500 rounded-md transition-colors"
+                            className="w-full sm:w-auto inline-flex items-center justify-center px-3 py-2 sm:py-1 text-xs sm:text-sm font-medium text-purple-400 hover:text-purple-300 border border-purple-600 hover:border-purple-500 rounded-md transition-colors"
                           >
-                            <i className="fas fa-directions mr-2"></i>
-                            Get Directions
+                            <i className="fas fa-directions mr-1 sm:mr-2"></i>
+                            <span className="hidden sm:inline">Get Directions</span>
+                            <span className="sm:hidden">Directions</span>
                           </button>
                           <a
                             href={`https://www.google.com/maps/search/${complaint.location?.latitude},${complaint.location?.longitude}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center px-3 py-1 text-sm font-medium text-blue-400 hover:text-blue-300 border border-blue-600 hover:border-blue-500 rounded-md transition-colors"
+                            className="w-full sm:w-auto inline-flex items-center justify-center px-3 py-2 sm:py-1 text-xs sm:text-sm font-medium text-blue-400 hover:text-blue-300 border border-blue-600 hover:border-blue-500 rounded-md transition-colors"
                           >
-                            <i className="fas fa-external-link-alt mr-2"></i>
-                            Open in Maps
+                            <i className="fas fa-external-link-alt mr-1 sm:mr-2"></i>
+                            <span className="hidden sm:inline">Open in Maps</span>
+                            <span className="sm:hidden">Maps</span>
                           </a>
                         </div>
                       </div>
@@ -366,16 +387,16 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
             </div>
 
             {/* Status History */}
-            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6">
-              <h2 className="text-xl font-semibold text-white mb-4">Status History</h2>
+            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">Status History</h2>
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
                   <div className={`p-2 rounded-full ${getStatusColor(complaint.status).replace('border', '').replace('text-', 'text-white ')}`}>
                     <i className={`${getStatusIcon(complaint.status)} text-sm`}></i>
                   </div>
-                  <div>
-                    <p className="text-white font-medium">Current Status: {complaint.status}</p>
-                    <p className="text-gray-400 text-sm">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-medium text-sm sm:text-base">Current Status: {complaint.status}</p>
+                    <p className="text-gray-400 text-xs sm:text-sm">
                       {complaint.updatedAt && new Date(complaint.updatedAt).toLocaleString()}
                     </p>
                   </div>
@@ -386,20 +407,20 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Status Card */}
-            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Current Status</h3>
-              <div className="space-y-4">
+            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Current Status</h3>
+              <div className="space-y-3 sm:space-y-4">
                 <div className="flex items-center space-x-3">
-                  <span className={`inline-flex items-center px-3 py-2 rounded-full text-sm font-medium ${getStatusColor(complaint.status)}`}>
-                    <i className={`${getStatusIcon(complaint.status)} mr-2`}></i>
+                  <span className={`inline-flex items-center px-2 sm:px-3 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-medium ${getStatusColor(complaint.status)}`}>
+                    <i className={`${getStatusIcon(complaint.status)} mr-1 sm:mr-2`}></i>
                     {complaint.status}
                   </span>
                 </div>
                 <button
                   onClick={() => setShowStatusModal(true)}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 sm:py-2 rounded-lg transition-colors text-sm font-medium"
                 >
                   Change Status
                 </button>
@@ -407,39 +428,39 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
             </div>
 
             {/* User Information */}
-            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Submitted By</h3>
+            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Submitted By</h3>
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
-                  <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-600 flex items-center justify-center">
-                    <span className="text-sm font-medium text-white">
+                  <div className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gray-600 flex items-center justify-center">
+                    <span className="text-xs sm:text-sm font-medium text-white">
                       {complaint.userName ? complaint.userName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U'}
                     </span>
                   </div>
-                  <div>
-                    <p className="text-white font-medium">{complaint.userName || 'Unknown User'}</p>
-                    <p className="text-gray-400 text-sm">{complaint.userEmail || 'Unknown Email'}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-white font-medium text-sm sm:text-base truncate">{complaint.userName || 'Unknown User'}</p>
+                    <p className="text-gray-400 text-xs sm:text-sm truncate">{complaint.userEmail || 'Unknown Email'}</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Complaint Info */}
-            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Complaint Info</h3>
+            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Complaint Info</h3>
               <div className="space-y-3">
                 <div>
-                  <p className="text-gray-400 text-sm">Category</p>
-                  <p className="text-white font-medium">{complaint.category}</p>
+                  <p className="text-gray-400 text-xs sm:text-sm">Category</p>
+                  <p className="text-white font-medium text-sm sm:text-base">{complaint.category}</p>
                 </div>
                 <div>
-                  <p className="text-gray-400 text-sm">Created</p>
-                  <p className="text-white">{new Date(complaint.createdAt).toLocaleString()}</p>
+                  <p className="text-gray-400 text-xs sm:text-sm">Created</p>
+                  <p className="text-white text-xs sm:text-sm">{new Date(complaint.createdAt).toLocaleString()}</p>
                 </div>
                 {complaint.updatedAt && (
                   <div>
-                    <p className="text-gray-400 text-sm">Last Updated</p>
-                    <p className="text-white">{new Date(complaint.updatedAt).toLocaleString()}</p>
+                    <p className="text-gray-400 text-xs sm:text-sm">Last Updated</p>
+                    <p className="text-white text-xs sm:text-sm">{new Date(complaint.updatedAt).toLocaleString()}</p>
                   </div>
                 )}
               </div>
@@ -451,26 +472,26 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
       {/* Status Update Modal */}
       {showStatusModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-semibold text-white">Update Complaint Status</h3>
+          <div className="bg-gray-800 rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-md mx-4">
+            <div className="flex justify-between items-center mb-4 sm:mb-6">
+              <h3 className="text-base sm:text-lg font-semibold text-white">Update Complaint Status</h3>
               <button
                 onClick={() => setShowStatusModal(false)}
-                className="text-gray-400 hover:text-gray-300"
+                className="text-gray-400 hover:text-gray-300 p-1"
               >
                 <i className="fas fa-times"></i>
               </button>
             </div>
             
-            <div className="mb-6">
-              <label htmlFor="status" className="block text-sm font-medium text-gray-300 mb-2">
+            <div className="mb-4 sm:mb-6">
+              <label htmlFor="status" className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
                 New Status
               </label>
               <select
                 id="status"
                 value={newStatusId}
                 onChange={(e) => setNewStatusId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 text-sm border border-gray-600 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select a status</option>
                 {statuses.map(status => (
@@ -479,17 +500,17 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
               </select>
             </div>
             
-            <div className="flex justify-end space-x-3">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
               <button
                 onClick={() => setShowStatusModal(false)}
-                className="px-4 py-2 text-gray-400 hover:text-gray-300 transition-colors"
+                className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-gray-400 hover:text-gray-300 border border-gray-600 hover:border-gray-500 rounded-lg transition-colors text-sm font-medium"
               >
                 Cancel
               </button>
               <button
                 onClick={handleStatusUpdate}
                 disabled={updating || !newStatusId}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
+                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2.5 sm:py-2 rounded-lg transition-colors flex items-center justify-center text-sm font-medium"
               >
                 {updating ? (
                   <>

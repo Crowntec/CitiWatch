@@ -267,117 +267,118 @@ export default function ComplaintsPage() {
 
   return (
     <AdminLayout>
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
             <div>
-              <h1 className="text-3xl font-bold text-white">Complaint Management</h1>
-              <p className="text-gray-400 mt-2">Manage and review all citizen complaints</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white">Complaint Management</h1>
+              <p className="text-gray-400 mt-1 sm:mt-2 text-sm sm:text-base">Manage and review all citizen complaints</p>
             </div>
-            <div className="flex space-x-3">
+            <div className="flex space-x-2 sm:space-x-3">
               <Link
                 href="/admin/complaints/export"
-                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
+                className="bg-gray-600 hover:bg-gray-700 text-white px-3 sm:px-4 py-2 rounded-lg transition-colors flex items-center text-sm sm:text-base"
               >
-                <i className="fas fa-download mr-2"></i>
-                Export
+                <i className="fas fa-download mr-1 sm:mr-2"></i>
+                <span className="hidden sm:inline">Export</span>
+                <span className="sm:hidden">Export</span>
               </Link>
             </div>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-4 sm:p-6">
             <div className="flex items-center">
-              <div className="p-3 rounded-full bg-purple-500/20">
-                <i className="fas fa-exclamation-circle text-2xl text-purple-400"></i>
+              <div className="p-2 sm:p-3 rounded-full bg-purple-500/20">
+                <i className="fas fa-exclamation-circle text-lg sm:text-2xl text-purple-400"></i>
               </div>
-              <div className="ml-4">
-                <p className="text-3xl font-bold text-white">{stats.total}</p>
-                <p className="text-gray-400">Total Complaints</p>
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xl sm:text-3xl font-bold text-white">{stats.total}</p>
+                <p className="text-gray-400 text-xs sm:text-sm">Total Complaints</p>
               </div>
             </div>
           </div>
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6">
+          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-4 sm:p-6">
             <div className="flex items-center">
-              <div className="p-3 rounded-full bg-yellow-500/20">
-                <i className="fas fa-clock text-2xl text-yellow-400"></i>
+              <div className="p-2 sm:p-3 rounded-full bg-yellow-500/20">
+                <i className="fas fa-clock text-lg sm:text-2xl text-yellow-400"></i>
               </div>
-              <div className="ml-4">
-                <p className="text-3xl font-bold text-white">{stats.pending}</p>
-                <p className="text-gray-400">Pending Review</p>
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xl sm:text-3xl font-bold text-white">{stats.pending}</p>
+                <p className="text-gray-400 text-xs sm:text-sm">Pending Review</p>
               </div>
             </div>
           </div>
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6">
+          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-4 sm:p-6">
             <div className="flex items-center">
-              <div className="p-3 rounded-full bg-blue-500/20">
-                <i className="fas fa-spinner text-2xl text-blue-400"></i>
+              <div className="p-2 sm:p-3 rounded-full bg-blue-500/20">
+                <i className="fas fa-spinner text-lg sm:text-2xl text-blue-400"></i>
               </div>
-              <div className="ml-4">
-                <p className="text-3xl font-bold text-white">{stats.inProgress}</p>
-                <p className="text-gray-400">In Progress</p>
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xl sm:text-3xl font-bold text-white">{stats.inProgress}</p>
+                <p className="text-gray-400 text-xs sm:text-sm">In Progress</p>
               </div>
             </div>
           </div>
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6">
+          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-4 sm:p-6">
             <div className="flex items-center">
-              <div className="p-3 rounded-full bg-green-500/20">
-                <i className="fas fa-check-circle text-2xl text-green-400"></i>
+              <div className="p-2 sm:p-3 rounded-full bg-green-500/20">
+                <i className="fas fa-check-circle text-lg sm:text-2xl text-green-400"></i>
               </div>
-              <div className="ml-4">
-                <p className="text-3xl font-bold text-white">{stats.resolved}</p>
-                <p className="text-gray-400">Resolved</p>
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xl sm:text-3xl font-bold text-white">{stats.resolved}</p>
+                <p className="text-gray-400 text-xs sm:text-sm">Resolved</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Quick Status Links */}
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6 mb-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Quick Filters</h3>
-          <div className="flex flex-wrap gap-3">
+        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
+          <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Quick Filters</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
             <Link
               href="/admin/complaints/pending"
-              className="flex items-center px-4 py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-white transition-colors"
+              className="flex items-center justify-center px-3 sm:px-4 py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-white transition-colors text-sm sm:text-base"
             >
-              <i className="fas fa-clock mr-2"></i>
-              Pending ({stats.pending})
+              <i className="fas fa-clock mr-1 sm:mr-2"></i>
+              <span className="whitespace-nowrap">Pending ({stats.pending})</span>
             </Link>
             <Link
               href="/admin/complaints/progress"
-              className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors"
+              className="flex items-center justify-center px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors text-sm sm:text-base"
             >
-              <i className="fas fa-spinner mr-2"></i>
-              In Progress ({stats.inProgress})
+              <i className="fas fa-spinner mr-1 sm:mr-2"></i>
+              <span className="whitespace-nowrap">In Progress ({stats.inProgress})</span>
             </Link>
             <Link
               href="/admin/complaints/resolved"
-              className="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white transition-colors"
+              className="flex items-center justify-center px-3 sm:px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white transition-colors text-sm sm:text-base"
             >
-              <i className="fas fa-check-circle mr-2"></i>
-              Resolved ({stats.resolved})
+              <i className="fas fa-check-circle mr-1 sm:mr-2"></i>
+              <span className="whitespace-nowrap">Resolved ({stats.resolved})</span>
             </Link>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
+          <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-4">
             <div>
-              <label htmlFor="search" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="search" className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
                 Search Complaints
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <i className="fas fa-search text-gray-400"></i>
+                  <i className="fas fa-search text-gray-400 text-sm"></i>
                 </div>
                 <input
                   type="text"
                   id="search"
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-600 rounded-md leading-5 bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="block w-full pl-8 sm:pl-10 pr-3 py-2 text-sm border border-gray-600 rounded-md leading-5 bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Search by title, description, or user..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -385,12 +386,12 @@ export default function ComplaintsPage() {
               </div>
             </div>
             <div>
-              <label htmlFor="status" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="status" className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
                 Filter by Status
               </label>
               <select
                 id="status"
-                className="block w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="block w-full px-3 py-2 text-sm border border-gray-600 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
               >
@@ -401,12 +402,12 @@ export default function ComplaintsPage() {
               </select>
             </div>
             <div>
-              <label htmlFor="category" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="category" className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
                 Filter by Category
               </label>
               <select
                 id="category"
-                className="block w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="block w-full px-3 py-2 text-sm border border-gray-600 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
@@ -420,11 +421,11 @@ export default function ComplaintsPage() {
         </div>
 
         {/* Complaints Cards Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
           {filteredComplaints.length === 0 ? (
-            <div className="col-span-full text-center py-12">
-              <i className="fas fa-exclamation-circle text-4xl text-gray-500 mb-4"></i>
-              <p className="text-gray-400 text-lg">
+            <div className="col-span-full text-center py-8 sm:py-12">
+              <i className="fas fa-exclamation-circle text-3xl sm:text-4xl text-gray-500 mb-3 sm:mb-4"></i>
+              <p className="text-gray-400 text-base sm:text-lg">
                 {searchTerm || selectedStatus !== 'all' || selectedCategory !== 'all' 
                   ? 'No complaints match your filters.' 
                   : 'No complaints found.'}
@@ -434,35 +435,36 @@ export default function ComplaintsPage() {
             filteredComplaints.map((complaint) => (
               <div key={complaint.id} className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg hover:shadow-xl hover:border-gray-600 transition-all duration-300">
                 {/* Card Header */}
-                <div className="p-6 pb-4">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center space-x-3">
+                <div className="p-4 sm:p-6 pb-3 sm:pb-4">
+                  <div className="flex items-start justify-between mb-3 sm:mb-4">
+                    <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
                       <div className="flex-shrink-0">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                          <i className="fas fa-exclamation-circle text-white text-sm"></i>
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                          <i className="fas fa-exclamation-circle text-white text-xs sm:text-sm"></i>
                         </div>
                       </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-white leading-tight flex items-center">
-                          {complaint.title}
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-sm sm:text-lg font-semibold text-white leading-tight flex items-center">
+                          <span className="truncate">{complaint.title}</span>
                           {complaint.latitude && complaint.longitude && (
-                            <i className="fas fa-map-marker-alt ml-2 text-blue-400" title="Has location data"></i>
+                            <i className="fas fa-map-marker-alt ml-1 sm:ml-2 text-blue-400 flex-shrink-0" title="Has location data"></i>
                           )}
                         </h3>
-                        <p className="text-sm text-gray-400">
+                        <p className="text-xs sm:text-sm text-gray-400 truncate">
                           ID: #{complaint.id}
                         </p>
                       </div>
                     </div>
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(complaint.status)}`}>
+                    <span className={`ml-2 inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(complaint.status)}`}>
                       <i className={`${getStatusIcon(complaint.status)} mr-1 text-xs`}></i>
-                      {complaint.status}
+                      <span className="hidden sm:inline">{complaint.status}</span>
+                      <span className="sm:hidden">{complaint.status.split(' ')[0]}</span>
                     </span>
                   </div>
 
                   {/* Image */}
                   {complaint.imageUrl && (
-                    <div className="mb-4 relative h-48">
+                    <div className="mb-3 sm:mb-4 relative h-32 sm:h-48">
                       <Image 
                         className="rounded-lg object-cover border border-gray-600" 
                         src={complaint.imageUrl} 
@@ -474,32 +476,36 @@ export default function ComplaintsPage() {
                   )}
 
                   {/* Description */}
-                  <p className="text-gray-300 text-sm mb-4 leading-relaxed">
-                    {complaint.description.length > 120 
-                      ? `${complaint.description.substring(0, 120)}...` 
+                  <p className="text-gray-300 text-xs sm:text-sm mb-3 sm:mb-4 leading-relaxed">
+                    {complaint.description.length > (complaint.imageUrl ? 80 : 120) 
+                      ? `${complaint.description.substring(0, complaint.imageUrl ? 80 : 120)}...` 
                       : complaint.description}
                   </p>
 
                   {/* Meta Information */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center space-x-2">
-                        <i className="fas fa-user text-gray-400"></i>
-                        <span className="text-gray-300">{complaint.userName}</span>
+                  <div className="space-y-2 sm:space-y-3">
+                    <div className="flex items-center justify-between text-xs sm:text-sm">
+                      <div className="flex items-center space-x-1 sm:space-x-2 min-w-0 flex-1">
+                        <i className="fas fa-user text-gray-400 flex-shrink-0"></i>
+                        <span className="text-gray-300 truncate">{complaint.userName}</span>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-1 sm:space-x-2 ml-2">
                         <i className="fas fa-calendar-alt text-gray-400"></i>
-                        <span className="text-gray-400">
-                          {new Date(complaint.createdAt).toLocaleDateString()}
+                        <span className="text-gray-400 whitespace-nowrap">
+                          {new Date(complaint.createdAt).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric',
+                            ...(window.innerWidth > 640 && { year: 'numeric' })
+                          })}
                         </span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-700/50 text-gray-300 border border-gray-600">
+                      <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-700/50 text-gray-300 border border-gray-600">
                         <i className="fas fa-tag mr-1 text-xs"></i>
-                        {complaint.category}
+                        <span className="truncate max-w-20 sm:max-w-none">{complaint.category}</span>
                       </span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-500 ml-2">
                         {Math.floor((new Date().getTime() - new Date(complaint.createdAt).getTime()) / (1000 * 60 * 60 * 24))} days ago
                       </span>
                     </div>
@@ -507,19 +513,20 @@ export default function ComplaintsPage() {
                 </div>
 
                 {/* Card Footer - Action Buttons */}
-                <div className="px-6 py-4 bg-gray-700/30 border-t border-gray-600 rounded-b-lg">
-                  <div className="flex items-center justify-between space-x-3">
+                <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-700/30 border-t border-gray-600 rounded-b-lg">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
                     <Link
                       href={`/admin/complaints/${complaint.id}`}
-                      className="flex-1 flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                      className="flex-1 flex items-center justify-center px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors"
                     >
-                      <i className="fas fa-eye mr-2"></i>
-                      View Details
+                      <i className="fas fa-eye mr-1 sm:mr-2"></i>
+                      <span className="hidden sm:inline">View Details</span>
+                      <span className="sm:hidden">View</span>
                     </Link>
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-2 justify-center sm:justify-start">
                       {complaint.status.toLowerCase() === 'pending' && (
                         <button 
-                          className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
+                          className="px-2 sm:px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors"
                           onClick={() => {
                             const inProgressStatus = statuses.find(s => s.name.toLowerCase() === 'in progress');
                             if (inProgressStatus) {
@@ -533,7 +540,7 @@ export default function ComplaintsPage() {
                       )}
                       {complaint.status.toLowerCase() === 'in progress' && (
                         <button 
-                          className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
+                          className="px-2 sm:px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors"
                           onClick={() => {
                             const resolvedStatus = statuses.find(s => s.name.toLowerCase() === 'resolved');
                             if (resolvedStatus) {
@@ -546,7 +553,7 @@ export default function ComplaintsPage() {
                         </button>
                       )}
                       <button 
-                        className="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors"
+                        className="px-2 sm:px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors"
                         onClick={() => openStatusModal(complaint)}
                         title="Change Status"
                       >
@@ -554,7 +561,7 @@ export default function ComplaintsPage() {
                       </button>
                       {complaint.latitude && complaint.longitude && (
                         <button 
-                          className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors"
+                          className="px-2 sm:px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors"
                           onClick={() => getDirectionsToComplaint(complaint)}
                           title="Get Directions to Location"
                         >
@@ -572,23 +579,23 @@ export default function ComplaintsPage() {
         {/* Status Update Modal */}
         {showStatusModal && selectedComplaint && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-800 border border-gray-700 rounded-lg max-w-md w-full">
-              <div className="p-6">
+            <div className="bg-gray-800 border border-gray-700 rounded-lg max-w-md w-full mx-4">
+              <div className="p-4 sm:p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-white">Update Status</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-white">Update Status</h3>
                   <button
                     onClick={() => setShowStatusModal(false)}
-                    className="text-gray-400 hover:text-white"
+                    className="text-gray-400 hover:text-white p-1"
                   >
                     <i className="fas fa-times"></i>
                   </button>
                 </div>
-                <p className="text-gray-300 mb-4">
-                  Update status for: <strong>{selectedComplaint.title}</strong>
+                <p className="text-gray-300 mb-4 text-sm sm:text-base">
+                  Update status for: <strong className="text-white break-words">{selectedComplaint.title}</strong>
                 </p>
-                <div className="space-y-3 mb-6">
+                <div className="space-y-3 mb-6 max-h-60 overflow-y-auto">
                   {statuses.map((status) => (
-                    <label key={status.id} className="flex items-center">
+                    <label key={status.id} className="flex items-center cursor-pointer hover:bg-gray-700/30 rounded p-2 -m-2">
                       <input
                         type="radio"
                         name="status"
@@ -604,17 +611,17 @@ export default function ComplaintsPage() {
                     </label>
                   ))}
                 </div>
-                <div className="flex space-x-3">
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
                   <button
                     onClick={() => setShowStatusModal(false)}
-                    className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                    className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={() => handleStatusUpdate()}
                     disabled={!newStatusId || updating}
-                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center justify-center"
+                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors flex items-center justify-center"
                   >
                     {updating ? (
                       <>

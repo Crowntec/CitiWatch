@@ -190,22 +190,22 @@ export default function StatusManagementPage() {
 
   return (
     <AdminLayout>
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-white">Status Management</h1>
-              <p className="text-gray-400 mt-2">Configure and manage complaint status workflow</p>
+        <div className="mb-6 sm:mb-8">
+          <div className="space-y-4 sm:space-y-0 sm:flex sm:justify-between sm:items-center">
+            <div className="text-center sm:text-left">
+              <h1 className="text-2xl sm:text-3xl font-bold text-white">Status Management</h1>
+              <p className="text-gray-400 mt-1 sm:mt-2 text-sm sm:text-base">Configure and manage complaint status workflow</p>
             </div>
-            <div className="flex space-x-3">
-              <button className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <button className="w-full sm:w-auto bg-gray-600 hover:bg-gray-700 text-white px-4 py-2.5 sm:py-2 rounded-lg transition-colors flex items-center justify-center text-sm font-medium">
                 <i className="fas fa-download mr-2"></i>
-                Export Settings
+                <span>Export Settings</span>
               </button>
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center">
+              <button className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 sm:py-2 rounded-lg transition-colors flex items-center justify-center text-sm font-medium">
                 <i className="fas fa-plus mr-2"></i>
-                Add Status
+                <span>Add Status</span>
               </button>
             </div>
           </div>
@@ -280,11 +280,75 @@ export default function StatusManagementPage() {
 
         {/* Status Details */}
         <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg">
-          <div className="px-6 py-4 border-b border-gray-700">
-            <h3 className="text-lg font-semibold text-white">All Status Configurations</h3>
-            <p className="text-gray-400 text-sm mt-1">Manage individual status settings and properties</p>
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-700">
+            <h3 className="text-base sm:text-lg font-semibold text-white">All Status Configurations</h3>
+            <p className="text-gray-400 text-xs sm:text-sm mt-1">Manage individual status settings and properties</p>
           </div>
-          <div className="overflow-x-auto">
+          
+          {/* Mobile: Card Layout */}
+          <div className="block lg:hidden">
+            <div className="p-4 space-y-4">
+              {statuses.sort((a, b) => a.order - b.order).map((status) => (
+                <div key={status.id} className={`bg-gray-700/30 border border-gray-600 rounded-lg p-4 transition-all duration-200 hover:bg-gray-700/50 ${!status.isActive ? 'opacity-60' : ''}`}>
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center space-x-3">
+                      <div className={`p-2 rounded-full ${getBackgroundColor(status.color)}`}>
+                        <i className={`${status.icon} text-sm ${getIconColor(status.color)}`}></i>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium text-white">{status.name}</h4>
+                        <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-1 ${getColorClasses(status.color, status.isActive)}`}>
+                          {status.color}
+                        </div>
+                      </div>
+                    </div>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      status.isActive 
+                        ? 'bg-green-900/50 text-green-300 border border-green-700' 
+                        : 'bg-red-900/50 text-red-300 border border-red-700'
+                    }`}>
+                      <i className={`${status.isActive ? 'fas fa-check' : 'fas fa-times'} mr-1 text-xs`}></i>
+                      {status.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="space-y-2 mb-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-400">Description:</span>
+                      <span className="text-xs text-gray-300">{status.description}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-400">Order:</span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-700 text-white">
+                        #{status.order}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Actions */}
+                  <div className="flex space-x-2 pt-2 border-t border-gray-600">
+                    <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
+                      <i className="fas fa-edit mr-1"></i>
+                      Edit
+                    </button>
+                    <button className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                      status.isActive 
+                        ? 'bg-red-600 hover:bg-red-700 text-white' 
+                        : 'bg-green-600 hover:bg-green-700 text-white'
+                    }`}>
+                      <i className={`${status.isActive ? 'fas fa-pause' : 'fas fa-play'} mr-1`}></i>
+                      {status.isActive ? 'Deactivate' : 'Activate'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Desktop: Table Layout */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-700">
               <thead className="bg-gray-700/50">
                 <tr>
@@ -367,12 +431,12 @@ export default function StatusManagementPage() {
         </div>
 
         {/* Help Section */}
-        <div className="mt-8 bg-blue-900/20 border border-blue-700/30 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-300 mb-3">
+        <div className="mt-6 sm:mt-8 bg-blue-900/20 border border-blue-700/30 rounded-lg p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-blue-300 mb-3">
             <i className="fas fa-info-circle mr-2"></i>
             Status Management Guide
           </h3>
-          <div className="space-y-2 text-blue-200 text-sm">
+          <div className="space-y-2 text-blue-200 text-xs sm:text-sm">
             <p>• <strong>Order:</strong> Determines the sequence of status progression in the workflow</p>
             <p>• <strong>Active Status:</strong> Only active statuses are available for complaint updates</p>
             <p>• <strong>Color Coding:</strong> Helps users and administrators quickly identify complaint status</p>

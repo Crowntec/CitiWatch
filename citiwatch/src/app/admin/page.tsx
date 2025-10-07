@@ -257,7 +257,7 @@ export default function AdminDashboard() {
           {/* Welcome message for admin */}
           <div className="mt-4 p-4 bg-green-900/20 border border-green-600 rounded-lg">
             <p className="text-green-200 text-sm">
-              <strong>Welcome, {user?.email}!</strong> You have administrative access to the CitiWatch platform.
+              <strong>Welcome, {user?.fullName}!</strong>
             </p>
           </div>
         </div>
@@ -394,134 +394,133 @@ export default function AdminDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-6 mb-8">
-          <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-4 sm:p-6 mb-8">
+          <h3 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Quick Actions</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <Link
               href="/admin/complaints"
-              className="flex items-center justify-center p-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors"
+              className="group flex flex-col sm:flex-row items-center justify-center p-4 sm:p-6 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-all duration-200 hover:scale-105 hover:shadow-lg"
             >
-              <i className="fas fa-list mr-2"></i>
-              View All Complaints
+              <i className="fas fa-list text-2xl sm:text-lg sm:mr-2 mb-2 sm:mb-0 group-hover:animate-pulse"></i>
+              <span className="text-sm sm:text-base font-medium text-center sm:text-left">View All Complaints</span>
             </Link>
             <Link
               href="/admin/users"
-              className="flex items-center justify-center p-4 bg-purple-600 hover:bg-purple-700 rounded-lg text-white transition-colors"
+              className="group flex flex-col sm:flex-row items-center justify-center p-4 sm:p-6 bg-purple-600 hover:bg-purple-700 rounded-lg text-white transition-all duration-200 hover:scale-105 hover:shadow-lg"
             >
-              <i className="fas fa-users mr-2"></i>
-              Manage Users
+              <i className="fas fa-users text-2xl sm:text-lg sm:mr-2 mb-2 sm:mb-0 group-hover:animate-pulse"></i>
+              <span className="text-sm sm:text-base font-medium text-center sm:text-left">Manage Users</span>
             </Link>
             <Link
               href="/admin/categories/manage"
-              className="flex items-center justify-center p-4 bg-green-600 hover:bg-green-700 rounded-lg text-white transition-colors"
+              className="group flex flex-col sm:flex-row items-center justify-center p-4 sm:p-6 bg-green-600 hover:bg-green-700 rounded-lg text-white transition-all duration-200 hover:scale-105 hover:shadow-lg"
             >
-              <i className="fas fa-plus mr-2"></i>
-              Add Category
+              <i className="fas fa-plus text-2xl sm:text-lg sm:mr-2 mb-2 sm:mb-0 group-hover:animate-pulse"></i>
+              <span className="text-sm sm:text-base font-medium text-center sm:text-left">Add Category</span>
             </Link>
             <Link
               href="/admin/complaints/pending"
-              className="flex items-center justify-center p-4 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-white transition-colors"
+              className="group flex flex-col sm:flex-row items-center justify-center p-4 sm:p-6 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-white transition-all duration-200 hover:scale-105 hover:shadow-lg"
             >
-              <i className="fas fa-clock mr-2"></i>
-              Pending Reviews
+              <i className="fas fa-clock text-2xl sm:text-lg sm:mr-2 mb-2 sm:mb-0 group-hover:animate-pulse"></i>
+              <span className="text-sm sm:text-base font-medium text-center sm:text-left">Pending Reviews</span>
             </Link>
           </div>
         </div>
 
-        {/* Latest Complaints Table */}
+        {/* Latest Complaints - Responsive Cards */}
         <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg">
-          <div className="px-6 py-4 border-b border-gray-700">
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-700">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">Latest Complaints</h3>
+              <h3 className="text-lg sm:text-xl font-semibold text-white">Latest Complaints</h3>
               <Link
                 href="/admin/complaints"
-                className="text-blue-400 hover:text-blue-300 text-sm"
+                className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
               >
                 View All
               </Link>
             </div>
           </div>
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {getRecentComplaints().length === 0 ? (
-              <p className="text-gray-400 text-center py-8">No complaints found.</p>
+              <div className="text-center py-12">
+                <i className="fas fa-inbox text-4xl text-gray-500 mb-4"></i>
+                <p className="text-gray-400">No complaints found.</p>
+              </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-700">
-                  <thead>
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        Title
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        User
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        Category
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-700">
-                    {getRecentComplaints().map((complaint) => (
-                      <tr key={complaint.id} className="hover:bg-gray-700/30 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-white flex items-center">
-                            {complaint.title}
+              <div className="space-y-4">
+                {getRecentComplaints().map((complaint) => (
+                  <div key={complaint.id} className="bg-gray-700/30 hover:bg-gray-700/50 border border-gray-600/50 rounded-lg p-4 transition-all duration-200 hover:shadow-lg">
+                    {/* Mobile/Tablet Layout */}
+                    <div className="space-y-3">
+                      {/* Header Row */}
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-2">
+                            <h4 className="text-white font-medium text-sm sm:text-base truncate">
+                              {complaint.title}
+                            </h4>
                             {complaint.latitude && complaint.longitude && (
-                              <i className="fas fa-map-marker-alt ml-2 text-blue-400" title="Has location data"></i>
+                              <i className="fas fa-map-marker-alt text-blue-400 text-xs" title="Has location data"></i>
                             )}
                           </div>
-                          <div className="text-sm text-gray-400 max-w-xs truncate">
+                          <p className="text-gray-400 text-xs sm:text-sm mt-1 line-clamp-2">
                             {complaint.description}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                          {complaint.userName || complaint.userEmail || 'Unknown User'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                          {complaint.categoryName}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(complaint.statusName || '')}`}>
-                            {complaint.statusName}
+                          </p>
+                        </div>
+                        <span className={`ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(complaint.statusName || '')}`}>
+                          {complaint.statusName}
+                        </span>
+                      </div>
+
+                      {/* Info Row */}
+                      <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-gray-400">
+                        <div className="flex items-center space-x-1">
+                          <i className="fas fa-user text-purple-400"></i>
+                          <span className="truncate max-w-24 sm:max-w-32">
+                            {complaint.userName || complaint.userEmail || 'Unknown User'}
                           </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                          {new Date(complaint.createdOn).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                          <Link
-                            href={`/admin/complaints/${complaint.id}`}
-                            className="text-blue-400 hover:text-blue-300 transition-colors"
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <i className="fas fa-tag text-green-400"></i>
+                          <span className="truncate max-w-20 sm:max-w-28">{complaint.categoryName}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <i className="fas fa-calendar text-blue-400"></i>
+                          <span>{new Date(complaint.createdOn).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric'
+                          })}</span>
+                        </div>
+                      </div>
+
+                      {/* Actions Row */}
+                      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-600/30">
+                        <Link
+                          href={`/admin/complaints/${complaint.id}`}
+                          className="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-md transition-colors"
+                        >
+                          <i className="fas fa-eye mr-1.5"></i>
+                          View
+                        </Link>
+                        {complaint.latitude && complaint.longitude && (
+                          <button
+                            onClick={() => getDirectionsToComplaint(complaint)}
+                            className="inline-flex items-center px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium rounded-md transition-colors"
+                            title="Get directions to complaint location"
                           >
-                            View
-                          </Link>
-                          {complaint.latitude && complaint.longitude && (
-                            <button
-                              onClick={() => getDirectionsToComplaint(complaint)}
-                              className="text-purple-400 hover:text-purple-300 transition-colors"
-                              title="Get directions to complaint location"
-                            >
-                              <i className="fas fa-directions mr-1"></i>
-                              Route
-                            </button>
-                          )}
-                          <button className="text-green-400 hover:text-green-300 transition-colors">
-                            Update Status
+                            <i className="fas fa-directions mr-1.5"></i>
+                            Route
                           </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        )}
+                        <button className="inline-flex items-center px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-md transition-colors">
+                          <i className="fas fa-edit mr-1.5"></i>
+                          Update
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
