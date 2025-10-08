@@ -35,5 +35,6 @@ export class AuthDebugger {
 
 // Make it available globally for console debugging
 if (typeof window !== 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (window as any).AuthDebugger = AuthDebugger;
 }
