@@ -62,17 +62,12 @@ const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
   
-  // Static files handling and API proxy
+  // Static files handling
   async rewrites() {
     return [
       {
         source: '/robots.txt',
         destination: '/api/robots',
-      },
-      // Proxy API calls to backend to avoid CORS and HTTPS/HTTP issues
-      {
-        source: '/api/proxy/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://citiwatch.runasp.net/api'}/:path*`,
       },
     ];
   },

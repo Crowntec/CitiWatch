@@ -4,12 +4,7 @@ class ApiClient {
   private baseUrl: string;
 
   constructor() {
-    // Use proxy in production (Vercel) to avoid HTTPS/HTTP mixed content issues
-    if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
-      this.baseUrl = '/api/proxy';
-    } else {
-      this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://citiwatch.runasp.net/api';
-    }
+    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5182/api';
   }
 
   private async request<T>(
