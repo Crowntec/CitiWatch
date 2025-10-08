@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Forward the request to the real API with Admin role
-    const apiBaseUrl = process.env.BACKEND_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://citiwatch.runasp.net/api';
+    const apiBaseUrl = 'http://citiwatch.runasp.net/api';
     
     const response = await fetch(`${apiBaseUrl}/User/Create`, {
       method: 'POST',
