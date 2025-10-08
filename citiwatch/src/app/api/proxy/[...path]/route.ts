@@ -45,6 +45,9 @@ async function proxyRequest(
     const url = new URL(request.url);
     const targetUrl = `${BACKEND_API_URL}/${path}${url.search}`;
 
+    // Log the proxy request for debugging
+    console.log(`[PROXY] ${method} ${targetUrl}`);
+
     // Prepare headers - forward relevant headers from the original request
     const headers = new Headers();
     
@@ -81,6 +84,8 @@ async function proxyRequest(
       body,
     });
 
+    console.log(`[PROXY] Response status: ${response.status} for ${targetUrl}`);
+
     // Create response with the same status and headers
     const responseData = await response.text();
     
@@ -112,12 +117,19 @@ async function proxyRequest(
 
     return proxyResponse;
   } catch (error) {
-    console.error('Proxy error:', error);
+    console.error('[PROXY] Error:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      method,
+      pathSegments,
+      targetUrl: `${BACKEND_API_URL}/${pathSegments.join('/')}`
+    });
     return NextResponse.json(
       { 
         status: 'error', 
         message: 'Proxy request failed',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
+        target: `${BACKEND_API_URL}/${pathSegments.join('/')}`
       },
       { status: 500 }
     );

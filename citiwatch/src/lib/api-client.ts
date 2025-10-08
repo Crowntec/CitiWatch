@@ -5,8 +5,15 @@ class ApiClient {
 
   constructor() {
     // Use environment-specific API URL
-    // In production on Vercel, this will use the proxy route to avoid mixed content issues
-    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://citiwatch.runasp.net/api';
+    // In production (HTTPS), always use the proxy route to avoid mixed content issues
+    // In development, can use direct HTTP connection
+    if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+      // Force proxy route in HTTPS environments
+      this.baseUrl = '/api/proxy';
+    } else {
+      // Use environment variable or fallback to direct API
+      this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://citiwatch.runasp.net/api';
+    }
   }
 
   private async request<T>(
@@ -27,12 +34,14 @@ class ApiClient {
       ...options,
     };
 
-    // Safe logging for development only
+    // Safe logging for development and debugging
     if (process.env.NODE_ENV === 'development') {
       console.log('🌐 API Request:', {
         method: options.method || 'GET',
         endpoint: endpoint,
-        url: url.replace(this.baseUrl, ''), // Just show the endpoint path
+        baseUrl: this.baseUrl,
+        fullUrl: url,
+        isHttps: typeof window !== 'undefined' ? window.location.protocol === 'https:' : false,
         hasAuth: !!token,
         // Never log the actual token or sensitive headers
       });
