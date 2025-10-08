@@ -11,7 +11,8 @@ class ApiClient {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    retryCount: number = 0
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     
@@ -33,6 +34,7 @@ class ApiClient {
         method: options.method || 'GET',
         endpoint: endpoint,
         hasAuth: !!token,
+        tokenLength: token ? token.length : 0,
       });
     }
 
@@ -40,8 +42,15 @@ class ApiClient {
       const response = await fetch(url, config);
       
       if (!response.ok) {
-        // Handle 401 Unauthorized - redirect to login
+        // Handle 401 Unauthorized - try retry first, then redirect to login
         if (response.status === 401) {
+          // Try once more if we haven't retried yet and we're missing token
+          if (retryCount === 0 && !token) {
+            // Wait a bit for token to be available
+            await new Promise(resolve => setTimeout(resolve, 200));
+            return this.request<T>(endpoint, options, retryCount + 1);
+          }
+          
           // Only log in development
           if (process.env.NODE_ENV === 'development') {
             console.warn('🔒 Authentication required - redirecting to login');

@@ -29,13 +29,25 @@ export default function SubmitComplaint() {
 
   useEffect(() => {
     // Check if user is authenticated
-    const token = SecureTokenStorage.getToken();
-    if (!token) {
-      router.push('/login');
-      return;
-    }
+    const checkAuth = () => {
+      const token = SecureTokenStorage.getToken();
+      if (!token) {
+        console.log('No token found, redirecting to login');
+        router.push('/login?redirect=/dashboard/submit');
+        return false;
+      }
+      return true;
+    };
 
-    loadCategories();
+    // Initial auth check
+    if (!checkAuth()) return;
+
+    // Load categories with a small delay to ensure token is ready
+    setTimeout(() => {
+      if (checkAuth()) {
+        loadCategories();
+      }
+    }, 100);
   }, [router]);
 
   const loadCategories = async () => {

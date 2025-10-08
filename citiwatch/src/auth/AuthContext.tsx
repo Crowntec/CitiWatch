@@ -54,6 +54,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.success && response.data) {
         setUser(response.data);
         
+        // Wait a bit to ensure token is properly stored
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         // Redirect to intended page or default based on role
         if (redirectTo) {
           router.push(redirectTo);

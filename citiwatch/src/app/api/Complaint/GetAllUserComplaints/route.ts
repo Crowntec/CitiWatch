@@ -15,6 +15,9 @@ export async function GET(request: NextRequest) {
     const fullUrl = `${apiBaseUrl}/Complaint/GetAllUserComplaints`;
     
     console.log('Proxying request to:', fullUrl, 'with auth:', authHeader ? 'present' : 'missing');
+    if (authHeader && process.env.NODE_ENV === 'development') {
+      console.log('Auth header preview:', authHeader.substring(0, 50) + '...');
+    }
     
     const response = await fetch(fullUrl, {
       method: 'GET',
@@ -31,7 +34,8 @@ export async function GET(request: NextRequest) {
         status: response.status,
         statusText: response.statusText,
         error: errorData,
-        url: `${apiBaseUrl}/Complaint/GetAllUserComplaints`
+        url: fullUrl,
+        authHeader: authHeader ? 'present' : 'missing'
       });
       
       return NextResponse.json(
