@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug JWT Token</title>
+</head>
+<body>
+    <h1>Debug JWT Token Claims</h1>
+    <div id="result"></div>
+
+    <script>
+        // Function to decode JWT token and display claims
+        function debugJWT() {
+            // Use the actual token from login
+            const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwcmluY2VtYXR0aGlhczY0QGdtYWlsLmNvbSIsImp0aSI6IjMwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAwMSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IlVzZXIiLCJleHAiOjE3Mzg0MzMwOTYsImlzcyI6IkNpdGlXYXRjaCIsImF1ZCI6IkNpdGlXYXRjaC1Vc2VycyJ9.ZGD8hsJoEB1RDjH8KX7YJAvgXpYiMD3X0m7OLmKLT-E";
+            
+            try {
+                // Decode the JWT payload (second part)
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                
+                console.log('JWT Payload:', payload);
+                
+                document.getElementById('result').innerHTML = `
+                    <h3>JWT Token Claims:</h3>
+                    <pre>${JSON.stringify(payload, null, 2)}</pre>
+                    
+                    <h3>Key Claims:</h3>
+                    <ul>
+                        <li><strong>Subject (sub):</strong> ${payload.sub}</li>
+                        <li><strong>JWT ID (jti):</strong> ${payload.jti}</li>
+                        <li><strong>Role Claim:</strong> ${payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']}</li>
+                        <li><strong>Expiration (exp):</strong> ${new Date(payload.exp * 1000).toISOString()}</li>
+                        <li><strong>Issuer (iss):</strong> ${payload.iss}</li>
+                        <li><strong>Audience (aud):</strong> ${payload.aud}</li>
+                    </ul>
+                    
+                    <h3>Expected Backend Claims:</h3>
+                    <ul>
+                        <li><strong>User ID from JTI:</strong> ${payload.jti}</li>
+                        <li><strong>Role for Authorization:</strong> ${payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']}</li>
+                    </ul>
+                `;
+            } catch (error) {
+                console.error('Error decoding JWT:', error);
+                document.getElementById('result').innerHTML = `<p style="color: red;">Error decoding JWT: ${error.message}</p>`;
+            }
+        }
+        
+        // Run immediately
+        debugJWT();
+    </script>
+</body>
+</html>

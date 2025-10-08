@@ -87,13 +87,13 @@ export default function SubmitComplaint() {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
     setSuccess('');
+    setLoading(true);
 
-    // Use comprehensive validation
+    // Validate form data
     const validation = ValidationHelper.validateComplaint({
       title: formData.title,
       description: formData.description,

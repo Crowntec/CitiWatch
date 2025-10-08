@@ -16,20 +16,31 @@ export class AuthService {
         // Also store token in cookies for middleware
         document.cookie = `token=${loginResponse.token}; path=/; max-age=${3 * 60 * 60}`; // 3 hours
         
-        // Decode JWT to get user info (simplified - in production use a proper JWT library)
+                // Decode JWT to get user info (simplified - in production use a proper JWT library)
         const tokenPayload = JSON.parse(atob(loginResponse.token.split('.')[1]));
         
-        // Create user object from token
+        // Create user object from token - Use correct JWT claims
         const roleString = tokenPayload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || tokenPayload.role || 'User';
         const fullNameClaim = tokenPayload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || tokenPayload.name;
+        
+        // IMPORTANT: Use 'jti' for user ID (not 'sub') - backend ValidatorHelper.GetUserId() expects this
+        const userId = tokenPayload.jti || tokenPayload.sub || tokenPayload.nameid;
+        
         const userData: User = {
-          id: tokenPayload.sub || tokenPayload.nameid,
-          email: tokenPayload.email || credentials.email,
-          role: roleString.toLowerCase() === 'admin' ? 'admin' : 'user',
-          fullName: fullNameClaim || 'User', // Use the name claim from JWT
+          id: userId,
+          email: tokenPayload.sub || tokenPayload.email || credentials.email, // 'sub' contains email
+          role: roleString === 'Admin' ? 'admin' : 'user', // Keep original case, then normalize for frontend
+          fullName: fullNameClaim || 'User',
           createdAt: new Date().toISOString(),
           isActive: true
         };
+        
+        console.log('JWT Token Claims:', {
+          jti: tokenPayload.jti,
+          sub: tokenPayload.sub,
+          role: roleString,
+          fullClaims: tokenPayload
+        });
         
         console.log('Login successful for:', userData.email, 'Role:', userData.role);
         

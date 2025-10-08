@@ -4,16 +4,9 @@ class ApiClient {
   private baseUrl: string;
 
   constructor() {
-    // Use environment-specific API URL
-    // In production (HTTPS), always use the proxy route to avoid mixed content issues
-    // In development, can use direct HTTP connection
-    if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
-      // Force proxy route in HTTPS environments
-      this.baseUrl = '/api/proxy';
-    } else {
-      // Use environment variable or fallback to direct API
-      this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://citiwatch.runasp.net/api';
-    }
+    // Always use proxy route for consistent JWT handling
+    // The proxy route ensures proper authentication forwarding
+    this.baseUrl = '/api/proxy';
   }
 
   private async request<T>(
@@ -84,11 +77,31 @@ class ApiClient {
         try {
           const errorData = await responseClone.json();
           errorMessage = errorData.message || errorData.Message || errorMessage;
+          
+          // Log 400 errors in development for debugging
+          if (response.status === 400 && process.env.NODE_ENV === 'development') {
+            console.error('🔴 400 Bad Request Details:', {
+              url: url,
+              method: options.method || 'GET',
+              errorData: errorData,
+              status: response.status
+            });
+          }
         } catch {
           // If parsing as JSON fails, try as text on the original response
           try {
             const errorText = await response.text();
             errorMessage = errorText || errorMessage;
+            
+            // Log text error in development
+            if (response.status === 400 && process.env.NODE_ENV === 'development') {
+              console.error('🔴 400 Bad Request (Text):', {
+                url: url,
+                method: options.method || 'GET',
+                errorText: errorText,
+                status: response.status
+              });
+            }
           } catch {
             // If both fail, use the status message
             errorMessage = response.statusText || errorMessage;
@@ -145,8 +158,8 @@ class ApiClient {
   async postForm<T>(endpoint: string, formData: FormData): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     
-    // Get token from localStorage if available
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    // Get token from secure storage
+    const token = typeof window !== 'undefined' ? SecureTokenStorage.getToken() : null;
     
     const config: RequestInit = {
       method: 'POST',

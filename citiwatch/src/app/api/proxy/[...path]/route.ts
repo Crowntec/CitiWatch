@@ -64,14 +64,21 @@ async function proxyRequest(
       const value = request.headers.get(headerName);
       if (value) {
         headers.set(headerName, value);
+        // Log auth headers for debugging (but mask the token)
+        if (headerName === 'authorization' && value.startsWith('Bearer ')) {
+          console.log(`[PROXY] Auth header present: Bearer ${value.slice(-10)}`);
+        }
       }
     });
 
     // Prepare the request body for POST/PUT requests
     let body: BodyInit | undefined;
     if (method === 'POST' || method === 'PUT') {
+      // For multipart/form-data, we need to pass the raw body stream
+      // Don't parse it as FormData as that consumes the stream
       if (request.headers.get('content-type')?.includes('multipart/form-data')) {
-        body = await request.formData();
+        // Get the raw body as ArrayBuffer to preserve the multipart stream
+        body = await request.arrayBuffer();
       } else if (request.headers.get('content-type')?.includes('application/json')) {
         body = await request.text();
       }
@@ -85,6 +92,12 @@ async function proxyRequest(
     });
 
     console.log(`[PROXY] Response status: ${response.status} for ${targetUrl}`);
+    
+    // Log error responses for debugging
+    if (!response.ok) {
+      const errorText = await response.clone().text();
+      console.log(`[PROXY] Error response: ${errorText}`);
+    }
 
     // Create response with the same status and headers
     const responseData = await response.text();
