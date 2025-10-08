@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AdminLayout from '@/components/AdminLayout';
+import { CategoryService } from '@/services/category';
 
 export default function ManageCategoriesPage() {
   const [formData, setFormData] = useState({
@@ -93,16 +94,15 @@ export default function ManageCategoriesPage() {
       
       console.log('Category data to send:', categoryData); // For debugging
       
-      // TODO: Implement actual API call
-      // const response = await makeAuthenticatedRequest('/api/Category/Create', {
-      //   method: 'POST',
-      //   body: JSON.stringify(categoryData)
-      // });
+      // Use the CategoryService to create via hosted API
+      const result = await CategoryService.createCategory(categoryData);
       
-      // Mock implementation
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      setSuccess('Category created successfully!');
+      if (result.success) {
+        setSuccess('Category created successfully!');
+      } else {
+        setError(result.message || 'Failed to create category');
+        return;
+      }
       setFormData({
         name: '',
         description: '',

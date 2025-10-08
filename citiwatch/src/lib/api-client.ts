@@ -4,7 +4,9 @@ class ApiClient {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5182/api';
+    // Use environment-specific API URL
+    // In production on Vercel, this will use the proxy route to avoid mixed content issues
+    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://citiwatch.runasp.net/api';
   }
 
   private async request<T>(

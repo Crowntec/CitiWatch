@@ -62,14 +62,24 @@ const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
   
-  // Static files handling
+  // Static files handling and API proxy for production
   async rewrites() {
-    return [
+    const rewrites = [
       {
         source: '/robots.txt',
         destination: '/api/robots',
       },
     ];
+
+    // Add API proxy rewrites for production to avoid mixed content issues
+    if (process.env.NODE_ENV === 'production') {
+      rewrites.push({
+        source: '/api/proxy/:path*',
+        destination: 'http://citiwatch.runasp.net/api/:path*',
+      });
+    }
+
+    return rewrites;
   },
 };
 

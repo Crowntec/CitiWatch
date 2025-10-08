@@ -70,18 +70,19 @@ export default function PendingComplaintsPage() {
 
   const handleQuickStatusUpdate = async (complaintId: string, newStatus: string) => {
     try {
-      // TODO: Implement actual API call
-      // await makeAuthenticatedRequest(`/api/Complaint/UpdateStatus/${complaintId}`, {
-      //   method: 'PUT',
-      //   body: JSON.stringify({ status: newStatus })
-      // });
+      // Use the ComplaintService to update status via hosted API
+      const result = await ComplaintService.updateComplaintStatus(complaintId, { id: complaintId });
       
-      // Mock implementation - remove complaint from pending list
-      setComplaints(complaints.filter(c => c.id !== complaintId));
-      
-      // Show success message
-      const statusText = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
-      alert(`Complaint marked as ${statusText}`);
+      if (result.success) {
+        // Remove complaint from pending list on successful update
+        setComplaints(complaints.filter(c => c.id !== complaintId));
+        
+        // Show success message
+        const statusText = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+        alert(`Complaint marked as ${statusText}`);
+      } else {
+        alert(result.message || 'Failed to update complaint status');
+      }
     } catch (error) {
       console.error('Error updating complaint status:', error);
       alert('Failed to update complaint status');

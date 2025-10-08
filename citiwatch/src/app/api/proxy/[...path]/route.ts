@@ -1,0 +1,137 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+const BACKEND_API_URL = 'http://citiwatch.runasp.net/api';
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
+  const { path } = await params;
+  return proxyRequest(request, path, 'GET');
+}
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
+  const { path } = await params;
+  return proxyRequest(request, path, 'POST');
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
+  const { path } = await params;
+  return proxyRequest(request, path, 'PUT');
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
+  const { path } = await params;
+  return proxyRequest(request, path, 'DELETE');
+}
+
+async function proxyRequest(
+  request: NextRequest,
+  pathSegments: string[],
+  method: string
+) {
+  try {
+    // Construct the target URL
+    const path = pathSegments.join('/');
+    const url = new URL(request.url);
+    const targetUrl = `${BACKEND_API_URL}/${path}${url.search}`;
+
+    // Prepare headers - forward relevant headers from the original request
+    const headers = new Headers();
+    
+    // Copy important headers
+    const headersToForward = [
+      'authorization',
+      'content-type',
+      'accept',
+      'user-agent',
+      'accept-language',
+    ];
+
+    headersToForward.forEach(headerName => {
+      const value = request.headers.get(headerName);
+      if (value) {
+        headers.set(headerName, value);
+      }
+    });
+
+    // Prepare the request body for POST/PUT requests
+    let body: BodyInit | undefined;
+    if (method === 'POST' || method === 'PUT') {
+      if (request.headers.get('content-type')?.includes('multipart/form-data')) {
+        body = await request.formData();
+      } else if (request.headers.get('content-type')?.includes('application/json')) {
+        body = await request.text();
+      }
+    }
+
+    // Make the proxied request
+    const response = await fetch(targetUrl, {
+      method,
+      headers,
+      body,
+    });
+
+    // Create response with the same status and headers
+    const responseData = await response.text();
+    
+    const proxyResponse = new NextResponse(responseData, {
+      status: response.status,
+      statusText: response.statusText,
+    });
+
+    // Forward relevant response headers
+    const responseHeadersToForward = [
+      'content-type',
+      'cache-control',
+      'etag',
+      'expires',
+      'last-modified',
+    ];
+
+    responseHeadersToForward.forEach(headerName => {
+      const value = response.headers.get(headerName);
+      if (value) {
+        proxyResponse.headers.set(headerName, value);
+      }
+    });
+
+    // Add CORS headers
+    proxyResponse.headers.set('Access-Control-Allow-Origin', '*');
+    proxyResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    proxyResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+    return proxyResponse;
+  } catch (error) {
+    console.error('Proxy error:', error);
+    return NextResponse.json(
+      { 
+        status: 'error', 
+        message: 'Proxy request failed',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// Handle OPTIONS requests for CORS
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
+}
