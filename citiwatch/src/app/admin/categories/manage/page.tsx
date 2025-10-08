@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AdminLayout from '@/components/AdminLayout';
-import { SecureTokenStorage } from '@/utils/secureStorage';
 
 export default function ManageCategoriesPage() {
   const [formData, setFormData] = useState({
@@ -94,21 +93,14 @@ export default function ManageCategoriesPage() {
       
       console.log('Category data to send:', categoryData); // For debugging
       
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5182/api';
+      // TODO: Implement actual API call
+      // const response = await makeAuthenticatedRequest('/api/Category/Create', {
+      //   method: 'POST',
+      //   body: JSON.stringify(categoryData)
+      // });
       
-      const response = await fetch(`${apiBaseUrl}/Category/Create`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SecureTokenStorage.getToken()}`,
-        },
-        body: JSON.stringify(categoryData)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Failed to create category: ${response.status}`);
-      }
+      // Mock implementation
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
       setSuccess('Category created successfully!');
       setFormData({

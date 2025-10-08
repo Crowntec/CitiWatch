@@ -4,15 +4,12 @@ class ApiClient {
   private baseUrl: string;
 
   constructor() {
-    // Use Next.js API routes as HTTPS proxies to the HTTP backend API
-    // This solves the Mixed Content issue by making server-side HTTP calls
-    this.baseUrl = '/api';
+    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5182/api';
   }
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {},
-    retryCount: number = 0
+    options: RequestInit = {}
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     
@@ -33,8 +30,9 @@ class ApiClient {
       console.log('🌐 API Request:', {
         method: options.method || 'GET',
         endpoint: endpoint,
+        url: url.replace(this.baseUrl, ''), // Just show the endpoint path
         hasAuth: !!token,
-        tokenLength: token ? token.length : 0,
+        // Never log the actual token or sensitive headers
       });
     }
 
@@ -42,15 +40,8 @@ class ApiClient {
       const response = await fetch(url, config);
       
       if (!response.ok) {
-        // Handle 401 Unauthorized - try retry first, then redirect to login
+        // Handle 401 Unauthorized - redirect to login
         if (response.status === 401) {
-          // Try once more if we haven't retried yet and we're missing token
-          if (retryCount === 0 && !token) {
-            // Wait a bit for token to be available
-            await new Promise(resolve => setTimeout(resolve, 200));
-            return this.request<T>(endpoint, options, retryCount + 1);
-          }
-          
           // Only log in development
           if (process.env.NODE_ENV === 'development') {
             console.warn('🔒 Authentication required - redirecting to login');
@@ -75,23 +66,22 @@ class ApiClient {
           throw new Error('Session expired. Please log in again.');
         }
         
-        // Read the response body once as text, then try to parse as JSON
+        // Clone response to read body without consuming the stream
+        const responseClone = response.clone();
         let errorMessage = `HTTP ${response.status}`;
         
         try {
-          const responseText = await response.text();
-          if (responseText) {
-            try {
-              const errorData = JSON.parse(responseText);
-              errorMessage = errorData.message || errorData.Message || errorMessage;
-            } catch {
-              // If it's not JSON, use the text as the error message
-              errorMessage = responseText;
-            }
-          }
+          const errorData = await responseClone.json();
+          errorMessage = errorData.message || errorData.Message || errorMessage;
         } catch {
-          // If we can't read the response, use the status message
-          errorMessage = response.statusText || errorMessage;
+          // If parsing as JSON fails, try as text on the original response
+          try {
+            const errorText = await response.text();
+            errorMessage = errorText || errorMessage;
+          } catch {
+            // If both fail, use the status message
+            errorMessage = response.statusText || errorMessage;
+          }
         }
         throw new Error(errorMessage);
       }
@@ -110,11 +100,8 @@ class ApiClient {
       if (process.env.NODE_ENV === 'development') {
         console.error('❌ API Error:', {
           endpoint: endpoint,
-          fullUrl: url,
           method: options.method || 'GET',
           message: error instanceof Error ? error.message : 'Unknown error',
-          errorType: error instanceof Error ? error.constructor.name : typeof error,
-          hasToken: !!SecureTokenStorage.getToken(),
           // Never log the full error object which might contain sensitive data
         });
       }
@@ -147,8 +134,8 @@ class ApiClient {
   async postForm<T>(endpoint: string, formData: FormData): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     
-    // Get token from secure storage
-    const token = typeof window !== 'undefined' ? SecureTokenStorage.getToken() : null;
+    // Get token from localStorage if available
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     
     const config: RequestInit = {
       method: 'POST',
@@ -159,72 +146,31 @@ class ApiClient {
       body: formData,
     };
 
-    // Debug log the request in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🌐 API Form Request:', {
-        method: 'POST',
-        url: url,
-        hasAuth: !!token,
-        formDataKeys: Array.from(formData.keys()),
-      });
-    }
-
     try {
       const response = await fetch(url, config);
       
-      if (process.env.NODE_ENV === 'development') {
-        console.log('📡 API Form Response:', {
-          status: response.status,
-          statusText: response.statusText,
-          ok: response.ok,
-          headers: Object.fromEntries(response.headers.entries()),
-        });
-      }
-      
       if (!response.ok) {
-        // Read the response body once as text, then try to parse as JSON
+        // Try to parse the error response as JSON first
         let errorMessage = `HTTP ${response.status}`;
         try {
-          const responseText = await response.text();
-          if (responseText) {
-            try {
-              const errorData = JSON.parse(responseText);
-              errorMessage = errorData.message || errorData.Message || errorMessage;
-            } catch {
-              // If it's not JSON, use the text as the error message
-              errorMessage = responseText;
-            }
-          }
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.Message || errorMessage;
         } catch {
-          // If we can't read the response, use the default error message
+          // If parsing as JSON fails, try as text
+          const errorText = await response.text();
+          errorMessage = errorText || errorMessage;
         }
         throw new Error(errorMessage);
       }
 
       return await response.json();
     } catch (error) {
-      // Enhanced error logging - only in development
+      // Safe error logging - only in development
       if (process.env.NODE_ENV === 'development') {
         console.error('❌ API Form Error:', {
           endpoint: endpoint,
-          url: url,
-          method: 'POST',
-          hasToken: !!token,
-          tokenPreview: token ? `${token.substring(0, 10)}...` : 'No token',
-          error: error,
-          errorMessage: error instanceof Error ? error.message : 'Unknown error',
-          errorStack: error instanceof Error ? error.stack : undefined,
+          message: error instanceof Error ? error.message : 'Unknown error',
         });
-        
-        // Log FormData contents for debugging
-        console.log('📋 FormData contents:');
-        for (const [key, value] of formData.entries()) {
-          if (value instanceof File) {
-            console.log(`  ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
-          } else {
-            console.log(`  ${key}: ${value}`);
-          }
-        }
       }
       throw error;
     }

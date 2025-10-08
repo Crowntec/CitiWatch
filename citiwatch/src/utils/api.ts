@@ -10,19 +10,14 @@ interface ApiResponse<T = unknown> {
   [key: string]: unknown;
 }
 
-// Get the base URL from environment variables
-const getBaseUrl = (): string => {
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5182/api';
-};
-
 /**
  * Makes an authenticated API request with proper error handling
- * @param endpoint - The API endpoint path (e.g., '/User/GetAll')
+ * @param url - The API endpoint URL
  * @param options - Fetch options
  * @returns Promise with API response or null if authentication failed
  */
 export const makeAuthenticatedRequest = async <T = unknown>(
-  endpoint: string, 
+  url: string, 
   options: RequestInit = {}
 ): Promise<ApiResponse<T> | null> => {
   const token = localStorage.getItem('token');
@@ -34,7 +29,6 @@ export const makeAuthenticatedRequest = async <T = unknown>(
   }
 
   try {
-    const url = `${getBaseUrl()}${endpoint}`;
     const response = await fetch(url, {
       ...options,
       headers: {
@@ -68,16 +62,15 @@ export const makeAuthenticatedRequest = async <T = unknown>(
 
 /**
  * Makes a public API request (no authentication required)
- * @param endpoint - The API endpoint path (e.g., '/User/Login')
+ * @param url - The API endpoint URL
  * @param options - Fetch options
  * @returns Promise with API response
  */
 export const makePublicRequest = async <T = unknown>(
-  endpoint: string, 
+  url: string, 
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> => {
   try {
-    const url = `${getBaseUrl()}${endpoint}`;
     const response = await fetch(url, {
       ...options,
       headers: {

@@ -3,7 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
-import { CategoryService, type Category } from '@/services/category';
+
+interface Category {
+  id: string;
+  name: string;
+  createdAt: string;
+}
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -27,13 +32,19 @@ export default function CategoriesPage() {
 
   const loadCategories = async () => {
     try {
-      const result = await CategoryService.getAllCategories();
-      
-      if (result.success && result.data) {
-        setCategories(result.data);
-        setError('');
-      } else {
-        setError(result.message || 'Failed to load categories');
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      // TODO: Replace with actual API call
+      const response = await fetch('/api/Category/GetAll', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCategories(data.data || []);
       }
     } catch (error) {
       console.error('Error loading categories:', error);
@@ -51,19 +62,29 @@ export default function CategoriesPage() {
     }
 
     try {
-      const result = await CategoryService.createCategory({ name: newCategoryName.trim() });
-      
-      if (result.success) {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      // TODO: Replace with actual API call
+      const response = await fetch('/api/Category/Create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: newCategoryName.trim() }),
+      });
+
+      if (response.ok) {
         setSuccess('Category added successfully');
         setNewCategoryName('');
         setShowAddForm(false);
-        setError('');
         loadCategories();
       } else {
-        setError(result.message || 'Failed to add category');
+        const data = await response.json();
+        setError(data.message || 'Failed to add category');
       }
-    } catch (error) {
-      console.error('Error adding category:', error);
+    } catch {
       setError('Network error. Please try again.');
     }
   };
@@ -76,21 +97,28 @@ export default function CategoriesPage() {
     }
 
     try {
-      const result = await CategoryService.updateCategory(
-        editingCategory.id, 
-        { name: editingCategory.name.trim() }
-      );
-      
-      if (result.success) {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      // TODO: Replace with actual API call
+      const response = await fetch(`/api/Category/Update/${editingCategory.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: editingCategory.name.trim() }),
+      });
+
+      if (response.ok) {
         setSuccess('Category updated successfully');
         setEditingCategory(null);
-        setError('');
         loadCategories();
       } else {
-        setError(result.message || 'Failed to update category');
+        const data = await response.json();
+        setError(data.message || 'Failed to update category');
       }
-    } catch (error) {
-      console.error('Error updating category:', error);
+    } catch {
       setError('Network error. Please try again.');
     }
   };
@@ -101,17 +129,25 @@ export default function CategoriesPage() {
     }
 
     try {
-      const result = await CategoryService.deleteCategory(categoryId);
-      
-      if (result.success) {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      // TODO: Replace with actual API call
+      const response = await fetch(`/api/Category/Delete/${categoryId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
         setSuccess('Category deleted successfully');
-        setError('');
         loadCategories();
       } else {
-        setError(result.message || 'Failed to delete category');
+        const data = await response.json();
+        setError(data.message || 'Failed to delete category');
       }
-    } catch (error) {
-      console.error('Error deleting category:', error);
+    } catch {
       setError('Network error. Please try again.');
     }
   };
@@ -238,7 +274,7 @@ export default function CategoriesPage() {
                       <div>
                         <h3 className="text-lg font-medium text-white">{category.name}</h3>
                         <p className="text-sm text-gray-400">
-                          Created: {category.createdOn ? new Date(category.createdOn).toLocaleDateString() : 'Unknown'}
+                          Created: {new Date(category.createdAt).toLocaleDateString()}
                         </p>
                       </div>
                       <div className="flex space-x-2">

@@ -14,13 +14,7 @@ export class AuthService {
         SecureTokenStorage.setToken(loginResponse.token);
         
         // Also store token in cookies for middleware
-        document.cookie = `token=${loginResponse.token}; path=/; max-age=${3 * 60 * 60}; SameSite=Lax`; // 3 hours
-        
-        // Log for debugging (only in development)
-        if (process.env.NODE_ENV === 'development') {
-          console.log('Token stored successfully');
-          console.log('Token retrieved back:', SecureTokenStorage.getToken() ? 'Present' : 'Missing');
-        }
+        document.cookie = `token=${loginResponse.token}; path=/; max-age=${3 * 60 * 60}`; // 3 hours
         
         // Decode JWT to get user info (simplified - in production use a proper JWT library)
         const tokenPayload = JSON.parse(atob(loginResponse.token.split('.')[1]));
@@ -40,14 +34,6 @@ export class AuthService {
         console.log('Login successful for:', userData.email, 'Role:', userData.role);
         
         SecureTokenStorage.setUser(userData);
-        
-        // Debug authentication after login (only in development)
-        if (process.env.NODE_ENV === 'development') {
-          setTimeout(async () => {
-            const { AuthDebugger } = await import('@/utils/authDebugger');
-            await AuthDebugger.testAuth();
-          }, 500);
-        }
         
         return {
           success: true,

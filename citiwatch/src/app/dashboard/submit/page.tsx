@@ -29,25 +29,13 @@ export default function SubmitComplaint() {
 
   useEffect(() => {
     // Check if user is authenticated
-    const checkAuth = () => {
-      const token = SecureTokenStorage.getToken();
-      if (!token) {
-        console.log('No token found, redirecting to login');
-        router.push('/login?redirect=/dashboard/submit');
-        return false;
-      }
-      return true;
-    };
+    const token = SecureTokenStorage.getToken();
+    if (!token) {
+      router.push('/login');
+      return;
+    }
 
-    // Initial auth check
-    if (!checkAuth()) return;
-
-    // Load categories with a small delay to ensure token is ready
-    setTimeout(() => {
-      if (checkAuth()) {
-        loadCategories();
-      }
-    }, 100);
+    loadCategories();
   }, [router]);
 
   const loadCategories = async () => {
@@ -56,13 +44,6 @@ export default function SubmitComplaint() {
       
       if (response.success) {
         setCategories(response.data || []);
-        console.log('🔍 Loaded categories:', response.data);
-        console.log('🔍 Category IDs and formats:');
-        response.data?.forEach((cat, index) => {
-          console.log(`  [${index}] ID: "${cat.id}" (type: ${typeof cat.id}, length: ${cat.id?.length})`);
-          console.log(`  [${index}] Name: "${cat.name}"`);
-          console.log(`  [${index}] Is valid GUID?: ${/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(cat.id)}`);
-        });
       } else {
         setError('Failed to load categories: ' + response.message);
       }
@@ -140,13 +121,6 @@ export default function SubmitComplaint() {
         latitude: formData.latitude || undefined,
         longitude: formData.longitude || undefined,
       };
-
-      console.log('🔍 Submitting complaint data:', complaintData);
-      console.log('🔍 Available categories:', categories);
-      console.log('🔍 Selected category ID:', formData.categoryId);
-      console.log('🔍 Selected category ID type:', typeof formData.categoryId);
-      console.log('🔍 Selected category ID length:', formData.categoryId.length);
-      console.log('🔍 Is valid GUID format?:', /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(formData.categoryId));
 
       const response = await ComplaintService.submitComplaint(complaintData, selectedFile || undefined);
 

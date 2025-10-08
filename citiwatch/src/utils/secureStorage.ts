@@ -14,20 +14,12 @@ export class SecureTokenStorage {
    * Store authentication token securely
    */
   static setToken(token: string): void {
-    try {
-      if (this.isProduction()) {
-        // In production, try secure storage first, fallback to regular localStorage
-        try {
-          this.setSecureItem(this.TOKEN_KEY, token);
-        } catch (error) {
-          console.warn('Secure storage failed, falling back to localStorage:', error);
-          localStorage.setItem(this.TOKEN_KEY, token);
-        }
-      } else {
-        localStorage.setItem(this.TOKEN_KEY, token);
-      }
-    } catch (error) {
-      console.error('Failed to store token:', error);
+    if (this.isProduction()) {
+      // In production, use httpOnly cookie (requires server-side implementation)
+      // For now, we'll use secure localStorage with additional security measures
+      this.setSecureItem(this.TOKEN_KEY, token);
+    } else {
+      localStorage.setItem(this.TOKEN_KEY, token);
     }
   }
 
@@ -35,20 +27,10 @@ export class SecureTokenStorage {
    * Retrieve authentication token
    */
   static getToken(): string | null {
-    try {
-      if (this.isProduction()) {
-        // Try secure storage first, fallback to regular localStorage
-        let token = this.getSecureItem(this.TOKEN_KEY);
-        if (!token) {
-          token = localStorage.getItem(this.TOKEN_KEY);
-        }
-        return token;
-      } else {
-        return localStorage.getItem(this.TOKEN_KEY);
-      }
-    } catch (error) {
-      console.error('Failed to retrieve token:', error);
-      return null;
+    if (this.isProduction()) {
+      return this.getSecureItem(this.TOKEN_KEY);
+    } else {
+      return localStorage.getItem(this.TOKEN_KEY);
     }
   }
 

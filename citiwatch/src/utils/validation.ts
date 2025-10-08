@@ -125,9 +125,9 @@ export class ValidationHelper {
     // Category validation
     if (!data.categoryId || !data.categoryId.trim()) {
       errors.push('Category is required');
+    } else if (!this.isValidGuid(data.categoryId)) {
+      errors.push('Invalid category selected');
     }
-    // Note: Removed GUID validation to allow backend-generated IDs
-    // Backend will validate the actual category exists
 
     // Location validation (optional)
     if (data.location && data.location.trim().length > 500) {

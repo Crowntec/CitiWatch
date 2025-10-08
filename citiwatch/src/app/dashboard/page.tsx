@@ -14,7 +14,7 @@ import { ComplaintService, type Complaint } from '@/services/complaint';
 const MapDisplay = dynamic(() => import('@/components/MapDisplay'), {
   ssr: false,
   loading: () => (
-    <div className="h-32 sm:h-48 w-full rounded-lg bg-gray-600/50 flex items-center justify-center">
+    <div className="h-48 w-full rounded-lg bg-gray-600/50 flex items-center justify-center">
       <p className="text-gray-400">Loading map...</p>
     </div>
   )
@@ -63,14 +63,7 @@ export default function Dashboard() {
       if (response.success) {
         setComplaints(response.data || []);
       } else {
-        // Don't show error for "no complaints" case
-        if (response.message?.toLowerCase().includes('not found') || 
-            response.message?.toLowerCase().includes('no complaints')) {
-          setComplaints([]);
-          setError(''); // Clear any previous errors
-        } else {
-          setError(response.message);
-        }
+        setError(response.message);
       }
     } catch (error) {
       console.error('Error loading complaints:', error);
@@ -117,15 +110,11 @@ export default function Dashboard() {
     console.log('Opening modal for complaint:', complaint.id);
     setSelectedComplaint(complaint);
     setIsModalOpen(true);
-    // Prevent body scroll when modal is open
-    document.body.style.overflow = 'hidden';
   };
 
   const closeModal = () => {
     setSelectedComplaint(null);
     setIsModalOpen(false);
-    // Restore body scroll
-    document.body.style.overflow = 'unset';
   };
 
   const formatDate = (dateString: string) => {
@@ -138,7 +127,7 @@ export default function Dashboard() {
     
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'short',
+      month: 'long',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
@@ -169,76 +158,75 @@ export default function Dashboard() {
         {/* Navigation */}
         <Navigation />
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8 pt-20 sm:pt-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         {/* Header */}
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white">
             Welcome back, {user?.fullName || 'User'}
           </h1>
-          <p className="text-gray-400 mt-1 sm:mt-2 text-sm sm:text-base">Track your submitted complaints and their status</p>
+          <p className="text-gray-400 mt-2">Track your submitted complaints and their status</p>
           {user?.role === 'admin' && (
-            <div className="mt-3 sm:mt-4">
+            <div className="mt-4">
               <Link
                 href="/admin"
-                className="inline-flex items-center px-3 sm:px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md transition-colors text-sm"
+                className="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md transition-colors text-sm"
               >
                 <i className="fas fa-user-shield mr-2"></i>
-                <span className="hidden sm:inline">Admin Panel</span>
-                <span className="sm:hidden">Admin</span>
+                Admin Panel
               </Link>
             </div>
           )}
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-lg p-3 sm:p-6 border border-gray-700">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-gray-700">
             <div className="flex items-center">
-              <div className="p-1 sm:p-2 rounded-lg">
-                <i className="fas fa-clipboard-list text-2xl sm:text-4xl text-blue-400"></i>
+              <div className="p-2 rounded-lg">
+                <i className="fas fa-clipboard-list text-4xl text--400"></i>
               </div>
-              <div className="ml-2 sm:ml-4 min-w-0">
-                <p className="text-lg sm:text-2xl font-semibold text-white truncate">{complaints.length}</p>
-                <p className="text-gray-400 text-xs sm:text-sm">Total</p>
+              <div className="ml-4">
+                <p className="text-2xl font-semibold text-white">{complaints.length}</p>
+                <p className="text-gray-400">Total Complaints</p>
               </div>
             </div>
           </div>
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-lg p-3 sm:p-6 border border-gray-700">
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-gray-700">
             <div className="flex items-center">
-              <div className="p-1 sm:p-2 rounded-lg">
-                <i className="fas fa-clock text-2xl sm:text-4xl text-yellow-400"></i>
+              <div className="p-2 rounded-lg">
+                <i className="fas fa-clock text-4xl text-yellow-400"></i>
               </div>
-              <div className="ml-2 sm:ml-4 min-w-0">
-                <p className="text-lg sm:text-2xl font-semibold text-white truncate">
+              <div className="ml-4">
+                <p className="text-2xl font-semibold text-white">
                   {complaints.filter(c => c.statusName?.toLowerCase().includes('submitted')).length}
                 </p>
-                <p className="text-gray-400 text-xs sm:text-sm">Pending</p>
+                <p className="text-gray-400">Pending</p>
               </div>
             </div>
           </div>
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-lg p-3 sm:p-6 border border-gray-700">
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-gray-700">
             <div className="flex items-center">
-              <div className="p-1 sm:p-2 rounded-lg">
-                <i className="fas fa-sync-alt text-2xl sm:text-4xl text-blue-400"></i>
+              <div className="p-2 rounded-lg">
+                <i className="fas fa-sync-alt text-4xl text-blue-400"></i>
               </div>
-              <div className="ml-2 sm:ml-4 min-w-0">
-                <p className="text-lg sm:text-2xl font-semibold text-white truncate">
+              <div className="ml-4">
+                <p className="text-2xl font-semibold text-white">
                   {complaints.filter(c => c.statusName?.toLowerCase().includes('progress')).length}
                 </p>
-                <p className="text-gray-400 text-xs sm:text-sm">In Progress</p>
+                <p className="text-gray-400">In Progress</p>
               </div>
             </div>
           </div>
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-lg p-3 sm:p-6 border border-gray-700">
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-gray-700">
             <div className="flex items-center">
-              <div className="p-1 sm:p-2 rounded-lg">
-                <i className="fas fa-check-circle text-2xl sm:text-4xl text-green-400"></i>
+              <div className="p-2 rounded-lg">
+                <i className="fas fa-check-circle text-4xl text-green-400"></i>
               </div>
-              <div className="ml-2 sm:ml-4 min-w-0">
-                <p className="text-lg sm:text-2xl font-semibold text-white truncate">
+              <div className="ml-4">
+                <p className="text-2xl font-semibold text-white">
                   {complaints.filter(c => c.statusName?.toLowerCase().includes('resolved')).length}
                 </p>
-                <p className="text-gray-400 text-xs sm:text-sm">Resolved</p>
+                <p className="text-gray-400">Resolved</p>
               </div>
             </div>
           </div>
@@ -246,12 +234,12 @@ export default function Dashboard() {
 
         {/* Complaints List */}
         <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-lg border border-gray-700">
-          <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-700 flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <h2 className="text-base sm:text-lg font-medium text-white">My Complaints</h2>
-              <span className="text-xs sm:text-sm text-gray-400">({complaints.length} total)</span>
+          <div className="px-6 py-4 border-b border-gray-700 flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <h2 className="text-lg font-medium text-white">My Complaints</h2>
+              <span className="text-sm text-gray-400">({complaints.length} total)</span>
             </div>
-            <div className="flex items-center justify-between sm:justify-end space-x-2">
+            <div className="flex items-center space-x-2">
               <button
                 onClick={loadUserComplaints}
                 disabled={loading}
@@ -262,27 +250,26 @@ export default function Dashboard() {
               </button>
               <Link
                 href="/dashboard/submit"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
               >
-                <i className="fas fa-plus mr-1 sm:mr-2"></i>
-                <span className="hidden sm:inline">New Complaint</span>
-                <span className="sm:hidden">New</span>
+                <i className="fas fa-plus mr-2"></i>
+                New Complaint
               </Link>
             </div>
           </div>
 
           {/* Filter and Sort Controls */}
           {complaints.length > 0 && (
-            <div className="px-3 sm:px-6 py-3 border-b border-gray-700 bg-gray-700/30">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+            <div className="px-6 py-3 border-b border-gray-700 bg-gray-700/30">
+              <div className="flex flex-wrap items-center gap-4">
                 {/* Status Filter */}
                 <div className="flex items-center space-x-2">
-                  <label htmlFor="statusFilter" className="text-xs sm:text-sm text-gray-300 whitespace-nowrap">Filter:</label>
+                  <label htmlFor="statusFilter" className="text-sm text-gray-300">Filter by:</label>
                   <select
                     id="statusFilter"
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
-                    className="text-xs sm:text-sm bg-gray-600 text-white border border-gray-500 rounded px-2 py-1 flex-1 sm:flex-none"
+                    className="text-sm bg-gray-600 text-white border border-gray-500 rounded px-2 py-1"
                   >
                     <option value="all">All Status</option>
                     {uniqueStatuses.map(status => (
@@ -293,23 +280,22 @@ export default function Dashboard() {
 
                 {/* Sort */}
                 <div className="flex items-center space-x-2">
-                  <label htmlFor="sortBy" className="text-xs sm:text-sm text-gray-300 whitespace-nowrap">Sort:</label>
+                  <label htmlFor="sortBy" className="text-sm text-gray-300">Sort by:</label>
                   <select
                     id="sortBy"
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as 'date' | 'status' | 'category')}
-                    className="text-xs sm:text-sm bg-gray-600 text-white border border-gray-500 rounded px-2 py-1 flex-1 sm:flex-none"
+                    className="text-sm bg-gray-600 text-white border border-gray-500 rounded px-2 py-1"
                   >
-                    <option value="date">Date (Newest)</option>
+                    <option value="date">Date (Newest First)</option>
                     <option value="status">Status</option>
                     <option value="category">Category</option>
                   </select>
                 </div>
 
                 {/* Results count */}
-                <div className="text-xs sm:text-sm text-gray-400 sm:ml-auto">
-                  <span className="sm:hidden">{filteredAndSortedComplaints.length}/{complaints.length}</span>
-                  <span className="hidden sm:inline">Showing {filteredAndSortedComplaints.length} of {complaints.length} complaints</span>
+                <div className="text-sm text-gray-400 ml-auto">
+                  Showing {filteredAndSortedComplaints.length} of {complaints.length} complaints
                 </div>
               </div>
             </div>
@@ -318,13 +304,13 @@ export default function Dashboard() {
           {loading ? (
             <LoadingCard message="Loading your complaints..." />
           ) : error ? (
-            <div className="p-3 sm:p-6">
+            <div className="p-6">
               <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-center">
-                <i className="fas fa-exclamation-triangle text-red-400 text-xl sm:text-2xl mb-2"></i>
-                <p className="text-red-300 mb-4 text-sm sm:text-base">{error}</p>
+                <i className="fas fa-exclamation-triangle text-red-400 text-2xl mb-2"></i>
+                <p className="text-red-300 mb-4">{error}</p>
                 <button
                   onClick={loadUserComplaints}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors text-sm"
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors"
                 >
                   Try Again
                 </button>
@@ -332,19 +318,19 @@ export default function Dashboard() {
             </div>
           ) : filteredAndSortedComplaints.length === 0 && complaints.length === 0 ? (
             <div className="p-6 text-center">
-              <i className="fas fa-clipboard-list text-3xl sm:text-4xl mb-4 block text-gray-500"></i>
-              <p className="text-gray-400 mb-4 text-sm sm:text-base">No complaints submitted yet</p>
+              <i className="fas fa-clipboard-list text-4xl mb-4 block text-gray-500"></i>
+              <p className="text-gray-400 mb-4">No complaints submitted yet</p>
               <Link
                 href="/dashboard/submit"
-                className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors text-sm"
+                className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
               >
                 Submit Your First Complaint
               </Link>
             </div>
           ) : filteredAndSortedComplaints.length === 0 ? (
             <div className="p-6 text-center">
-              <i className="fas fa-filter text-3xl sm:text-4xl mb-4 block text-gray-500"></i>
-              <p className="text-gray-400 mb-4 text-sm sm:text-base">No complaints match your current filters</p>
+              <i className="fas fa-filter text-4xl mb-4 block text-gray-500"></i>
+              <p className="text-gray-400 mb-4">No complaints match your current filters</p>
               <button
                 onClick={() => {setFilterStatus('all'); setSortBy('date');}}
                 className="text-blue-400 hover:text-blue-300 text-sm"
@@ -355,38 +341,38 @@ export default function Dashboard() {
           ) : (
             <div className="divide-y divide-gray-700">
               {filteredAndSortedComplaints.map((complaint) => (
-                <div key={complaint.id} className="p-3 sm:p-6 hover:bg-gray-700/30 transition-colors cursor-pointer" onClick={() => openModal(complaint)}>
-                  <div className="flex items-start space-x-3 sm:space-x-4">
+                <div key={complaint.id} className="p-6 hover:bg-gray-700/30 transition-colors cursor-pointer" onClick={() => openModal(complaint)}>
+                  <div className="flex items-start space-x-4">
                     {/* Complaint Image or Icon */}
                     <div className="flex-shrink-0">
                       {complaint.mediaUrl ? (
                         <Image
                           src={complaint.mediaUrl}
                           alt="Complaint evidence"
-                          width={48}
-                          height={48}
-                          className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover border border-gray-600"
+                          width={64}
+                          height={64}
+                          className="w-16 h-16 rounded-lg object-cover border border-gray-600"
                         />
                       ) : (
-                        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-700 rounded-lg flex items-center justify-center border border-gray-600">
-                          <i className="fas fa-image text-gray-400 text-sm sm:text-xl"></i>
+                        <div className="w-16 h-16 bg-gray-700 rounded-lg flex items-center justify-center border border-gray-600">
+                          <i className="fas fa-image text-gray-400 text-xl"></i>
                         </div>
                       )}
                     </div>
 
                     {/* Complaint Details */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-sm sm:text-lg font-medium text-white mb-1 truncate">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-medium text-white mb-1 truncate">
                             {complaint.title}
                           </h3>
-                          <p className="text-gray-300 text-xs sm:text-sm mb-2 sm:mb-3 line-clamp-2">
+                          <p className="text-gray-300 text-sm mb-3 line-clamp-2">
                             {complaint.description}
                           </p>
                           
                           {/* Metadata */}
-                          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-1 sm:gap-4 text-xs text-gray-400">
+                          <div className="flex flex-wrap items-center gap-4 text-xs text-gray-400">
                             <span className="flex items-center">
                               <i className="fas fa-tag mr-1"></i>
                               {complaint.categoryName}
@@ -398,8 +384,7 @@ export default function Dashboard() {
                             {complaint.latitude && complaint.longitude && (
                               <span className="flex items-center">
                                 <i className="fas fa-map-marker-alt mr-1"></i>
-                                <span className="hidden sm:inline">Location provided</span>
-                                <span className="sm:hidden">Location</span>
+                                Location provided
                               </span>
                             )}
                             {complaint.lastModifiedOn && 
@@ -407,23 +392,19 @@ export default function Dashboard() {
                              new Date(complaint.lastModifiedOn).getFullYear() > 1900 && (
                               <span className="flex items-center">
                                 <i className="fas fa-edit mr-1"></i>
-                                <span className="hidden sm:inline">Updated {formatDate(complaint.lastModifiedOn)}</span>
-                                <span className="sm:hidden">Updated</span>
+                                Updated {formatDate(complaint.lastModifiedOn)}
                               </span>
                             )}
                           </div>
                         </div>
 
                         {/* Status Badge */}
-                        <div className="flex flex-row sm:flex-col items-center sm:items-end mt-2 sm:mt-0 sm:ml-4">
-                          <span className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(complaint.statusName || '')}`}>
+                        <div className="flex flex-col items-end ml-4">
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(complaint.statusName || '')}`}>
                             <i className={`${getStatusIcon(complaint.statusName || '')} mr-1`}></i>
                             {complaint.statusName}
                           </span>
-                          <span className="text-xs text-gray-500 ml-2 sm:ml-0 sm:mt-1">
-                            <span className="hidden sm:inline">Click to view details</span>
-                            <span className="sm:hidden">Tap for details</span>
-                          </span>
+                          <span className="text-xs text-gray-500 mt-1">Click to view details</span>
                         </div>
                       </div>
                     </div>
@@ -436,30 +417,30 @@ export default function Dashboard() {
 
         {/* Complaint Detail Modal */}
         {isModalOpen && selectedComplaint && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black bg-opacity-50">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
             {/* Background overlay */}
             <div className="absolute inset-0 bg-black bg-opacity-75" onClick={closeModal}></div>
 
             {/* Modal content */}
-            <div className="relative bg-gray-800 rounded-lg shadow-2xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden border-2 border-gray-600 z-10 mx-2 sm:mx-0">
+            <div className="relative bg-gray-800 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden border-2 border-gray-600 z-10">
               {/* Header */}
-              <div className="bg-gray-700/50 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-600">
+              <div className="bg-gray-700/50 px-6 py-4 border-b border-gray-600">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-base sm:text-lg font-medium text-white">Complaint Details</h3>
+                  <h3 className="text-lg font-medium text-white">Complaint Details</h3>
                   <button
                     onClick={closeModal}
-                    className="text-gray-400 hover:text-white transition-colors p-1"
+                    className="text-gray-400 hover:text-white transition-colors"
                   >
-                    <i className="fas fa-times text-lg sm:text-xl"></i>
+                    <i className="fas fa-times text-xl"></i>
                   </button>
                 </div>
               </div>
 
               {/* Content */}
-              <div className="px-4 sm:px-6 py-3 sm:py-4 max-h-[70vh] sm:max-h-96 overflow-y-auto">
+              <div className="px-6 py-4 max-h-96 overflow-y-auto">
                   {/* Status and ID */}
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-4">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedComplaint.statusName || '')} self-start`}>
+                  <div className="flex items-center justify-between mb-4">
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedComplaint.statusName || '')}`}>
                       <i className={`${getStatusIcon(selectedComplaint.statusName || '')} mr-2`}></i>
                       {selectedComplaint.statusName}
                     </span>
@@ -467,7 +448,7 @@ export default function Dashboard() {
                   </div>
 
                   {/* Title */}
-                  <h4 className="text-lg sm:text-xl font-semibold text-white mb-3">{selectedComplaint.title}</h4>
+                  <h4 className="text-xl font-semibold text-white mb-3">{selectedComplaint.title}</h4>
 
                   {/* Image */}
                   {selectedComplaint.mediaUrl && (
@@ -478,7 +459,7 @@ export default function Dashboard() {
                         width={0}
                         height={192}
                         sizes="100vw"
-                        className="w-full h-32 sm:h-48 object-cover rounded-lg border border-gray-600"
+                        className="w-full h-48 object-cover rounded-lg border border-gray-600"
                       />
                     </div>
                   )}
@@ -486,11 +467,11 @@ export default function Dashboard() {
                   {/* Description */}
                   <div className="mb-4">
                     <h5 className="text-sm font-medium text-gray-300 mb-2">Description</h5>
-                    <p className="text-gray-200 whitespace-pre-wrap text-sm sm:text-base">{selectedComplaint.description}</p>
+                    <p className="text-gray-200 whitespace-pre-wrap">{selectedComplaint.description}</p>
                   </div>
 
                   {/* Details Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div>
                       <h5 className="font-medium text-gray-300 mb-1">Category</h5>
                       <p className="text-gray-200">{selectedComplaint.categoryName}</p>
@@ -502,25 +483,25 @@ export default function Dashboard() {
                     {selectedComplaint.lastModifiedOn && 
                      selectedComplaint.lastModifiedOn !== selectedComplaint.createdOn && 
                      new Date(selectedComplaint.lastModifiedOn).getFullYear() > 1900 && (
-                      <div className="sm:col-span-2">
+                      <div className="md:col-span-2">
                         <h5 className="font-medium text-gray-300 mb-1">Last Updated</h5>
                         <p className="text-gray-200">{formatDate(selectedComplaint.lastModifiedOn)}</p>
                       </div>
                     )}
                     {selectedComplaint.latitude && selectedComplaint.longitude && (
-                      <div className="sm:col-span-2">
+                      <div className="md:col-span-2">
                         <h5 className="font-medium text-gray-300 mb-3">Location</h5>
                         <div className="space-y-3">
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                            <div className="flex items-center text-gray-200 text-sm">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center text-gray-200">
                               <i className="fas fa-map-marker-alt mr-2 text-blue-400"></i>
-                              <span className="break-all">{selectedComplaint.latitude}, {selectedComplaint.longitude}</span>
+                              <span>Coordinates: {selectedComplaint.latitude}, {selectedComplaint.longitude}</span>
                             </div>
                             <a
                               href={`https://www.google.com/maps?q=${selectedComplaint.latitude},${selectedComplaint.longitude}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-400 hover:text-blue-300 border border-blue-600 hover:border-blue-500 rounded-md transition-colors self-start"
+                              className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-400 hover:text-blue-300 border border-blue-600 hover:border-blue-500 rounded-md transition-colors"
                             >
                               <i className="fas fa-external-link-alt mr-1"></i>
                               Open in Maps
@@ -539,7 +520,7 @@ export default function Dashboard() {
               </div>
 
               {/* Footer */}
-              <div className="bg-gray-700/50 px-4 sm:px-6 py-3 border-t border-gray-600 flex justify-end">
+              <div className="bg-gray-700/50 px-6 py-3 border-t border-gray-600 flex justify-end">
                 <button
                   onClick={closeModal}
                   className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-md text-sm font-medium transition-colors"

@@ -100,9 +100,7 @@ namespace CitiWatch.Application.Services
                .ToListAsync();
             if (!complaints.Any())
             {
-                response.Message = "No complaints found";
-                response.Status = true;
-                response.Data = new List<ComplaintResponseDto>();
+                response.Message = "Not found!";
                 return response;
             }
 

@@ -1,53 +1,63 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest) {
+// Mock category data - replace with actual database queries
+const mockCategories = [
+  {
+    id: '1',
+    name: 'Road Maintenance',
+    createdAt: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '2',
+    name: 'Street Lighting',
+    createdAt: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '3',
+    name: 'Waste Management',
+    createdAt: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '4',
+    name: 'Water & Sewage',
+    createdAt: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '5',
+    name: 'Public Safety',
+    createdAt: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '6',
+    name: 'Parks & Recreation',
+    createdAt: '2024-01-01T00:00:00Z'
+  }
+];
+
+export async function GET() {
   try {
-    // Check for authorization header and pass it through
-    const authHeader = request.headers.get('authorization');
-    
-    const apiBaseUrl = process.env.BACKEND_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://citiwatch.runasp.net/api';
-    
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    
-    // Add authorization header if present
-    if (authHeader) {
-      headers['Authorization'] = authHeader;
-    }
-    
-    const response = await fetch(`${apiBaseUrl}/Category/GetAll`, {
-      method: 'GET',
-      headers,
-    });
+    // TODO: Add authentication check here
+    // const authHeader = request.headers.get('authorization');
+    // if (!authHeader) {
+    //   return NextResponse.json(
+    //     { success: false, message: 'Authentication required' },
+    //     { status: 401 }
+    //   );
+    // }
 
-    console.log('Category API request to:', `${apiBaseUrl}/Category/GetAll`, 'Auth:', authHeader ? 'present' : 'missing');
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Category API Error:', {
-        status: response.status,
-        statusText: response.statusText,
-        error: errorData,
-        url: `${apiBaseUrl}/Category/GetAll`
-      });
-      
-      return NextResponse.json(
-        { 
-          success: false, 
-          message: errorData.message || `API request failed: ${response.status} ${response.statusText}`,
-          details: errorData
-        },
-        { status: response.status }
-      );
-    }
+    // TODO: Replace with actual database query
+    // const categories = await prisma.category.findMany({
+    //   orderBy: {
+    //     name: 'asc'
+    //   }
+    // });
 
-    const data = await response.json();
+    const categories = mockCategories;
 
     return NextResponse.json({
       success: true,
-      data: data.data || data,
-      message: data.message || 'Categories retrieved successfully'
+      data: categories,
+      message: 'Categories retrieved successfully'
     });
 
   } catch (error) {

@@ -11,49 +11,49 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const apiBaseUrl = process.env.BACKEND_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://citiwatch.runasp.net/api';
-    const fullUrl = `${apiBaseUrl}/Complaint/GetAllUserComplaints`;
-    
-    console.log('Proxying request to:', fullUrl, 'with auth:', authHeader ? 'present' : 'missing');
-    if (authHeader && process.env.NODE_ENV === 'development') {
-      console.log('Auth header preview:', authHeader.substring(0, 50) + '...');
-    }
-    
-    const response = await fetch(fullUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': authHeader,
+    // Dummy complaints data
+    const dummyComplaints = [
+      {
+        id: '1',
+        title: 'Broken streetlight on Main Street',
+        description: 'The streetlight near the bus stop has been out for 3 days, making it dangerous for pedestrians at night.',
+        status: 'pending',
+        category: 'Street Lighting',
+        userName: 'Demo User',
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+        imageUrl: null
       },
-    });
+      {
+        id: '2',
+        title: 'Pothole on Oak Avenue',
+        description: 'Large pothole causing damage to vehicles. Located near house number 123.',
+        status: 'in progress',
+        category: 'Road & Transportation',
+        userName: 'Demo User',
+        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+        imageUrl: null
+      },
+      {
+        id: '3',
+        title: 'Noise complaint from construction site',
+        description: 'Construction work starting before 6 AM is violating city noise ordinances.',
+        status: 'resolved',
+        category: 'Noise Complaints',
+        userName: 'Demo User',
+        createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 days ago
+        imageUrl: null
+      }
+    ];
 
-    if (!response.ok) {
-      // Get the actual error from the backend
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Backend API Error:', {
-        status: response.status,
-        statusText: response.statusText,
-        error: errorData,
-        url: fullUrl,
-        authHeader: authHeader ? 'present' : 'missing'
-      });
-      
-      return NextResponse.json(
-        { 
-          status: 'error', 
-          message: errorData.message || `API request failed: ${response.status} ${response.statusText}`,
-          details: errorData
-        },
-        { status: response.status }
-      );
-    }
-
-    const data = await response.json();
+    // Sort complaints by creation date (newest first)
+    const sortedComplaints = dummyComplaints.sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
 
     return NextResponse.json({
       status: 'success',
-      data: data.data || data,
-      message: data.message || 'Complaints retrieved successfully'
+      data: sortedComplaints,
+      message: 'Complaints retrieved successfully'
     });
 
   } catch {
