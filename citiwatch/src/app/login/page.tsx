@@ -19,8 +19,8 @@ function LoginForm() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // Redirect if already authenticated
-    if (isAuthenticated) {
+    // Only redirect if already authenticated on page load (not during login process)
+    if (isAuthenticated && !isLoading) {
       // Check if there's a redirect parameter
       const redirectTo = searchParams.get('redirect');
       if (redirectTo) {
@@ -31,7 +31,7 @@ function LoginForm() {
         router.push('/dashboard');
       }
     }
-  }, [isAuthenticated, isAdmin, router, searchParams]);
+  }, [isAuthenticated, isAdmin, router, searchParams, isLoading]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -61,7 +61,7 @@ function LoginForm() {
       if (!result.success) {
         setError(result.message);
       }
-      // Success redirect is handled in the AuthContext
+      // Success redirect is handled in the AuthContext - don't do anything else here
     } catch (error) {
       if (error instanceof Error) {
         setError(error.message);

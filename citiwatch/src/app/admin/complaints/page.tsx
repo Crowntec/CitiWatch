@@ -58,7 +58,7 @@ export default function ComplaintsPage() {
         ...complaint,
         status: complaint.statusName || 'Unknown',
         category: complaint.categoryName || 'Unknown',
-        userName: complaint.userName || 'Unknown User',
+        userName: complaint.userName || 'User Info N/A',
         createdAt: complaint.createdOn,
         imageUrl: complaint.mediaUrl || undefined
       })) || [];

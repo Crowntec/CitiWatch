@@ -27,6 +27,11 @@ function decodeJWT(token: string): JWTPayload | null {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
+  // Skip middleware for login/register pages to prevent redirect loops
+  if (pathname === '/login' || pathname === '/register') {
+    return NextResponse.next();
+  }
+  
   // Check if the route is protected
   const isProtectedRoute = protectedRoutes.some(route => 
     pathname.startsWith(route)

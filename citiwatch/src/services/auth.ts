@@ -16,33 +16,56 @@ export class AuthService {
         // Also store token in cookies for middleware
         document.cookie = `token=${loginResponse.token}; path=/; max-age=${3 * 60 * 60}`; // 3 hours
         
-                // Decode JWT to get user info (simplified - in production use a proper JWT library)
+        // Decode JWT to get user info (simplified - in production use a proper JWT library)
         const tokenPayload = JSON.parse(atob(loginResponse.token.split('.')[1]));
         
-        // Create user object from token - Use correct JWT claims
+        // Extract user info from JWT claims
         const roleString = tokenPayload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || tokenPayload.role || 'User';
-        const fullNameClaim = tokenPayload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || tokenPayload.name;
-        
-        // IMPORTANT: Use 'jti' for user ID (not 'sub') - backend ValidatorHelper.GetUserId() expects this
         const userId = tokenPayload.jti || tokenPayload.sub || tokenPayload.nameid;
+        const userEmail = tokenPayload.sub || tokenPayload.email || credentials.email;
+        
+        // Try to fetch full user profile data from API (only works for admin users)
+        let fullName = 'User'; // Default fallback
+        let createdAt = new Date().toISOString();
+        
+        // Only try to fetch user profile if user is an admin (has access to GetAll endpoint)
+        if (roleString === 'Admin') {
+          try {
+            const userProfileResponse = await apiClient.get<{
+              message: string;
+              status: boolean;
+              data: Array<{
+                id: string;
+                fullName: string;
+                email: string;
+                role: number;
+                createdOn: string;
+                lastModifiedOn: string;
+              }>;
+            }>('/User/GetAll');
+
+            // Find current user in the response
+            const currentUser = userProfileResponse.data.find(user => user.id === userId);
+            if (currentUser) {
+              fullName = currentUser.fullName;
+              createdAt = currentUser.createdOn;
+            }
+          } catch (profileError) {
+            console.warn('Failed to fetch admin user profile:', profileError);
+            // Keep using default fallback values
+          }
+        }
         
         const userData: User = {
           id: userId,
-          email: tokenPayload.sub || tokenPayload.email || credentials.email, // 'sub' contains email
-          role: roleString === 'Admin' ? 'admin' : 'user', // Keep original case, then normalize for frontend
-          fullName: fullNameClaim || 'User',
-          createdAt: new Date().toISOString(),
+          email: userEmail,
+          role: roleString === 'Admin' ? 'admin' : 'user',
+          fullName: fullName,
+          createdAt: createdAt,
           isActive: true
         };
         
-        console.log('JWT Token Claims:', {
-          jti: tokenPayload.jti,
-          sub: tokenPayload.sub,
-          role: roleString,
-          fullClaims: tokenPayload
-        });
-        
-        console.log('Login successful for:', userData.email, 'Role:', userData.role);
+        console.log('Login successful for:', userData.email, 'FullName:', userData.fullName, 'Role:', userData.role);
         
         SecureTokenStorage.setUser(userData);
         
