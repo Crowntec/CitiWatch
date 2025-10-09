@@ -183,7 +183,7 @@ export default function Dashboard() {
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-gray-700">
             <div className="flex items-center">
               <div className="p-2 rounded-lg">
-                <i className="fas fa-clipboard-list text-4xl text--400"></i>
+                <i className="fas fa-clipboard-list text-4xl text-green-400"></i>
               </div>
               <div className="ml-4">
                 <p className="text-2xl font-semibold text-white">{complaints.length}</p>
