@@ -73,7 +73,7 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
         ...complaintResult.data,
         status: complaintResult.data.statusName || 'Unknown',
         category: complaintResult.data.categoryName || 'Unknown',
-        userName: complaintResult.data.userName || 'User Info N/A',
+        userName: complaintResult.data.userName || 'Unknown User',
         userEmail: complaintResult.data.userEmail || 'unknown@email.com',
         createdAt: complaintResult.data.createdOn,
         updatedAt: complaintResult.data.lastModifiedOn,
@@ -438,7 +438,7 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
                     </span>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-white font-medium text-sm sm:text-base truncate" title="User information not available from backend API">{complaint.userName || 'User Info N/A'}</p>
+                    <p className="text-white font-medium text-sm sm:text-base truncate">{complaint.userName || 'Unknown User'}</p>
                     <p className="text-gray-400 text-xs sm:text-sm truncate">{complaint.userEmail || 'Unknown Email'}</p>
                   </div>
                 </div>

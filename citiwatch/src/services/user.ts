@@ -21,43 +21,6 @@ export interface UserUpdateRequest {
 }
 
 export class UserService {
-  // Get current user profile by fetching from GetAll and filtering by user ID
-  static async getCurrentUserProfile(userId: string): Promise<{ success: boolean; data?: User; message: string }> {
-    try {
-      // Try to get user profile - this might fail for non-admin users
-      const response = await apiClient.get<{ status: boolean; data: User[]; message: string }>('/User/GetAll');
-      
-      if (response.status && response.data) {
-        // Find current user in the list
-        const currentUser = response.data.find(user => user.id === userId);
-        
-        if (currentUser) {
-          return {
-            success: true,
-            data: currentUser,
-            message: 'User profile retrieved successfully'
-          };
-        } else {
-          return {
-            success: false,
-            message: 'User not found in results'
-          };
-        }
-      }
-      
-      return {
-        success: false,
-        message: response.message || 'Failed to fetch user profile'
-      };
-    } catch (error: unknown) {
-      // This will happen for non-admin users (403 Forbidden)
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : 'Access denied - unable to fetch user profile'
-      };
-    }
-  }
-
   // Admin: Get all users
   static async getAllUsers(): Promise<{ success: boolean; data?: User[]; message: string }> {
     try {

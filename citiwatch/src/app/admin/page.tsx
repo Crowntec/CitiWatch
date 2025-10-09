@@ -260,20 +260,6 @@ export default function AdminDashboard() {
               <strong>Welcome, {user?.fullName}!</strong>
             </p>
           </div>
-          
-          {/* Information about user data limitation */}
-          <div className="mt-4 p-4 bg-amber-900/20 border border-amber-600 rounded-lg">
-            <div className="flex items-start space-x-2">
-              <i className="fas fa-info-circle text-amber-400 mt-0.5"></i>
-              <div>
-                <p className="text-amber-200 text-sm font-medium">Information Notice</p>
-                <p className="text-amber-100 text-xs mt-1">
-                  User information is not currently available for complaints due to backend API limitations. 
-                  Complaints show &ldquo;User Info N/A&rdquo; until the backend is updated to include user details.
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* KPI Cards */}
@@ -491,8 +477,8 @@ export default function AdminDashboard() {
                       <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-gray-400">
                         <div className="flex items-center space-x-1">
                           <i className="fas fa-user text-purple-400"></i>
-                          <span className="truncate max-w-24 sm:max-w-32" title="User information not available from backend API">
-                            {complaint.userName || complaint.userEmail || 'User Info N/A'}
+                          <span className="truncate max-w-24 sm:max-w-32">
+                            {complaint.userName || complaint.userEmail || 'Unknown User'}
                           </span>
                         </div>
                         <div className="flex items-center space-x-1">
