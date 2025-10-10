@@ -8,6 +8,12 @@ export interface Complaint {
   statusName: string;
   userName?: string;
   userEmail?: string;
+  user?: {
+    id: string;
+    fullName: string;
+    email: string;
+    role: number;
+  };
   latitude?: string;
   longitude?: string;
   mediaUrl?: string;

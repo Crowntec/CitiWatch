@@ -73,8 +73,8 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
         ...complaintResult.data,
         status: complaintResult.data.statusName || 'Unknown',
         category: complaintResult.data.categoryName || 'Unknown',
-        userName: complaintResult.data.userName || 'Unknown User',
-        userEmail: complaintResult.data.userEmail || 'unknown@email.com',
+        userName: complaintResult.data.user?.fullName || complaintResult.data.userName || 'Unknown User',
+        userEmail: complaintResult.data.user?.email || complaintResult.data.userEmail || 'unknown@email.com',
         createdAt: complaintResult.data.createdOn,
         updatedAt: complaintResult.data.lastModifiedOn,
         imageUrl: complaintResult.data.mediaUrl || undefined,
@@ -434,7 +434,9 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
                 <div className="flex items-center space-x-3">
                   <div className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gray-600 flex items-center justify-center">
                     <span className="text-xs sm:text-sm font-medium text-white">
-                      {complaint.userName ? complaint.userName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U'}
+                      {complaint.userName && complaint.userName !== 'Unknown User' 
+                        ? complaint.userName.split(' ').map(n => n[0]).join('').toUpperCase() 
+                        : 'UU'}
                     </span>
                   </div>
                   <div className="min-w-0 flex-1">

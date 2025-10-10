@@ -38,7 +38,7 @@ export default function PendingComplaintsPage() {
         ...complaint,
         status: complaint.statusName || 'Unknown',
         category: complaint.categoryName || 'Unknown',
-        userName: complaint.userName || 'Unknown User',
+        userName: complaint.user?.fullName || complaint.userName || 'Unknown User',
         createdAt: complaint.createdOn,
         imageUrl: complaint.mediaUrl || undefined
       })).filter(complaint => complaint.status.toLowerCase() === 'pending') || [];

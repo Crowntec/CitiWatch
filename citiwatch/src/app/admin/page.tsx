@@ -478,7 +478,7 @@ export default function AdminDashboard() {
                         <div className="flex items-center space-x-1">
                           <i className="fas fa-user text-purple-400"></i>
                           <span className="truncate max-w-24 sm:max-w-32">
-                            {complaint.userName || complaint.userEmail || 'Unknown User'}
+                            {complaint.user?.fullName || complaint.userName || complaint.userEmail || 'Unknown User'}
                           </span>
                         </div>
                         <div className="flex items-center space-x-1">
