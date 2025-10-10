@@ -27,6 +27,14 @@ function decodeJWT(token: string): JWTPayload | null {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
+  // Clone request headers for performance enhancements
+  const requestHeaders = new Headers(request.headers);
+  
+  // Add compression acceptance for better performance
+  if (!requestHeaders.has('accept-encoding')) {
+    requestHeaders.set('accept-encoding', 'gzip, deflate, br');
+  }
+  
   // Check if the route is protected
   const isProtectedRoute = protectedRoutes.some(route => 
     pathname.startsWith(route)
@@ -81,9 +89,53 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  // Create response with performance optimizations
+  const response = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
+
+  // Add performance and caching headers
+  // Cache static assets for better performance
+  if (pathname.startsWith('/_next/static/') || 
+      pathname.startsWith('/images/') ||
+      pathname.endsWith('.ico') ||
+      pathname.endsWith('.png') ||
+      pathname.endsWith('.jpg') ||
+      pathname.endsWith('.jpeg') ||
+      pathname.endsWith('.gif') ||
+      pathname.endsWith('.webp') ||
+      pathname.endsWith('.svg')) {
+    
+    response.headers.set(
+      'Cache-Control',
+      'public, max-age=31536000, immutable' // Cache for 1 year
+    );
+  }
+  
+  // Cache API responses with shorter duration
+  if (pathname.startsWith('/api/')) {
+    response.headers.set(
+      'Cache-Control', 
+      'public, max-age=60, s-maxage=60' // Cache for 1 minute
+    );
+  }
+
+  // Performance and security headers
+  response.headers.set('X-DNS-Prefetch-Control', 'on');
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+  return response;
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/dashboard/:path*']
+  matcher: [
+    // Protected routes for authentication
+    '/admin/:path*', 
+    '/dashboard/:path*',
+    // Performance optimization for all routes except static files
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+  ]
 };

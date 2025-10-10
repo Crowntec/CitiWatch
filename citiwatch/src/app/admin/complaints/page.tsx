@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { LoadingCard } from '@/components/Loading';
 import AdminLayout from '@/components/AdminLayout';
-import { ComplaintService, type Complaint } from '@/services/complaint';
-import { StatusService, type Status } from '@/services/status';
+import { type Complaint } from '@/services/complaint';
+import { useComplaints, useUpdateComplaintStatus } from '@/hooks/useComplaints';
+import { useStatuses } from '@/hooks/useQueries';
 
 // Interface to match the UI expectations
 interface ComplaintWithUser extends Complaint {
@@ -19,10 +20,9 @@ interface ComplaintWithUser extends Complaint {
 }
 
 export default function ComplaintsPage() {
-  const [complaints, setComplaints] = useState<ComplaintWithUser[]>([]);
-  const [statuses, setStatuses] = useState<Status[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { data: complaintsData = [], isLoading: complaintsLoading, error: complaintsError } = useComplaints();
+  const { data: statusesData = [], isLoading: statusesLoading } = useStatuses();
+  const updateComplaintMutation = useUpdateComplaintStatus();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -31,58 +31,25 @@ export default function ComplaintsPage() {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [selectedComplaint, setSelectedComplaint] = useState<ComplaintWithUser | null>(null);
   const [newStatusId, setNewStatusId] = useState('');
-  const [updating, setUpdating] = useState(false);
 
-  // Error handler for API calls (removed to prevent infinite reloading)
-  // const { handleApiError } = useApiErrorHandler();
+  // Transform the data for UI
+  const complaints: ComplaintWithUser[] = useMemo(() => {
+    return complaintsData.map(complaint => ({
+      ...complaint,
+      status: complaint.statusName || 'Unknown',
+      category: complaint.categoryName || 'Unknown',
+      userName: complaint.user?.fullName || complaint.userName || 'Unknown User',
+      userEmail: complaint.user?.email || complaint.userEmail || 'unknown@email.com',
+      createdAt: complaint.createdOn,
+      imageUrl: complaint.mediaUrl || undefined
+    })).sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }, [complaintsData]);
 
-  const loadComplaints = useCallback(async () => {
-    setLoading(true);
-    setError('');
-    
-    try {
-      const [complaintsResult, statusesResult] = await Promise.all([
-        ComplaintService.getAllComplaints(),
-        StatusService.getAllStatuses()
-      ]);
-      
-      if (!complaintsResult.success) {
-        throw new Error(complaintsResult.message);
-      }
-      
-      if (!statusesResult.success) {
-        throw new Error(statusesResult.message); 
-      }
-      
-      // Transform the API data to match the UI expectations
-      const transformedComplaints = complaintsResult.data?.map(complaint => ({
-        ...complaint,
-        status: complaint.statusName || 'Unknown',
-        category: complaint.categoryName || 'Unknown',
-        userName: complaint.user?.fullName || complaint.userName || 'Unknown User',
-        userEmail: complaint.user?.email || complaint.userEmail || 'unknown@email.com',
-        createdAt: complaint.createdOn,
-        imageUrl: complaint.mediaUrl || undefined
-      })) || [];
-      
-      // Sort complaints by creation date (newest first)
-      const sortedComplaints = transformedComplaints.sort((a, b) => 
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-      
-      setComplaints(sortedComplaints);
-      setStatuses(statusesResult.data || []);
-    } catch (error: unknown) {
-      console.error('Error loading complaints:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load complaints');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadComplaints();
-  }, [loadComplaints]);
+  const statuses = statusesData;
+  const loading = complaintsLoading || statusesLoading;
+  const error = complaintsError ? (complaintsError as Error).message : '';
 
   const filteredComplaints = useMemo(() => {
     return complaints.filter(complaint => {
@@ -144,56 +111,34 @@ export default function ComplaintsPage() {
   }, [complaints]);
 
   // Modal functions
-  const openStatusModal = useCallback((complaint: ComplaintWithUser) => {
+  const openStatusModal = (complaint: ComplaintWithUser) => {
     setSelectedComplaint(complaint);
     // Find the status ID for the current status
     const currentStatus = statuses.find(s => s.name.toLowerCase() === complaint.status.toLowerCase());
     setNewStatusId(currentStatus?.id || '');
     setShowStatusModal(true);
-  }, [statuses]);
+  };
 
-  const updateComplaintStatus = useCallback(async (id: string, statusId: string) => {
+  const updateComplaintStatus = async (id: string, statusId: string) => {
     try {
-      setUpdating(true);
-      
       console.log('Updating complaint status:', { complaintId: id, statusId });
       
-      const result = await ComplaintService.updateComplaintStatus(id, { id: statusId });
+      await updateComplaintMutation.mutateAsync({ id, statusUpdate: { id: statusId } });
       
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-      
-      // Find the status name for UI update
-      const statusName = statuses.find(s => s.id === statusId)?.name || 'Unknown';
-      
-      console.log('Status update successful:', { statusId, statusName });
-      
-      setComplaints(prev => 
-        prev.map(complaint => 
-          complaint.id === id 
-            ? { ...complaint, status: statusName, lastModifiedOn: new Date().toISOString() }
-            : complaint
-        )
-      );
-      
-      console.log(`Updated complaint ${id} status to ${statusName}`);
+      console.log(`Updated complaint ${id} status`);
     } catch (error: unknown) {
       console.error('Error updating status:', error);
-      setError(error instanceof Error ? error.message : 'Failed to update complaint status');
-    } finally {
-      setUpdating(false);
     }
-  }, [statuses]);
+  };
 
-  const handleStatusUpdate = useCallback(async () => {
+  const handleStatusUpdate = async () => {
     if (!selectedComplaint || !newStatusId) return;
     
     await updateComplaintStatus(selectedComplaint.id, newStatusId);
     setShowStatusModal(false);
     setSelectedComplaint(null);
     setNewStatusId('');
-  }, [selectedComplaint, newStatusId, updateComplaintStatus]);
+  };
 
   const getDirectionsToComplaint = (complaint: ComplaintWithUser) => {
     if (!complaint.latitude || !complaint.longitude) {
@@ -255,7 +200,7 @@ export default function ComplaintsPage() {
               <i className="fas fa-exclamation-triangle text-red-400 text-2xl mb-2"></i>
               <p className="text-red-300 mb-4">{error}</p>
               <button
-                onClick={loadComplaints}
+                onClick={() => window.location.reload()}
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors"
               >
                 Try Again
@@ -473,6 +418,8 @@ export default function ComplaintsPage() {
                         alt="Complaint"
                         fill
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        placeholder="blur"
+                        blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRobHB0eH/xAAVAQEBAAAAAAAAAAAAAAAAAAAAAf/xAAhEQACAQIEBwAAAAAAAAAAAAABAgADBBEFITESSUFRgbH/2gAMAwEAAhEDEQA/AO5gM7CZb1AMOJddjdeJ1000llFQFEPEnFhHU8cqczwKvGLqm8AKzQlFNwGzrZgeQ2o4TnyJmJeB9IEMLBms1TRK1ScJMGQwFkoXLJCXjUbpJAZlZSGYCqzMUYG9hcS7i1iNQJQjPjlxYgQ9FzBFSjONgU+H8RTcsL2VCKKCzQx8nGfhRBTTM7CZbeAL2BY9ni0DAze2igM7bxA4EPFn8w1ExMo6rkpKJBvNpOn8JJhrMNIhNxllSqgQ2JlQhVGQT8/Bi5FD0kRs5BGQS7sGPkkpGmyfCjONNkplLsFc1rMNL/9k="
                       />
                     </div>
                   )}
@@ -622,10 +569,10 @@ export default function ComplaintsPage() {
                   </button>
                   <button
                     onClick={() => handleStatusUpdate()}
-                    disabled={!newStatusId || updating}
+                    disabled={!newStatusId || updateComplaintMutation.isPending}
                     className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors flex items-center justify-center"
                   >
-                    {updating ? (
+                    {updateComplaintMutation.isPending ? (
                       <>
                         <i className="fas fa-spinner fa-spin mr-2"></i>
                         Updating...

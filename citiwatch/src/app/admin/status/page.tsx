@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { LoadingCard } from '@/components/Loading';
 import AdminLayout from '@/components/AdminLayout';
-import { StatusService, type Status as ApiStatus } from '@/services/status';
+import { type Status as ApiStatus } from '@/services/status';
+import { useStatuses } from '@/hooks/useQueries';
 
 // Extended Status interface for UI display
 interface Status extends ApiStatus {
@@ -61,44 +61,18 @@ const getStatusIcon = (name: string): string => {
 };
 
 export default function StatusManagementPage() {
-  const [statuses, setStatuses] = useState<Status[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  const loadStatuses = async () => {
-    setLoading(true);
-    setError('');
-    
-    try {
-      const response = await StatusService.getAllStatuses();
-      
-      if (response.success && response.data) {
-        // Map API status data to the extended interface expected by the UI
-        const mappedStatuses = response.data.map((status, index) => ({
-          ...status,
-          description: `Status: ${status.name}`,
-          color: getStatusColor(status.name),
-          icon: getStatusIcon(status.name),
-          order: index + 1,
-          isActive: true,
-          createdAt: status.createdOn || new Date().toISOString()
-        }));
-        
-        setStatuses(mappedStatuses);
-      } else {
-        setError(response.message || 'Failed to load statuses');
-      }
-    } catch (error) {
-      console.error('Error loading statuses:', error);
-      setError('Failed to load status information');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadStatuses();
-  }, []);
+  const { data: statusesData = [], isLoading: loading, error: queryError, refetch } = useStatuses();
+  
+  // Map API status data to the extended interface expected by the UI
+  const statuses: Status[] = statusesData.map((status, index) => ({
+    ...status,
+    description: `Status: ${status.name}`,
+    color: getStatusColor(status.name),
+    icon: getStatusIcon(status.name),
+    order: index + 1,
+    isActive: true,
+    createdAt: status.createdOn || new Date().toISOString()
+  }));
 
   const getColorClasses = (color: string, isActive: boolean = true) => {
     const opacity = isActive ? '50' : '20';
@@ -167,16 +141,16 @@ export default function StatusManagementPage() {
     );
   }
 
-  if (error) {
+  if (queryError) {
     return (
       <AdminLayout>
         <div className="p-8">
           <div className="text-center py-8">
             <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
               <i className="fas fa-exclamation-triangle text-red-400 text-2xl mb-2"></i>
-              <p className="text-red-300 mb-4">{error}</p>
+              <p className="text-red-300 mb-4">{queryError instanceof Error ? queryError.message : 'Failed to load statuses'}</p>
               <button
-                onClick={loadStatuses}
+                onClick={() => refetch()}
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors"
               >
                 Try Again

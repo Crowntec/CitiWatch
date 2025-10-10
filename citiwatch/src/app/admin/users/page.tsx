@@ -6,6 +6,8 @@ import { LoadingCard } from '@/components/Loading';
 import AdminLayout from '@/components/AdminLayout';
 import { UserService, User } from '@/services/user';
 import { ComplaintService, Complaint } from '@/services/complaint';
+import { useAllUsers } from '@/hooks/useQueries';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 // Define interface to match our needs with role as number for compatibility
 interface UserDisplay extends Omit<User, 'role'> {
@@ -13,8 +15,30 @@ interface UserDisplay extends Omit<User, 'role'> {
 }
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<UserDisplay[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: usersData = [], isLoading: loading, error: queryError, refetch } = useAllUsers();
+  const queryClient = useQueryClient();
+
+  // Delete user mutation
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const result = await UserService.deleteUser(userId);
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to delete user');
+      }
+      return result;
+    },
+    onSuccess: () => {
+      // Invalidate and refetch users list
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      setSuccess('User deleted successfully');
+      setDeleteConfirmation({ show: false, user: null, loading: false });
+    },
+    onError: (error) => {
+      setError(error instanceof Error ? error.message : 'Failed to delete user');
+      setDeleteConfirmation(prev => ({ ...prev, loading: false }));
+    }
+  });
+  
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,65 +57,28 @@ export default function UsersPage() {
     loading: false
   });
 
-  const loadUsers = async () => {
-    setLoading(true);
-    setError('');
+    // Transform the data to match our display interface
+  const users: UserDisplay[] = usersData.map(user => {
+    // Debug logging to see what we're getting
+    console.log('User data for', user.email, ':', {
+      role: user.role, // This should be the string from API
+      roleType: typeof user.role,
+      fullUser: user
+    });
     
-    try {
-      const result = await UserService.getAllUsers();
-      
-    if (result.success && result.data) {
-      // Enhanced debugging to see the raw API response
-      console.log('Raw API response:', result.data);
-      
-      // Transform the data to match our display interface
-      const transformedUsers: UserDisplay[] = result.data.map(user => {
-        // Debug logging to see what we're getting
-        console.log('User data for', user.email, ':', {
-          role: user.role,
-          roleType: typeof user.role,
-          createdOn: user.createdOn,
-          createdOnType: typeof user.createdOn,
-          lastModifiedOn: user.lastModifiedOn,
-          lastModifiedOnType: typeof user.lastModifiedOn,
-          // Log all properties to see what's available
-          allProperties: Object.keys(user)
-        });          // Handle both string and number role values from backend
-          let roleNumber: number;
-          if (typeof user.role === 'string') {
-            // Handle string values: "Admin", "admin", "User", "user"
-            const roleStr = user.role.toLowerCase().trim();
-            roleNumber = (roleStr === 'admin' || roleStr === '1') ? 1 : 0;
-          } else if (typeof user.role === 'number') {
-            // Handle numeric enum values: 0 = User, 1 = Admin
-            roleNumber = user.role;
-          } else {
-            // Fallback: try to convert to number or default to User
-            const roleValue = Number(user.role);
-            roleNumber = isNaN(roleValue) ? 0 : roleValue;
-          }
-
-          // Ensure we only have 0 or 1
-          roleNumber = roleNumber === 1 ? 1 : 0;
-          
-          console.log(`Transformed role for ${user.email}: ${roleNumber} (${roleNumber === 1 ? 'Admin' : 'User'})`);
-          
-          return {
-            ...user,
-            role: roleNumber
-          };
-        });
-        setUsers(transformedUsers);
-      } else {
-        setError(result.message || 'Failed to load users');
-      }
-    } catch (error) {
-      console.error('Error loading users:', error);
-      setError('Failed to load users');
-    } finally {
-      setLoading(false);
+    // Try to convert role string to number
+    let roleNumber = 0;
+    if (typeof user.role === 'string') {
+      roleNumber = user.role.toLowerCase() === 'admin' ? 1 : 0;
+    } else if (typeof user.role === 'number') {
+      roleNumber = user.role;
     }
-  };
+      
+    return {
+      ...user,
+      role: roleNumber
+    };
+  });
 
   const handleUserClick = async (user: UserDisplay) => {
     setLoadingUserId(user.id);
@@ -143,38 +130,25 @@ export default function UsersPage() {
     if (!deleteConfirmation.user) return;
 
     setDeleteConfirmation(prev => ({ ...prev, loading: true }));
+    
+    // Close modal if it's the same user being viewed
+    if (selectedUser && selectedUser.id === deleteConfirmation.user.id) {
+      closeUserDetails();
+    }
 
-    try {
-      const result = await UserService.deleteUser(deleteConfirmation.user.id);
-      
-      if (result.success) {
-        // Remove user from the list
-        setUsers(prev => prev.filter(u => u.id !== deleteConfirmation.user!.id));
-        
-        // Close modal if it's the same user being viewed
-        if (selectedUser && selectedUser.id === deleteConfirmation.user.id) {
-          closeUserDetails();
-        }
-        
-        // Close confirmation dialog
-        setDeleteConfirmation({ show: false, user: null, loading: false });
-        
-        // Show success message
-        setSuccess(`User "${deleteConfirmation.user.fullName}" has been deleted successfully.`);
+    // Show success message with user name
+    const userName = deleteConfirmation.user.fullName;
+    
+    deleteUserMutation.mutate(deleteConfirmation.user.id, {
+      onSuccess: () => {
+        setSuccess(`User "${userName}" has been deleted successfully.`);
         setError('');
         
         // Clear success message after 5 seconds
         setTimeout(() => setSuccess(''), 5000);
-      } else {
-        setError(result.message || 'Failed to delete user');
-        setDeleteConfirmation(prev => ({ ...prev, loading: false }));
       }
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      setError('Failed to delete user');
-      setDeleteConfirmation(prev => ({ ...prev, loading: false }));
-    }
-  }, [deleteConfirmation.user, selectedUser, setUsers, setError, setSuccess]);
+    });
+  }, [deleteConfirmation.user, selectedUser, deleteUserMutation]);
 
   const cancelDeleteUser = () => {
     setDeleteConfirmation({ show: false, user: null, loading: false });
@@ -216,10 +190,8 @@ export default function UsersPage() {
     }
   };
 
+  // Add debugging function to test API directly (keep for debugging)
   useEffect(() => {
-    loadUsers();
-    
-    // Add debugging function to test API directly
     (window as Window & { testUserAPI?: () => Promise<void> }).testUserAPI = async () => {
       try {
         const result = await UserService.getAllUsers();
@@ -287,16 +259,16 @@ export default function UsersPage() {
     );
   }
 
-  if (error) {
+  if (queryError) {
     return (
       <AdminLayout>
         <div className="p-8">
           <div className="text-center py-8">
             <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
               <i className="fas fa-exclamation-triangle text-red-400 text-2xl mb-2"></i>
-              <p className="text-red-300 mb-4">{error}</p>
+              <p className="text-red-300 mb-4">{queryError instanceof Error ? queryError.message : 'Failed to load users'}</p>
               <button
-                onClick={loadUsers}
+                onClick={() => refetch()}
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors"
               >
                 Try Again

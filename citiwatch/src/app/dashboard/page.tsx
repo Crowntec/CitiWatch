@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
@@ -8,7 +8,8 @@ import Navigation from '@/components/Navigation';
 import { LoadingCard } from '@/components/Loading';
 import { useAuth } from '@/auth/AuthContext';
 import { ProtectedRoute } from '@/auth/ProtectedRoute';
-import { ComplaintService, type Complaint } from '@/services/complaint';
+import { type Complaint } from '@/services/complaint';
+import { useUserComplaints } from '@/hooks/useComplaints';
 
 // Dynamically import MapDisplay to avoid SSR issues
 const MapDisplay = dynamic(() => import('@/components/MapDisplay'), {
@@ -21,57 +22,14 @@ const MapDisplay = dynamic(() => import('@/components/MapDisplay'), {
 });
 
 export default function Dashboard() {
-  const [complaints, setComplaints] = useState<Complaint[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { data: complaints = [], isLoading: loading, error: queryError, refetch } = useUserComplaints();
   const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'date' | 'status' | 'category'>('date');
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
 
-  useEffect(() => {
-    // Load user complaints
-    if (isAuthenticated) {
-      loadUserComplaints();
-    }
-  }, [isAuthenticated]);
-
-  // Handle keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isModalOpen) {
-        closeModal();
-      }
-      if (event.key === 'r' && event.ctrlKey) {
-        event.preventDefault();
-        loadUserComplaints();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isModalOpen]);
-
-  const loadUserComplaints = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      
-      const response = await ComplaintService.getUserComplaints();
-      
-      if (response.success) {
-        setComplaints(response.data || []);
-      } else {
-        setError(response.message);
-      }
-    } catch (error) {
-      console.error('Error loading complaints:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load complaints');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const error = queryError ? (queryError as Error).message : '';
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -241,7 +199,7 @@ export default function Dashboard() {
             </div>
             <div className="flex items-center space-x-2">
               <button
-                onClick={loadUserComplaints}
+                onClick={() => refetch()}
                 disabled={loading}
                 className="text-gray-400 hover:text-white transition-colors px-2 py-1 rounded"
                 title="Refresh complaints (Ctrl+R)"
@@ -309,7 +267,7 @@ export default function Dashboard() {
                 <i className="fas fa-exclamation-triangle text-red-400 text-2xl mb-2"></i>
                 <p className="text-red-300 mb-4">{error}</p>
                 <button
-                  onClick={loadUserComplaints}
+                  onClick={() => refetch()}
                   className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors"
                 >
                   Try Again
@@ -352,6 +310,8 @@ export default function Dashboard() {
                           width={64}
                           height={64}
                           className="w-16 h-16 rounded-lg object-cover border border-gray-600"
+                          placeholder="blur"
+                          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRobHB0eH/xAAVAQEBAAAAAAAAAAAAAAAAAAAAAf/xAAhEQACAQIEBwAAAAAAAAAAAAABAgADBBEFITESSUFRgbH/2gAMAwEAAhEDEQA/AO5gM7CZb1AMOJddjdeJ1000llFQFEPEnFhHU8cqczwKvGLqm8AKzQlFNwGzrZgeQ2o4TnyJmJeB9IEMLBms1TRK1ScJMGQwFkoXLJCXjUbpJAZlZSGYCqzMUYG9hcS7i1iNQJQjPjlxYgQ9FzBFSjONgU+H8RTcsL2VCKKCzQx8nGfhRBTTM7CZbeAL2BY9ni0DAze2igM7bxA4EPFn8w1ExMo6rkpKJBvNpOn8JJhrMNIhNxllSqgQ2JlQhVGQT8/Bi5FD0kRs5BGQS7sGPkkpGmyfCjONNkplLsFc1rMNL/9k="
                         />
                       ) : (
                         <div className="w-16 h-16 bg-gray-700 rounded-lg flex items-center justify-center border border-gray-600">

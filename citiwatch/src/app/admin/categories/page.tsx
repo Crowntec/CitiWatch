@@ -1,15 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { LoadingCard } from '@/components/Loading';
 import AdminLayout from '@/components/AdminLayout';
 import { CategoryService, Category } from '@/services/category';
 import { useRoleAccess } from '@/hooks/useRoleAccess';
+import { useCategories } from '@/hooks/useQueries';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { data: categories = [], isLoading: loading, error: queryError, refetch } = useCategories();
+  const queryClient = useQueryClient();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -19,29 +21,58 @@ export default function CategoriesPage() {
   // Use role-based access control
   const { canCreateCategory, canUpdateCategory, canDeleteCategory } = useRoleAccess();
 
-  const loadCategories = async () => {
-    setLoading(true);
-    setError('');
-    
-    try {
-      const result = await CategoryService.getAllCategories();
-      
-      if (result.success && result.data) {
-        setCategories(result.data);
-      } else {
-        setError(result.message || 'Failed to load categories');
+  // Mutations for CRUD operations
+  const createCategoryMutation = useMutation({
+    mutationFn: async (categoryName: string) => {
+      const result = await CategoryService.createCategory({ name: categoryName });
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to create category');
       }
-    } catch (error) {
-      console.error('Error loading categories:', error);
-      setError('Failed to load categories');
-    } finally {
-      setLoading(false);
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      setShowAddModal(false);
+      setNewCategoryName('');
+    },
+    onError: (error) => {
+      console.error('Error creating category:', error);
     }
-  };
+  });
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
+  const updateCategoryMutation = useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      const result = await CategoryService.updateCategory(id, { name });
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to update category');
+      }
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      setEditingCategory(null);
+      setNewCategoryName('');
+    },
+    onError: (error) => {
+      console.error('Error updating category:', error);
+    }
+  });
+
+  const deleteCategoryMutation = useMutation({
+    mutationFn: async (categoryId: string) => {
+      const result = await CategoryService.deleteCategory(categoryId);
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to delete category');
+      }
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+    },
+    onError: (error) => {
+      console.error('Error deleting category:', error);
+    }
+  });
 
   const filteredCategories = categories.filter(category =>
     category.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -51,52 +82,22 @@ export default function CategoriesPage() {
     if (!newCategoryName.trim()) return;
     
     setActionLoading('add');
-    try {
-      const result = await CategoryService.createCategory({ 
-        name: newCategoryName.trim() 
-      });
-      
-      if (result.success) {
-        setNewCategoryName('');
-        setShowAddModal(false);
-        await loadCategories();
-      } else {
-        setError(result.message || 'Failed to add category');
-        setTimeout(() => setError(''), 5000); // Clear error after 5 seconds
+    createCategoryMutation.mutate(newCategoryName.trim(), {
+      onSettled: () => {
+        setActionLoading(null);
       }
-    } catch (error) {
-      console.error('Error adding category:', error);
-      setError('Failed to add category');
-      setTimeout(() => setError(''), 5000); // Clear error after 5 seconds
-    } finally {
-      setActionLoading(null);
-    }
+    });
   };
 
   const handleEditCategory = async () => {
     if (!editingCategory || !newCategoryName.trim()) return;
     
     setActionLoading(`edit-${editingCategory.id}`);
-    try {
-      const result = await CategoryService.updateCategory(editingCategory.id, { 
-        name: newCategoryName.trim() 
-      });
-      
-      if (result.success) {
-        setEditingCategory(null);
-        setNewCategoryName('');
-        await loadCategories();
-      } else {
-        setError(result.message || 'Failed to update category');
-        setTimeout(() => setError(''), 5000); // Clear error after 5 seconds
+    updateCategoryMutation.mutate({ id: editingCategory.id, name: newCategoryName.trim() }, {
+      onSettled: () => {
+        setActionLoading(null);
       }
-    } catch (error) {
-      console.error('Error updating category:', error);
-      setError('Failed to update category');
-      setTimeout(() => setError(''), 5000); // Clear error after 5 seconds
-    } finally {
-      setActionLoading(null);
-    }
+    });
   };
 
   const handleDeleteCategory = async (categoryId: string, categoryName: string) => {
@@ -105,22 +106,11 @@ export default function CategoriesPage() {
     }
     
     setActionLoading(`delete-${categoryId}`);
-    try {
-      const result = await CategoryService.deleteCategory(categoryId);
-      
-      if (result.success) {
-        await loadCategories();
-      } else {
-        setError(result.message || 'Failed to delete category');
-        setTimeout(() => setError(''), 5000); // Clear error after 5 seconds
+    deleteCategoryMutation.mutate(categoryId, {
+      onSettled: () => {
+        setActionLoading(null);
       }
-    } catch (error) {
-      console.error('Error deleting category:', error);
-      setError('Failed to delete category');
-      setTimeout(() => setError(''), 5000); // Clear error after 5 seconds
-    } finally {
-      setActionLoading(null);
-    }
+    });
   };
 
   const startEdit = (category: Category) => {
@@ -143,16 +133,16 @@ export default function CategoriesPage() {
     );
   }
 
-  if (error) {
+  if (queryError) {
     return (
       <AdminLayout>
         <div className="p-8">
           <div className="text-center py-8">
             <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
               <i className="fas fa-exclamation-triangle text-red-400 text-2xl mb-2"></i>
-              <p className="text-red-300 mb-4">{error}</p>
+              <p className="text-red-300 mb-4">{queryError instanceof Error ? queryError.message : 'Failed to load categories'}</p>
               <button
-                onClick={loadCategories}
+                onClick={() => refetch()}
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors"
               >
                 Try Again

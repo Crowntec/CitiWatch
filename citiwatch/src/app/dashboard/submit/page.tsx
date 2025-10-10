@@ -24,6 +24,9 @@ export default function SubmitComplaint() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showCamera, setShowCamera] = useState(false);
+  const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
 
   const router = useRouter();
 
@@ -76,6 +79,106 @@ export default function SubmitComplaint() {
       setError('');
     }
   };
+
+  const startCamera = async () => {
+    console.log('Starting camera...');
+    
+    // Check if camera is supported
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      console.error('Camera not supported by browser');
+      setCameraError('Camera not supported by this browser. Please use a modern browser like Chrome, Firefox, or Safari.');
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      });
+      
+      setVideoStream(stream);
+      setShowCamera(true);
+      setCameraError(null);
+    } catch (error: unknown) {
+      console.error('Camera error:', error);
+      let errorMessage = 'Unable to access camera: ';
+      
+      if (error instanceof DOMException) {
+        switch (error.name) {
+          case 'NotAllowedError':
+            errorMessage += 'Permission denied. Please allow camera access in your browser settings and try again.';
+            break;
+          case 'NotFoundError':
+            errorMessage += 'No camera found on this device.';
+            break;
+          case 'NotSupportedError':
+            errorMessage += 'Camera not supported by browser.';
+            break;
+          case 'NotReadableError':
+            errorMessage += 'Camera is being used by another application.';
+            break;
+          default:
+            errorMessage += error.message || 'Unknown error occurred';
+        }
+      } else if (error instanceof Error) {
+        errorMessage += error.message;
+      } else {
+        errorMessage += 'Unknown error occurred';
+      }
+      
+      setCameraError(errorMessage);
+    }
+  };  const stopCamera = () => {
+    if (videoStream) {
+      videoStream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
+      setVideoStream(null);
+    }
+    setShowCamera(false);
+    setCameraError(null);
+  };
+
+  const capturePhoto = () => {
+    if (!videoStream) return;
+
+    const video = document.getElementById('camera-video') as HTMLVideoElement;
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+
+    if (!video || !context) return;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0);
+
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
+        
+        // Validate the captured file
+        const validation = ValidationHelper.validateFile(file);
+        if (!validation.isValid) {
+          setError(ValidationHelper.formatErrors(validation.errors));
+          return;
+        }
+        
+        setSelectedFile(file);
+        stopCamera();
+        setError('');
+      }
+    }, 'image/jpeg', 0.8);
+  };
+
+  // Cleanup camera stream on component unmount
+  useEffect(() => {
+    return () => {
+      if (videoStream) {
+        videoStream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
+      }
+    };
+  }, [videoStream]);
 
 
 
@@ -238,48 +341,135 @@ export default function SubmitComplaint() {
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Photo Evidence
               </label>
-              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-600 border-dashed rounded-md hover:border-gray-500 bg-gray-800/30">
-                <div className="space-y-1 text-center">
-                  <svg
-                    className="mx-auto h-12 w-12 text-gray-400"
-                    stroke="currentColor"
-                    fill="none"
-                    viewBox="0 0 48 48"
-                  >
-                    <path
-                      d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                      strokeWidth={2}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <div className="flex text-sm text-gray-400">
-                    <label
-                      htmlFor="file-upload"
-                      className="relative cursor-pointer rounded-md bg-gray-700/50 font-medium text-blue-400 hover:text-blue-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-800 px-2 py-1"
+              
+              {!showCamera && !selectedFile && (
+                <div className="space-y-4">
+                  {/* Upload Options */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Camera Button */}
+                    <button
+                      type="button"
+                      onClick={startCamera}
+                      className="flex flex-col items-center justify-center p-6 border-2 border-blue-600 border-dashed rounded-md hover:border-blue-500 bg-blue-900/20 hover:bg-blue-900/30 transition-colors"
                     >
-                      <span>Upload a file</span>
-                      <input
-                        id="file-upload"
-                        name="file-upload"
-                        type="file"
-                        className="sr-only"
-                        accept="image/jpeg,image/jpg,image/png,image/gif"
-                        onChange={handleFileChange}
-                      />
-                    </label>
-                    <p className="pl-1">or drag and drop</p>
+                      <svg className="w-8 h-8 text-blue-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span className="text-sm font-medium text-blue-300">Take Photo</span>
+                      <span className="text-xs text-blue-400">Use camera (requires permission)</span>
+                    </button>
+
+                    {/* File Upload */}
+                    <div className="flex flex-col items-center justify-center p-6 border-2 border-gray-600 border-dashed rounded-md hover:border-gray-500 bg-gray-800/30 hover:bg-gray-800/40 transition-colors">
+                      <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      <label
+                        htmlFor="file-upload"
+                        className="cursor-pointer text-sm font-medium text-gray-300 hover:text-white"
+                      >
+                        Upload File
+                        <input
+                          id="file-upload"
+                          name="file-upload"
+                          type="file"
+                          className="sr-only"
+                          accept="image/jpeg,image/jpg,image/png,image/gif"
+                          onChange={handleFileChange}
+                        />
+                      </label>
+                      <span className="text-xs text-gray-400">PNG, JPG, GIF up to 10MB</span>
+                    </div>
                   </div>
-                  <p className="text-xs text-gray-500">
-                    PNG, JPG, GIF up to 10MB
-                  </p>
-                  {selectedFile && (
-                    <p className="text-sm text-green-400">
-                      Selected: {selectedFile.name}
-                    </p>
+
+                  {/* Camera Error Display */}
+                  {cameraError && (
+                    <div className="bg-red-900/30 border border-red-700 rounded-md p-3">
+                      <div className="flex">
+                        <svg className="w-5 h-5 text-red-400 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p className="text-sm text-red-300">{cameraError}</p>
+                      </div>
+                    </div>
                   )}
                 </div>
-              </div>
+              )}
+
+              {/* Camera Interface */}
+              {showCamera && (
+                <div className="space-y-4">
+                  <div className="relative bg-black rounded-lg overflow-hidden">
+                    <video
+                      id="camera-video"
+                      ref={(video) => {
+                        if (video && videoStream) {
+                          video.srcObject = videoStream;
+                          video.play();
+                        }
+                      }}
+                      className="w-full h-64 object-cover"
+                      autoPlay
+                      muted
+                      playsInline
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-48 h-48 border-2 border-white/50 rounded-lg"></div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-center space-x-4">
+                    <button
+                      type="button"
+                      onClick={capturePhoto}
+                      className="flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                    >
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Capture
+                    </button>
+                    <button
+                      type="button"
+                      onClick={stopCamera}
+                      className="flex items-center px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
+                    >
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Selected File Preview */}
+              {selectedFile && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-green-900/20 border border-green-700 rounded-lg">
+                    <div className="flex items-center">
+                      <svg className="w-6 h-6 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div>
+                        <p className="text-sm font-medium text-green-300">Photo selected</p>
+                        <p className="text-xs text-green-400">{selectedFile.name}</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedFile(null)}
+                      className="text-green-400 hover:text-green-300 transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <LocationMiniApp
