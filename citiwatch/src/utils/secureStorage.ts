@@ -14,12 +14,26 @@ export class SecureTokenStorage {
    * Store authentication token securely
    */
   static setToken(token: string): void {
-    if (this.isProduction()) {
-      // In production, use httpOnly cookie (requires server-side implementation)
-      // For now, we'll use secure localStorage with additional security measures
-      this.setSecureItem(this.TOKEN_KEY, token);
-    } else {
-      localStorage.setItem(this.TOKEN_KEY, token);
+    try {
+      if (this.isProduction()) {
+        // In production, use both secure storage and regular storage for redundancy
+        this.setSecureItem(this.TOKEN_KEY, token);
+        // Also store in regular localStorage as backup
+        localStorage.setItem(this.TOKEN_KEY, token);
+        console.log('🔐 Token stored in production with secure storage + backup');
+      } else {
+        localStorage.setItem(this.TOKEN_KEY, token);
+      }
+    } catch (error) {
+      console.error('🔴 Error storing token:', error);
+      // Fallback to regular localStorage if secure storage fails
+      try {
+        localStorage.setItem(this.TOKEN_KEY, token);
+        console.log('🔄 Token stored using fallback method');
+      } catch (fallbackError) {
+        console.error('🔴 All token storage methods failed:', fallbackError);
+        throw new Error('Failed to store authentication token');
+      }
     }
   }
 
@@ -27,10 +41,36 @@ export class SecureTokenStorage {
    * Retrieve authentication token
    */
   static getToken(): string | null {
-    if (this.isProduction()) {
-      return this.getSecureItem(this.TOKEN_KEY);
-    } else {
-      return localStorage.getItem(this.TOKEN_KEY);
+    try {
+      if (this.isProduction()) {
+        // Try secure storage first
+        let token = this.getSecureItem(this.TOKEN_KEY);
+        
+        // If secure storage fails, fallback to regular localStorage
+        if (!token) {
+          console.log('🔄 Secure storage failed, trying regular localStorage fallback');
+          token = localStorage.getItem(this.TOKEN_KEY);
+        }
+        
+        // Debug log for production
+        console.log('🔍 Production token retrieval:', {
+          hasToken: !!token,
+          tokenLength: token ? token.length : 0,
+          source: token ? (this.getSecureItem(this.TOKEN_KEY) ? 'secure' : 'fallback') : 'none'
+        });
+        return token;
+      } else {
+        return localStorage.getItem(this.TOKEN_KEY);
+      }
+    } catch (error) {
+      console.error('🔴 Error retrieving token:', error);
+      // Fallback to regular localStorage if secure storage fails
+      try {
+        return localStorage.getItem(this.TOKEN_KEY);
+      } catch (fallbackError) {
+        console.error('🔴 Fallback token retrieval also failed:', fallbackError);
+        return null;
+      }
     }
   }
 

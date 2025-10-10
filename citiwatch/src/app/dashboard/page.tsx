@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
@@ -30,12 +30,40 @@ export default function Dashboard() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const { user, isAuthenticated } = useAuth();
 
+  const loadUserComplaints = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      // Check if user is authenticated before making the request
+      if (!isAuthenticated) {
+        console.error('🔴 User not authenticated, cannot load complaints');
+        setError('Please log in to view your complaints');
+        return;
+      }
+      
+      console.log('🔍 Loading user complaints, authenticated:', isAuthenticated);
+      const response = await ComplaintService.getUserComplaints();
+      
+      if (response.success) {
+        setComplaints(response.data || []);
+      } else {
+        setError(response.message);
+      }
+    } catch (error) {
+      console.error('Error loading complaints:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load complaints');
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
+
   useEffect(() => {
     // Load user complaints
     if (isAuthenticated) {
       loadUserComplaints();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, loadUserComplaints]);
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -51,27 +79,7 @@ export default function Dashboard() {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isModalOpen]);
-
-  const loadUserComplaints = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      
-      const response = await ComplaintService.getUserComplaints();
-      
-      if (response.success) {
-        setComplaints(response.data || []);
-      } else {
-        setError(response.message);
-      }
-    } catch (error) {
-      console.error('Error loading complaints:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load complaints');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [isModalOpen, loadUserComplaints]);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {

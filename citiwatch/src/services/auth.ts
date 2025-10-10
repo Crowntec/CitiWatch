@@ -10,11 +10,20 @@ export class AuthService {
       const loginResponse = await apiClient.post<LoginResponse>('/User/Login', credentials);
       
       if (loginResponse.token) {
-        // Store token securely
+        // Store token securely with enhanced logging
+        console.log('🔐 Storing auth token...');
         SecureTokenStorage.setToken(loginResponse.token);
         
         // Also store token in cookies for middleware
         document.cookie = `token=${loginResponse.token}; path=/; max-age=${3 * 60 * 60}`; // 3 hours
+        
+        // Verify token was stored successfully
+        const storedToken = SecureTokenStorage.getToken();
+        if (!storedToken) {
+          console.error('🔴 Failed to store token in SecureTokenStorage!');
+          throw new Error('Failed to store authentication token');
+        }
+        console.log('✅ Token stored successfully, length:', storedToken.length);
         
                 // Decode JWT to get user info (simplified - in production use a proper JWT library)
         const tokenPayload = JSON.parse(atob(loginResponse.token.split('.')[1]));
