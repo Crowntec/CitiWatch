@@ -58,10 +58,18 @@ function LoginForm() {
     try {
       const redirectTo = searchParams.get('redirect');
       const result = await login(formData.email, formData.password, redirectTo || undefined);
-      if (!result.success) {
+      
+      if (result.success) {
+        // Backup navigation in case AuthContext redirect doesn't work
+        const targetUrl = redirectTo || (isAdmin ? '/admin' : '/dashboard');
+        
+        // Small delay to ensure state is updated, then force navigation
+        setTimeout(() => {
+          window.location.href = targetUrl;
+        }, 100);
+      } else {
         setError(result.message);
       }
-      // Success redirect is handled in the AuthContext
     } catch (error) {
       if (error instanceof Error) {
         setError(error.message);

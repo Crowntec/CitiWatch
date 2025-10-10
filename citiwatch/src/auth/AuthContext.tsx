@@ -80,6 +80,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await AuthService.login({ email, password });
       
       if (response.success && response.data) {
+        // Set user state immediately
+        setUser(response.data);
+        
         // After successful login, fetch the full user profile
         try {
           const profileResponse = await UserService.getUserProfile();
@@ -93,23 +96,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(fullUserData);
           } else {
             // If profile fetch fails, still use the basic user data from JWT
-            setUser(response.data);
+            // User is already set above
           }
         } catch {
           // If profile fetch fails, still use the basic user data from JWT
-          setUser(response.data);
-        }
-        
-        // Redirect to intended page or default based on role
-        if (redirectTo) {
-          router.push(redirectTo);
-        } else if (response.data?.role?.toLowerCase() === 'admin') {
-          router.push('/admin');
-        } else {
-          router.push('/dashboard');
+          // User is already set above
         }
         
         setIsLoading(false);
+        
+        // Use window.location.href for more reliable navigation in production
+        if (redirectTo) {
+          window.location.href = redirectTo;
+        } else if (response.data?.role?.toLowerCase() === 'admin') {
+          window.location.href = '/admin';
+        } else {
+          window.location.href = '/dashboard';
+        }
+        
         return { success: true, message: response.message };
       }
       
