@@ -19,6 +19,17 @@ function LoginForm() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
+    // Clean up any corrupted token data on login page load
+    if (typeof window !== 'undefined') {
+      const rawToken = localStorage.getItem('authToken');
+      if (rawToken && rawToken.startsWith('{')) {
+        // This looks like corrupted JSON data, clear it
+        console.log('🧹 Clearing corrupted token data on login page');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
+      }
+    }
+    
     // Redirect if already authenticated
     if (isAuthenticated) {
       // Check if there's a redirect parameter
