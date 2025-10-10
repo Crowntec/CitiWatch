@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { AuthProvider } from "@/auth/AuthContext";
 
-// Use CSS system fonts instead of Google Fonts to avoid network issues
-const geistSans = {
+const geistSans = Geist({
   variable: "--font-geist-sans",
-};
+  subsets: ["latin"],
+});
 
-const geistMono = {
+const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
-};
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://citiwatch-kappa.vercel.app'),

@@ -15,40 +15,8 @@ class ApiClient {
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     
-    // Get token from secure storage with retry logic
-    let token = typeof window !== 'undefined' ? SecureTokenStorage.getToken() : null;
-    
-    // If no token found, try to wait a bit and retry (for race conditions)
-    if (!token && typeof window !== 'undefined') {
-      console.log('🔄 No token found, retrying in 100ms...');
-      await new Promise(resolve => setTimeout(resolve, 100));
-      token = SecureTokenStorage.getToken();
-    }
-    
-    // Enhanced debugging for production
-    if (typeof window !== 'undefined') {
-      console.log('🔍 Token check:', {
-        hasToken: !!token,
-        tokenLength: token ? token.length : 0,
-        endpoint: endpoint,
-        isProduction: process.env.NODE_ENV === 'production',
-        hasLocalStorage: typeof localStorage !== 'undefined'
-      });
-    }
-    
-    // If still no token for protected endpoints, this is likely an auth issue
-    if (!token && endpoint !== '/Auth/Login' && endpoint !== '/Auth/Register') {
-      console.error('🔴 No auth token found for protected endpoint:', endpoint);
-      // Try to redirect to login if this is a protected route
-      if (typeof window !== 'undefined') {
-        const currentPath = window.location.pathname;
-        if (currentPath !== '/login') {
-          console.log('🔄 Redirecting to login due to missing token');
-          window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
-          throw new Error('Authentication required. Redirecting to login...');
-        }
-      }
-    }
+    // Get token from secure storage
+    const token = typeof window !== 'undefined' ? SecureTokenStorage.getToken() : null;
     
     const config: RequestInit = {
       headers: {
@@ -78,7 +46,10 @@ class ApiClient {
       if (!response.ok) {
         // Handle 401 Unauthorized - redirect to login
         if (response.status === 401) {
-          console.warn('🔒 Authentication required - redirecting to login');
+          // Only log in development
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('🔒 Authentication required - redirecting to login');
+          }
           
           // Clear any existing auth data
           if (typeof window !== 'undefined') {
@@ -97,17 +68,6 @@ class ApiClient {
           }
           
           throw new Error('Session expired. Please log in again.');
-        }
-
-        // Handle 403 Forbidden (authentication/authorization issues)
-        if (response.status === 403) {
-          console.error('🔴 403 Forbidden error for:', endpoint);
-          console.error('🔴 Token present:', !!token);
-          if (token) {
-            console.error('🔴 Token starts with Bearer:', token.startsWith('Bearer '));
-            console.error('🔴 Token format (first 20 chars):', token.substring(0, 20));
-            console.error('🔴 Token is JWT-like:', token.split('.').length === 3);
-          }
         }
         
         // Clone response to read body without consuming the stream

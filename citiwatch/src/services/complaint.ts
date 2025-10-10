@@ -75,15 +75,6 @@ export class ComplaintService {
         };
       }
       
-      // Handle 403 Forbidden (authentication/authorization issues)
-      if (error instanceof Error && error.message.includes('HTTP 403')) {
-        console.error('🔴 403 Forbidden - Authentication required for user complaints');
-        return {
-          success: false,
-          message: 'Authentication required. Please log in again.'
-        };
-      }
-      
       console.error('Failed to fetch user complaints:', error);
       return {
         success: false,
