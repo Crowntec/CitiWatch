@@ -106,13 +106,17 @@ export class SecureTokenStorage {
    * Clear all authentication data
    */
   static clearAuth(): void {
-    if (this.isProduction()) {
-      this.removeSecureItem(this.TOKEN_KEY);
-      this.removeSecureItem(this.USER_KEY);
-    } else {
-      localStorage.removeItem(this.TOKEN_KEY);
-      localStorage.removeItem(this.USER_KEY);
-    }
+    // Clear all possible token storage formats
+    localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(`${this.TOKEN_KEY}_secure`);
+    localStorage.removeItem(this.USER_KEY);
+    localStorage.removeItem(`${this.USER_KEY}_secure`);
+    
+    // Also clear any corrupted data
+    this.removeSecureItem(this.TOKEN_KEY);
+    this.removeSecureItem(this.USER_KEY);
+    
+    console.log('🧹 Cleared all authentication data');
   }
 
   /**
@@ -134,17 +138,29 @@ export class SecureTokenStorage {
    */
   private static setSecureItem(key: string, value: string): void {
     try {
-      // Add timestamp for expiration checks
-      const secureValue = {
-        data: value,
-        timestamp: Date.now(),
-        // Add simple obfuscation (not encryption, but better than plain text)
-        checksum: this.generateChecksum(value)
-      };
-      
-      localStorage.setItem(key, JSON.stringify(secureValue));
+      // In production, still use secure wrapper for new tokens
+      // But also store as plain for backward compatibility
+      if (this.isProduction()) {
+        // Store both secure and plain versions for migration
+        const secureValue = {
+          data: value,
+          timestamp: Date.now(),
+          // Add simple obfuscation (not encryption, but better than plain text)
+          checksum: this.generateChecksum(value)
+        };
+        
+        // Store secure version
+        localStorage.setItem(`${key}_secure`, JSON.stringify(secureValue));
+        // Store plain version for immediate compatibility
+        localStorage.setItem(key, value);
+      } else {
+        // In development, just store the plain value
+        localStorage.setItem(key, value);
+      }
     } catch (error) {
       console.error('Error storing secure item:', error);
+      // Fallback to plain storage
+      localStorage.setItem(key, value);
     }
   }
 
@@ -156,26 +172,40 @@ export class SecureTokenStorage {
       const storedValue = localStorage.getItem(key);
       if (!storedValue) return null;
 
-      const secureValue = JSON.parse(storedValue);
-      
-      // Validate checksum
-      if (secureValue.checksum !== this.generateChecksum(secureValue.data)) {
-        console.warn('Token integrity check failed');
-        this.removeSecureItem(key);
-        return null;
+      // Check if it's a raw JWT token (starts with 'ey') or secure wrapped value
+      if (storedValue.startsWith('ey')) {
+        // This is a raw JWT token, return it directly
+        console.log('🔄 Found raw JWT token, returning directly');
+        return storedValue;
       }
 
-      // Check for token age (optional: implement token expiration)
-      const tokenAge = Date.now() - secureValue.timestamp;
-      const maxAge = 24 * 60 * 60 * 1000; // 24 hours
-      
-      if (tokenAge > maxAge) {
-        console.warn('Token expired due to age');
-        this.removeSecureItem(key);
-        return null;
-      }
+      // Try to parse as secure wrapped value
+      try {
+        const secureValue = JSON.parse(storedValue);
+        
+        // Validate checksum
+        if (secureValue.checksum !== this.generateChecksum(secureValue.data)) {
+          console.warn('Token integrity check failed');
+          this.removeSecureItem(key);
+          return null;
+        }
 
-      return secureValue.data;
+        // Check for token age (optional: implement token expiration)
+        const tokenAge = Date.now() - secureValue.timestamp;
+        const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+        
+        if (tokenAge > maxAge) {
+          console.warn('Token expired due to age');
+          this.removeSecureItem(key);
+          return null;
+        }
+
+        return secureValue.data;
+      } catch {
+        // If parsing fails, it might be a plain string token
+        console.log('🔄 Secure parsing failed, treating as plain token');
+        return storedValue;
+      }
     } catch (error) {
       console.error('Error retrieving secure item:', error);
       return null;

@@ -99,12 +99,14 @@ class ApiClient {
           throw new Error('Session expired. Please log in again.');
         }
 
-        // Handle 403 Forbidden - could be token issue
+        // Handle 403 Forbidden (authentication/authorization issues)
         if (response.status === 403) {
           console.error('🔴 403 Forbidden error for:', endpoint);
           console.error('🔴 Token present:', !!token);
           if (token) {
             console.error('🔴 Token starts with Bearer:', token.startsWith('Bearer '));
+            console.error('🔴 Token format (first 20 chars):', token.substring(0, 20));
+            console.error('🔴 Token is JWT-like:', token.split('.').length === 3);
           }
         }
         
