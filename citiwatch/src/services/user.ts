@@ -1,5 +1,14 @@
 import { apiClient } from '@/lib/api-client';
 
+export interface UserProfile {
+  id: string;
+  fullName: string;
+  email: string;
+  role: string | number; // Backend might return enum as number or string
+  createdOn: string;
+  lastModifiedOn?: string;
+}
+
 export interface User {
   id: string;
   fullName: string;
@@ -107,6 +116,24 @@ export class UserService {
       return {
         success: false,
         message: error instanceof Error ? error.message : 'Failed to delete user'
+      };
+    }
+  }
+
+  // Get current user profile (uses JWT token to get current user's full profile data)
+  static async getUserProfile(): Promise<{ success: boolean; data?: UserProfile; message: string }> {
+    try {
+      const response = await apiClient.get<{ status: boolean; data: UserProfile; message: string }>('/User/GetCurrentUser');
+      
+      return {
+        success: response.status,
+        data: response.data,
+        message: response.message
+      };
+    } catch (error: unknown) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to fetch user profile'
       };
     }
   }

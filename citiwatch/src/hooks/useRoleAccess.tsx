@@ -53,9 +53,9 @@ export interface RolePermissions {
 export const useRoleAccess = (): RolePermissions => {
   const { user } = useAuth();
   
-  // Determine user role (handle both string and number formats)
-  const isAdmin = user?.role === 'Admin' || user?.role === 'admin';
-  const isUser = user?.role === 'User' || user?.role === 'user' || !isAdmin;
+  // Determine user role
+  const isAdmin = user?.role === 'admin';
+  const isUser = user?.role === 'user' || !isAdmin;
   
   return {
     // Basic role checks
