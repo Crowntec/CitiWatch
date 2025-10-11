@@ -416,7 +416,7 @@ export default function Home() {
         ></div>
 
         {/* About the Project Section */}
-        <section className="relative z-20 py-16 sm:py-24 px-4 sm:px-6 lg:px-8">
+        <section id="about" className="relative z-20 py-16 sm:py-24 px-4 sm:px-6 lg:px-8">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
@@ -526,7 +526,7 @@ export default function Home() {
         </section>
 
         {/* How to Use the App Section */}
-        <section className="relative z-20 py-16 sm:py-24 px-4 sm:px-6 lg:px-8">
+        <section id="how-to-use" className="relative z-20 py-16 sm:py-24 px-4 sm:px-6 lg:px-8">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">

@@ -120,7 +120,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             {/* Logo */}
             <div className="p-4 border-b border-gray-700">
               <div className="flex items-center justify-between">
-                <Link href="/admin" className="flex items-center space-x-3">
+                <Link href="/" className="flex items-center space-x-3">
                   <div className="rounded-lg flex items-center justify-center">
                     <Image 
                       src="/primarylogo.png" 
@@ -214,8 +214,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   <i className={`ri-${sidebarCollapsed ? 'menu-unfold' : 'menu-fold'}-line text-lg`}></i>
                 </button>
 
-                {/* Mobile Logo - Smaller on very small screens */}
-                <Link href="/admin" className="md:hidden flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+                {/* Mobile Logo - Always links to landing page */}
+                <Link href="/" className="md:hidden flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
                   <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center">
                     <Image 
                       src="/primarylogo.png" 
@@ -225,7 +225,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                       className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg"
                     />
                   </div>
-                  <span className="text-sm sm:text-lg font-bold text-white">Admin</span>
+                  <span className="text-sm sm:text-lg font-bold text-white">CitiWatch</span>
                 </Link>
 
                 {/* Desktop Breadcrumb/Page Title */}

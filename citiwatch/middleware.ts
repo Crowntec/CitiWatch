@@ -50,29 +50,26 @@ export function middleware(request: NextRequest) {
                   request.headers.get('authorization')?.replace('Bearer ', '');
     
     if (!token) {
-      console.log('No token found, redirecting to login');
-      // Redirect to login if no token
-      const loginUrl = new URL('/login', request.url);
-      loginUrl.searchParams.set('redirect', pathname); // Save the intended page
-      return NextResponse.redirect(loginUrl);
+      console.log('No token found, redirecting to home');
+      // Redirect to home page if no token (immediate redirect, no saved state)
+      const homeUrl = new URL('/', request.url);
+      return NextResponse.redirect(homeUrl);
     }
 
     // Verify token and extract payload
     const payload = decodeJWT(token);
     if (!payload) {
-      console.log('Invalid token, redirecting to login');
-      const loginUrl = new URL('/login', request.url);
-      loginUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(loginUrl);
+      console.log('Invalid token, redirecting to home');
+      const homeUrl = new URL('/', request.url);
+      return NextResponse.redirect(homeUrl);
     }
 
     // Check token expiration
     const currentTime = Math.floor(Date.now() / 1000);
     if (payload.exp && payload.exp < currentTime) {
-      console.log('Token expired, redirecting to login');
-      const loginUrl = new URL('/login', request.url);
-      loginUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(loginUrl);
+      console.log('Token expired, redirecting to home');
+      const homeUrl = new URL('/', request.url);
+      return NextResponse.redirect(homeUrl);
     }
 
     // For admin routes, check if user has admin role

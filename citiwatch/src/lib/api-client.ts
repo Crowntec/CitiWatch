@@ -44,27 +44,22 @@ class ApiClient {
       const response = await fetch(url, config);
       
       if (!response.ok) {
-        // Handle 401 Unauthorized - redirect to login
+        // Handle 401 Unauthorized - immediate redirect to landing page
         if (response.status === 401) {
           // Only log in development
           if (process.env.NODE_ENV === 'development') {
-            console.warn('🔒 Authentication required - redirecting to login');
+            console.warn('🔒 Session expired - redirecting to landing page');
           }
           
-          // Clear any existing auth data
+          // Clear any existing auth data immediately
           if (typeof window !== 'undefined') {
             SecureTokenStorage.clearAuth();
             
             // Clear auth cookie
             document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
             
-            // Store current path for redirect after login
-            const currentPath = window.location.pathname;
-            
-            // Redirect to login page with return URL
-            setTimeout(() => {
-              window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
-            }, 1000); // Brief delay to show any loading states
+            // Immediate redirect to landing page (no preserving redirect URL)
+            window.location.href = '/';
           }
           
           throw new Error('Session expired. Please log in again.');

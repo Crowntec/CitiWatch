@@ -44,68 +44,63 @@ export default function Navigation() {
           
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {isAuthenticated ? (
-              <>
-                <Link href="/" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
-                  Home
-                </Link>
-                {!isAdmin && (
-                  <>
-                    <Link href="/dashboard" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
-                      Dashboard
-                    </Link>
-                    <Link href="/dashboard/submit" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
-                      Submit Report
-                    </Link>
-                  </>
-                )}
-                {isAdmin && (
-                  <>
-                    <Link href="/admin" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
-                      Admin Dashboard
-                    </Link>
-                    <Link href="/admin/complaints" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
-                      Manage Complaints
-                    </Link>
-                  </>
-                )}
-                {isAdmin && (
-                  <Link href="/admin" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
-                    Admin
+            {/* Show landing page navigation for all users on home page */}
+            <>
+
+              <Link href="/" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
+                Home
+              </Link>
+              <Link href="#about" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
+                About
+              </Link>
+              <Link href="#how-to-use" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
+                How to Use
+              </Link>
+              {isAuthenticated && !isAdmin && (
+                <>
+                  <Link 
+                    href="/dashboard" 
+                    className="text-gray-300 hover:text-white transition-colors text-sm flex items-center"
+                  >
+                    Dashboard
                   </Link>
-                )}
-              </>
-            ) : (
-              <>
-                <Link href="/dashboard" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
-                  Dashboard
-                </Link>
-                <Link href="/dashboard/submit" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
-                  Submit Report
-                </Link>
-                <Link href="/admin" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
-                  Admin
-                </Link>
-                <Link href="#contact" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
-                  Contact
-                </Link>
-              </>
-            )}
+                  <Link 
+                    href="/dashboard/submit" 
+                    className="text-gray-300 hover:text-white transition-colors text-sm flex items-center"
+                  >
+                    Submit a Report
+                  </Link>
+                </>
+              )}
+            </>
           </div>
 
-          {/* Desktop Get Started Button */}
+          {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
             {isAuthenticated ? (
               <>
-                <span className="text-gray-300 text-sm">
-                  Welcome, {user?.fullName || 'User'}
-                </span>
-                <button
-                  onClick={logout}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors flex items-center"
-                >
-                  Logout
-                </button>
+                {!isAdmin && (
+                  <>
+                    <span className="text-gray-300 text-sm">
+                      Welcome, {user?.fullName || 'User'}
+                    </span>
+                    <button
+                      onClick={logout}
+                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors flex items-center"
+                    >
+                      Logout
+                    </button>
+                  </>
+                )}
+                {isAdmin && (
+                  // Admin logout handled in AdminLayout - show dashboard link on landing
+                  <Link
+                    href="/admin"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors flex items-center"
+                  >
+                    Dashboard
+                  </Link>
+                )}
               </>
             ) : (
               <>
@@ -117,7 +112,7 @@ export default function Navigation() {
                 </Link>
                 <Link
                   href="/register"
-                  className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm font-medium transition-colors flex items-center"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors flex items-center"
                 >
                   Get Started
                 </Link>
@@ -161,17 +156,36 @@ export default function Navigation() {
           >
             <div className="py-8 px-8">
               <div className="flex flex-col space-y-6">
+                {/* Common navigation for all users */}
+                <Link 
+                  href="/" 
+                  className="text-gray-300 hover:text-white transition-colors text-lg flex items-center py-3"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <i className="fas fa-home mr-4 w-5"></i>
+                  Home
+                </Link>
+                <Link 
+                  href="#about" 
+                  className="text-gray-300 hover:text-white transition-colors text-lg flex items-center py-3"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <i className="fas fa-info-circle mr-4 w-5"></i>
+                  About
+                </Link>
+                <Link 
+                  href="#how-to-use" 
+                  className="text-gray-300 hover:text-white transition-colors text-lg flex items-center py-3"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <i className="fas fa-question-circle mr-4 w-5"></i>
+                  How to Use
+                </Link>
+                
                 {isAuthenticated ? (
                   <>
-                    <Link 
-                      href="/" 
-                      className="text-gray-300 hover:text-white transition-colors text-lg flex items-center py-3"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <i className="fas fa-home mr-4 w-5"></i>
-                      Home
-                    </Link>
-                    {!isAdmin && (
+                    {!isAdmin ? (
+                      // Regular User Mobile Navigation
                       <>
                         <Link 
                           href="/dashboard" 
@@ -187,64 +201,43 @@ export default function Navigation() {
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
                           <i className="fas fa-plus-circle mr-4 w-5"></i>
-                          Submit Report
+                          Submit a Report
                         </Link>
+                        <div className="pt-6 mt-6 border-t border-gray-600/30 space-y-4">
+                          <div className="text-gray-400 text-sm">
+                            Welcome, {user?.fullName || 'User'}
+                          </div>
+                          <button
+                            onClick={() => {
+                              logout();
+                              setIsMobileMenuOpen(false);
+                            }}
+                            className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg text-lg font-medium transition-colors flex items-center w-full"
+                          >
+                            <i className="fas fa-sign-out-alt mr-4 w-5"></i>
+                            Logout
+                          </button>
+                        </div>
                       </>
-                    )}
-                    {isAdmin && (
+                    ) : (
+                      // Admin Mobile Navigation
                       <>
-                        <Link 
-                          href="/admin" 
-                          className="text-gray-300 hover:text-white transition-colors text-lg flex items-center py-3"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          <i className="fas fa-tachometer-alt mr-4 w-5"></i>
-                          Admin Dashboard
-                        </Link>
-                        <Link 
-                          href="/admin/complaints" 
-                          className="text-gray-300 hover:text-white transition-colors text-lg flex items-center py-3"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          <i className="fas fa-exclamation-triangle mr-4 w-5"></i>
-                          Manage Complaints
-                        </Link>
+                        <div className="pt-6 mt-6 border-t border-gray-600/30 space-y-4">
+                          <Link
+                            href="/admin"
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg text-lg font-medium transition-colors flex items-center w-full"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            <i className="fas fa-tachometer-alt mr-4 w-5"></i>
+                            Dashboard
+                          </Link>
+                        </div>
                       </>
                     )}
-                    <div className="pt-6 mt-6 border-t border-gray-600/30 space-y-4">
-                      <div className="text-gray-400 text-sm">
-                        Welcome, {user?.fullName || 'User'}
-                      </div>
-                      <button
-                        onClick={() => {
-                          logout();
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg text-lg font-medium transition-colors flex items-center w-full"
-                      >
-                        <i className="fas fa-sign-out-alt mr-4 w-5"></i>
-                        Logout
-                      </button>
-                    </div>
                   </>
                 ) : (
+                  // Guest Mobile Navigation (Landing Page)
                   <>
-                    <Link 
-                      href="/" 
-                      className="text-gray-300 hover:text-white transition-colors text-lg flex items-center py-3"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <i className="fas fa-home mr-4 w-5"></i>
-                      Home
-                    </Link>
-                    <Link 
-                      href="#contact" 
-                      className="text-gray-300 hover:text-white transition-colors text-lg flex items-center py-3"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <i className="fas fa-envelope mr-4 w-5"></i>
-                      Contact
-                    </Link>
                     <div className="pt-6 mt-6 border-t border-gray-600/30 space-y-4">
                       <Link
                         href="/login"

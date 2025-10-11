@@ -8,7 +8,7 @@ interface AuthRedirectProps {
 }
 
 export default function AuthRedirect({ 
-  message = "Session expired. Redirecting to login...", 
+  message = "Session expired. Redirecting to home...", 
   redirecting = true 
 }: AuthRedirectProps) {
   const [dots, setDots] = useState('');

@@ -119,7 +119,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredRole = 'any',
   requiredPermission,
   fallback,
-  redirectTo = '/login'
+  redirectTo = '/'
 }: ProtectedRouteProps) => {
   const { user, isLoading } = useAuth();
   const permissions = useRoleAccess();
