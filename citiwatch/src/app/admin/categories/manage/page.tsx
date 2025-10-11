@@ -92,7 +92,7 @@ export default function ManageCategoriesPage() {
         color: formData.color
       };
       
-      console.log('Category data to send:', categoryData); // For debugging
+
       
       // Use the CategoryService to create via hosted API
       const result = await CategoryService.createCategory(categoryData);

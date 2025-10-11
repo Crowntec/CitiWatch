@@ -1,5 +1,4 @@
 import { SecureTokenStorage } from '@/utils/secureStorage';
-import { AuthDebugger } from '@/utils/debugAuth';
 
 class ApiClient {
   private baseUrl: string;
@@ -28,20 +27,7 @@ class ApiClient {
       ...options,
     };
 
-    // Safe logging for development and debugging
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🌐 API Request:', {
-        method: options.method || 'GET',
-        endpoint: endpoint,
-        baseUrl: this.baseUrl,
-        fullUrl: url,
-        isHttps: typeof window !== 'undefined' ? window.location.protocol === 'https:' : false,
-        hasAuth: !!token,
-        tokenLength: token ? token.length : 0,
-        tokenType: token ? (token.startsWith('Bearer ') ? 'Bearer format' : 'Raw JWT') : 'None',
-        // Never log the actual token or sensitive headers
-      });
-    }
+
 
     try {
       const response = await fetch(url, config);
@@ -49,11 +35,6 @@ class ApiClient {
       if (!response.ok) {
         // Handle 401 Unauthorized - immediate redirect to landing page
         if (response.status === 401) {
-          // Only log in development
-          if (process.env.NODE_ENV === 'development') {
-            console.warn('🔒 Session expired - redirecting to landing page');
-          }
-          
           // Clear any existing auth data immediately
           if (typeof window !== 'undefined') {
             SecureTokenStorage.clearAuth();
@@ -70,19 +51,10 @@ class ApiClient {
 
         // Handle 403 Forbidden - likely authentication/authorization issue
         if (response.status === 403) {
-          if (process.env.NODE_ENV === 'development') {
-            console.error('🚫 Access forbidden - checking auth status:');
-            AuthDebugger.logAuthStatus();
-            
-            if (!AuthDebugger.shouldBeAuthenticated()) {
-              console.warn('⚠️ User appears to be unauthenticated - redirecting to login');
-              
-              // Clear invalid auth data and redirect
-              if (typeof window !== 'undefined') {
-                AuthDebugger.clearAuthWithLogging();
-                window.location.href = '/login';
-              }
-            }
+          // Clear auth data and redirect to login on forbidden access
+          if (typeof window !== 'undefined') {
+            SecureTokenStorage.clearAuth();
+            window.location.href = '/login';
           }
         }
         
@@ -94,30 +66,14 @@ class ApiClient {
           const errorData = await responseClone.json();
           errorMessage = errorData.message || errorData.Message || errorMessage;
           
-          // Log 400 errors in development for debugging
-          if (response.status === 400 && process.env.NODE_ENV === 'development') {
-            console.error('🔴 400 Bad Request Details:', {
-              url: url,
-              method: options.method || 'GET',
-              errorData: errorData,
-              status: response.status
-            });
-          }
+
         } catch {
           // If parsing as JSON fails, try as text on the original response
           try {
             const errorText = await response.text();
             errorMessage = errorText || errorMessage;
             
-            // Log text error in development
-            if (response.status === 400 && process.env.NODE_ENV === 'development') {
-              console.error('🔴 400 Bad Request (Text):', {
-                url: url,
-                method: options.method || 'GET',
-                errorText: errorText,
-                status: response.status
-              });
-            }
+
           } catch {
             // If both fail, use the status message
             errorMessage = response.statusText || errorMessage;
@@ -136,15 +92,6 @@ class ApiClient {
         return (text ? JSON.parse(text) : {}) as T;
       }
     } catch (error) {
-      // Safe error logging - only in development
-      if (process.env.NODE_ENV === 'development') {
-        console.error('❌ API Error:', {
-          endpoint: endpoint,
-          method: options.method || 'GET',
-          message: error instanceof Error ? error.message : 'Unknown error',
-          // Never log the full error object which might contain sensitive data
-        });
-      }
       throw error;
     }
   }
@@ -205,13 +152,6 @@ class ApiClient {
 
       return await response.json();
     } catch (error) {
-      // Safe error logging - only in development
-      if (process.env.NODE_ENV === 'development') {
-        console.error('❌ API Form Error:', {
-          endpoint: endpoint,
-          message: error instanceof Error ? error.message : 'Unknown error',
-        });
-      }
       throw error;
     }
   }

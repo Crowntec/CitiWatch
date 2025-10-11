@@ -9,6 +9,7 @@ import { useAuth } from '@/auth/AuthContext';
 import { ComplaintService, type Complaint } from '@/services/complaint';
 import { UserService } from '@/services/user';
 import { CategoryService } from '@/services/category';
+import { StatusService, type Status } from '@/services/status';
 
 interface DashboardStats {
   totalUsers: number;
@@ -25,6 +26,11 @@ export default function AdminDashboard() {
   const { user, isAuthenticated, isAdmin, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [complaints, setComplaints] = useState<Complaint[]>([]);
+  const [statuses, setStatuses] = useState<Status[]>([]);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
+  const [newStatusId, setNewStatusId] = useState('');
+  const [updating, setUpdating] = useState(false);
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     totalComplaints: 0,
@@ -59,10 +65,11 @@ export default function AdminDashboard() {
     
     try {
       // Load real data from APIs
-      const [complaintsResponse, usersResponse, categoriesResponse] = await Promise.all([
+      const [complaintsResponse, usersResponse, categoriesResponse, statusesResponse] = await Promise.all([
         ComplaintService.getAllComplaints(),
         UserService.getAllUsers(),
-        CategoryService.getAllCategories()
+        CategoryService.getAllCategories(),
+        StatusService.getAllStatuses()
       ]);
 
       if (!complaintsResponse.success) {
@@ -71,6 +78,11 @@ export default function AdminDashboard() {
       
       const complaintsData = complaintsResponse.data || [];
       setComplaints(complaintsData);
+      
+      // Set statuses data
+      if (statusesResponse.success && statusesResponse.data) {
+        setStatuses(statusesResponse.data);
+      }
       
       // Calculate stats from real data
       const totalComplaints = complaintsData.length;
@@ -150,6 +162,57 @@ export default function AdminDashboard() {
     return complaints
       .sort((a, b) => new Date(b.createdOn).getTime() - new Date(a.createdOn).getTime())
       .slice(0, 5);
+  };
+
+  const handleOpenStatusModal = (complaint: Complaint) => {
+    setSelectedComplaint(complaint);
+    // Find current status and set it as default
+    const currentStatus = statuses.find(s => s.name.toLowerCase() === complaint.statusName?.toLowerCase());
+    setNewStatusId(currentStatus?.id || '');
+    setShowStatusModal(true);
+  };
+
+  const handleStatusUpdate = async () => {
+    if (!selectedComplaint || !newStatusId) {
+      setShowStatusModal(false);
+      return;
+    }
+    
+    // Check if status is actually changing
+    const currentStatus = statuses.find(s => s.name.toLowerCase() === selectedComplaint.statusName?.toLowerCase());
+    if (currentStatus?.id === newStatusId) {
+      setShowStatusModal(false);
+      return;
+    }
+    
+    setUpdating(true);
+    try {
+      const result = await ComplaintService.updateComplaintStatus(selectedComplaint.id, { id: newStatusId });
+      
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+      
+      // Find the status name for UI update
+      const statusName = statuses.find(s => s.id === newStatusId)?.name || 'Unknown';
+      
+      // Update the complaint in the local state
+      setComplaints(prev => prev.map(c => 
+        c.id === selectedComplaint.id 
+          ? { ...c, statusName, lastModifiedOn: new Date().toISOString() }
+          : c
+      ));
+      
+      // Update stats if needed
+      await loadData();
+      
+      setShowStatusModal(false);
+    } catch (error: unknown) {
+      console.error('Error updating complaint status:', error);
+      setError(error instanceof Error ? error.message : 'Failed to update complaint status');
+    } finally {
+      setUpdating(false);
+    }
   };
 
   const getDirectionsToComplaint = (complaint: Complaint) => {
@@ -513,7 +576,10 @@ export default function AdminDashboard() {
                             Route
                           </button>
                         )}
-                        <button className="inline-flex items-center px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-md transition-colors">
+                        <button 
+                          onClick={() => handleOpenStatusModal(complaint)}
+                          className="inline-flex items-center px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-md transition-colors"
+                        >
                           <i className="fas fa-edit mr-1.5"></i>
                           Update
                         </button>
@@ -526,6 +592,75 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Status Update Modal */}
+      {showStatusModal && selectedComplaint && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-md mx-4">
+            <div className="flex justify-between items-center mb-4 sm:mb-6">
+              <h3 className="text-base sm:text-lg font-semibold text-white">Update Complaint Status</h3>
+              <button
+                onClick={() => setShowStatusModal(false)}
+                className="text-gray-400 hover:text-gray-300 p-1"
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            
+            <div className="mb-4">
+              <p className="text-sm text-gray-300 mb-2">
+                <strong>Complaint:</strong> {selectedComplaint.title}
+              </p>
+              <p className="text-sm text-gray-400 mb-4">
+                Current Status: <span className="text-white">{selectedComplaint.statusName}</span>
+              </p>
+            </div>
+            
+            <div className="mb-4 sm:mb-6">
+              <label htmlFor="status" className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                New Status
+              </label>
+              <select
+                id="status"
+                value={newStatusId}
+                onChange={(e) => setNewStatusId(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-600 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select a status</option>
+                {statuses.map(status => (
+                  <option key={status.id} value={status.id}>{status.name}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+              <button
+                onClick={() => setShowStatusModal(false)}
+                className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-gray-400 hover:text-gray-300 border border-gray-600 hover:border-gray-500 rounded-lg transition-colors text-sm font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleStatusUpdate}
+                disabled={updating || !newStatusId}
+                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2.5 sm:py-2 rounded-lg transition-colors flex items-center justify-center text-sm font-medium"
+              >
+                {updating ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin mr-2"></i>
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-save mr-2"></i>
+                    Update Status
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }

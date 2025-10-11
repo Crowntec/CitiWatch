@@ -45,34 +45,7 @@ async function proxyRequest(
     const url = new URL(request.url);
     const targetUrl = `${BACKEND_API_URL}/${path}${url.search}`;
 
-    // Log the proxy request for debugging
-    console.log(`[PROXY] ${method} ${targetUrl}`);
-    
-    // Enhanced logging for auth debugging
-    const authHeader = request.headers.get('authorization');
-    if (authHeader) {
-      console.log(`[PROXY] Auth header present: ${authHeader.substring(0, 20)}...${authHeader.slice(-10)}`);
-      
-      // Decode and log JWT payload for debugging
-      if (authHeader.startsWith('Bearer ')) {
-        try {
-          const token = authHeader.substring(7);
-          const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-          console.log('[PROXY] JWT payload:', {
-            sub: payload.sub,
-            jti: payload.jti,
-            role: payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || payload.role,
-            exp: payload.exp,
-            expiresAt: new Date(payload.exp * 1000).toISOString(),
-            isExpired: Date.now() / 1000 > payload.exp
-          });
-        } catch (error) {
-          console.log('[PROXY] Failed to decode JWT:', error);
-        }
-      }
-    } else {
-      console.log('[PROXY] No authorization header found');
-    }
+
 
     // Prepare headers - forward relevant headers from the original request
     const headers = new Headers();
@@ -86,18 +59,12 @@ async function proxyRequest(
       'accept-language',
     ];
 
-    headersToForward.forEach(headerName => {
+      headersToForward.forEach(headerName => {
       const value = request.headers.get(headerName);
       if (value) {
         headers.set(headerName, value);
-        // Log auth headers for debugging (but mask the token)
-        if (headerName === 'authorization' && value.startsWith('Bearer ')) {
-          console.log(`[PROXY] Auth header present: Bearer ${value.slice(-10)}`);
-        }
       }
-    });
-
-    // Prepare the request body for POST/PUT requests
+    });    // Prepare the request body for POST/PUT requests
     let body: BodyInit | undefined;
     if (method === 'POST' || method === 'PUT') {
       // For multipart/form-data, we need to pass the raw body stream
@@ -117,29 +84,7 @@ async function proxyRequest(
       body,
     });
 
-    console.log(`[PROXY] Response status: ${response.status} for ${targetUrl}`);
-    
-    // Log error responses for debugging
-    if (!response.ok) {
-      const errorText = await response.clone().text();
-      console.log(`[PROXY] Error response: ${errorText}`);
-      
-      // Special handling for 403 errors
-      if (response.status === 403) {
-        console.log(`[PROXY] 403 FORBIDDEN - This could indicate:`);
-        console.log(`[PROXY] 1. Backend API authentication/authorization issue`);
-        console.log(`[PROXY] 2. Invalid JWT claims or format expected by backend`);
-        console.log(`[PROXY] 3. User permissions issue on backend side`);
-        console.log(`[PROXY] 4. Backend API endpoint access restrictions`);
-        
-        // Log request headers that were forwarded
-        console.log(`[PROXY] Headers forwarded to backend:`, {
-          authorization: !!request.headers.get('authorization'),
-          contentType: request.headers.get('content-type'),
-          userAgent: request.headers.get('user-agent')
-        });
-      }
-    }
+
 
     // Create response with the same status and headers
     const responseData = await response.text();
@@ -172,19 +117,11 @@ async function proxyRequest(
 
     return proxyResponse;
   } catch (error) {
-    console.error('[PROXY] Error:', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      method,
-      pathSegments,
-      targetUrl: `${BACKEND_API_URL}/${pathSegments.join('/')}`
-    });
     return NextResponse.json(
       { 
         status: 'error', 
         message: 'Proxy request failed',
-        error: error instanceof Error ? error.message : 'Unknown error',
-        target: `${BACKEND_API_URL}/${pathSegments.join('/')}`
+        error: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );

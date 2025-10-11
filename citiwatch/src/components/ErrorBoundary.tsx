@@ -26,13 +26,8 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log API errors for debugging
-    console.error('API Error caught by boundary:', error);
-    console.error('Error Info:', errorInfo);
-    
-    // You can also send error reports to a logging service here
-    // Example: logErrorToService(error, errorInfo);
+  componentDidCatch() {
+    // Error boundary triggered - you can send error reports to a logging service here
   }
 
   resetError = () => {

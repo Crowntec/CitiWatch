@@ -55,18 +55,8 @@ export class ComplaintService {
   // User: Get user's complaints (with role-based endpoint selection)
   static async getUserComplaints(): Promise<{ success: boolean; data?: Complaint[]; message: string }> {
     try {
-      // Log user role info for debugging
-      UserRoleUtils.logUserRoleInfo();
-      
       // Use role-appropriate endpoint
       const endpoint = UserRoleUtils.getComplaintsEndpoint();
-      const isAdmin = UserRoleUtils.isCurrentUserAdmin();
-      
-      if (isAdmin) {
-        console.log('Admin user detected - fetching all complaints via GET /Complaint/GetAll');
-      } else {
-        console.log('Regular user - fetching user complaints via GET /Complaint/GetAllUserComplaints');
-      }
       
       const response = await apiClient.get<{ status: boolean; data: Complaint[]; message: string }>(endpoint);
       return {
@@ -77,7 +67,6 @@ export class ComplaintService {
     } catch (error) {
       // Handle the case where user has no complaints (backend returns "Not found!" with 400 status)
       if (error instanceof Error && error.message === 'Not found!') {
-        console.log('User has no complaints yet - returning empty array');
         return {
           success: true,
           data: [],
@@ -87,23 +76,12 @@ export class ComplaintService {
       
       // Handle 403 Forbidden errors specifically
       if (error instanceof Error && error.message.includes('HTTP 403')) {
-        const user = typeof window !== 'undefined' ? 
-          JSON.parse(localStorage.getItem('userData') || '{}') : null;
-        const isAdmin = user?.role?.toLowerCase() === 'admin';
-        
-        console.error('Access forbidden when fetching complaints. This may indicate:');
-        console.error('1. Invalid or expired JWT token');
-        console.error('2. User role mismatch with endpoint access permissions');
-        console.error('3. Backend authentication/authorization issue');
-        console.error(`Current user role: ${user?.role || 'unknown'}, is admin: ${isAdmin}`);
-        
         return {
           success: false,
-          message: 'Access denied. Please log in again or contact support if this persists.'
+          message: 'Access denied. Please log in again.'
         };
       }
-      
-      console.error('Failed to fetch user complaints:', error);
+
       return {
         success: false,
         message: error instanceof Error ? error.message : 'Failed to fetch user complaints'

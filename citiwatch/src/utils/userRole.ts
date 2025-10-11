@@ -41,21 +41,5 @@ export class UserRoleUtils {
     }
   }
 
-  /**
-   * Log current user role information (development only)
-   */
-  static logUserRoleInfo(): void {
-    if (process.env.NODE_ENV !== 'development') return;
 
-    const user = SecureTokenStorage.getUser();
-    const role = this.getCurrentUserRole();
-    
-    console.log('👤 User Role Info:', {
-      userId: user?.id,
-      email: user?.email,
-      role: role,
-      isAdmin: this.isCurrentUserAdmin(),
-      complaintsEndpoint: this.getComplaintsEndpoint()
-    });
-  }
 }

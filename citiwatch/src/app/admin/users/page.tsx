@@ -59,12 +59,7 @@ export default function UsersPage() {
 
     // Transform the data to match our display interface
   const users: UserDisplay[] = usersData.map(user => {
-    // Debug logging to see what we're getting
-    console.log('User data for', user.email, ':', {
-      role: user.role, // This should be the string from API
-      roleType: typeof user.role,
-      fullUser: user
-    });
+
     
     // Try to convert role string to number
     let roleNumber = 0;
@@ -190,34 +185,7 @@ export default function UsersPage() {
     }
   };
 
-  // Add debugging function to test API directly (keep for debugging)
-  useEffect(() => {
-    (window as Window & { testUserAPI?: () => Promise<void> }).testUserAPI = async () => {
-      try {
-        const result = await UserService.getAllUsers();
-        console.log('=== USER API TEST ===');
-        console.log('Success:', result.success);
-        console.log('Message:', result.message);
-        console.log('Data:', result.data);
-        if (result.data) {
-          result.data.forEach((user, index) => {
-            console.log(`User ${index + 1}:`, {
-              id: user.id,
-              fullName: user.fullName,
-              email: user.email,
-              role: user.role,
-              createdOn: user.createdOn,
-              lastModifiedOn: user.lastModifiedOn,
-              rawUser: user
-            });
-          });
-        }
-        console.log('=== END USER API TEST ===');
-      } catch (error) {
-        console.error('Test error:', error);
-      }
-    };
-  }, []);
+
 
   // Handle keyboard shortcuts for delete confirmation modal
   useEffect(() => {
