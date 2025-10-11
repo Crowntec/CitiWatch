@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Navigation from "@/components/Navigation";
 import StructuredData from "@/components/StructuredData";
 
@@ -10,50 +10,103 @@ import StructuredData from "@/components/StructuredData";
 // For SEO optimization, consider converting to server component if possible
 
 export default function Home() {
-  // Scroll animation effect for YouTube video
-  useEffect(() => {
-    const handleScroll = () => {
-      const videoContainer = document.getElementById('youtube-video-container');
-      if (!videoContainer) return;
+  const [isLoaded, setIsLoaded] = useState(false);
 
-      const rect = videoContainer.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
-      const containerHeight = rect.height;
-      
-      // Calculate visibility percentage
-      const visibleTop = Math.max(0, Math.min(windowHeight, windowHeight - rect.top));
-      const visibleBottom = Math.max(0, Math.min(windowHeight, rect.bottom));
-      const visibleHeight = visibleBottom - visibleTop;
-      const visibilityPercentage = visibleHeight / containerHeight;
-      
-      // Calculate scale and opacity based on visibility
-      const minScale = 0.8;
-      const maxScale = 1.1;
-      const minOpacity = 0.7;
-      const maxOpacity = 1;
-      
-      // Enhanced easing function for smoother animation
-      const easeInOutCubic = (t: number) => t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
-      const easedProgress = easeInOutCubic(Math.max(0, Math.min(1, visibilityPercentage)));
-      
-      const scale = minScale + (maxScale - minScale) * easedProgress;
-      const opacity = minOpacity + (maxOpacity - minOpacity) * easedProgress;
-      
-      // Apply transform and opacity
-      videoContainer.style.transform = `scale(${scale})`;
-      videoContainer.style.opacity = `${opacity}`;
-      
-      // Add slight rotation for extra effect when fully visible
-      if (visibilityPercentage > 0.8) {
-        const rotateIntensity = (visibilityPercentage - 0.8) * 5; // Max 1 degree rotation
-        videoContainer.style.transform = `scale(${scale}) rotate(${rotateIntensity * 0.2}deg)`;
-      }
+  // Initialize staggered animations
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Enhanced scroll animations with intersection observer
+  useEffect(() => {
+    // Create intersection observer for scroll-triggered animations
+    const observerOptions = {
+      threshold: [0.1, 0.3, 0.6, 0.9],
+      rootMargin: '-50px 0px -50px 0px'
     };
 
-    // Initial call
-    handleScroll();
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const element = entry.target as HTMLElement;
+        const intersectionRatio = entry.intersectionRatio;
+        
+        if (element.id === 'youtube-video-container') {
+          // Enhanced video container animation
+          const minScale = 0.8;
+          const maxScale = 1.05;
+          const minOpacity = 0.4;
+          const maxOpacity = 1;
+          
+          // Enhanced easing function
+          const easeOutQuart = (t: number) => 1 - Math.pow(1 - t, 4);
+          const easedProgress = easeOutQuart(intersectionRatio);
+          
+          const scale = minScale + (maxScale - minScale) * easedProgress;
+          const opacity = minOpacity + (maxOpacity - minOpacity) * easedProgress;
+          
+          element.style.transform = `scale(${scale}) translateY(${(1 - easedProgress) * 30}px)`;
+          element.style.opacity = `${opacity}`;
+          
+          // Add glow effect when fully visible
+          if (intersectionRatio > 0.8) {
+            element.style.filter = `brightness(${1 + (intersectionRatio - 0.8) * 0.5}) drop-shadow(0 0 20px rgba(59, 130, 246, 0.3))`;
+          }
+        }
+        
+        // Animate video stats
+        if (element.classList.contains('video-stat')) {
+          if (intersectionRatio > 0.3) {
+            element.style.transform = 'translateY(0) scale(1)';
+            element.style.opacity = '1';
+          } else {
+            element.style.transform = 'translateY(20px) scale(0.95)';
+            element.style.opacity = '0.7';
+          }
+        }
+      });
+    }, observerOptions);
+
+
+
+    // Create scroll reveal observer
+    const scrollRevealOptions = {
+      threshold: 0.1,
+      rootMargin: '-50px 0px -50px 0px'
+    };
+
+    const scrollRevealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, scrollRevealOptions);
+
+    // Observe elements
+    const videoContainer = document.getElementById('youtube-video-container');
+    const statElements = document.querySelectorAll('.video-stat');
+    const scrollRevealElements = document.querySelectorAll('.scroll-reveal-up, .scroll-reveal-left, .scroll-reveal-right, .scroll-reveal-scale, .scroll-reveal-rotate');
     
-    // Add scroll listener with throttling for better performance
+    if (videoContainer) observer.observe(videoContainer);
+    statElements.forEach(el => observer.observe(el));
+    scrollRevealElements.forEach(el => scrollRevealObserver.observe(el));
+
+    // Scroll-based animations for hero elements
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const heroElements = document.querySelectorAll('.hero-parallax');
+      
+      heroElements.forEach((element, index) => {
+        const speed = 0.5 + (index * 0.1);
+        const yPos = scrollY * speed;
+        (element as HTMLElement).style.transform = `translate3d(0, ${yPos}px, 0)`;
+      });
+    };
+
+    // Throttled scroll handler
     let ticking = false;
     const throttledScroll = () => {
       if (!ticking) {
@@ -66,11 +119,12 @@ export default function Home() {
     };
 
     window.addEventListener('scroll', throttledScroll, { passive: true });
-    window.addEventListener('resize', handleScroll, { passive: true });
+    window.addEventListener('resize', () => observer.disconnect(), { passive: true });
 
     return () => {
+      observer.disconnect();
+      scrollRevealObserver.disconnect();
       window.removeEventListener('scroll', throttledScroll);
-      window.removeEventListener('resize', handleScroll);
     };
   }, []);
 
@@ -93,7 +147,7 @@ export default function Home() {
         
         {/* Gradient Overlay */}
         <div 
-          className="absolute inset-0 z-10"
+          className="absolute inset-0 z-10 hero-parallax"
           style={{
             background: 'radial-gradient(ellipse at center, rgba(30, 41, 59, 0.2) 0%, rgba(15, 23, 42, 0.1) 100%)'
           }}
@@ -101,7 +155,7 @@ export default function Home() {
 
         {/* Glass Effect Overlay */}
         <div 
-          className="absolute inset-0 z-10"
+          className="absolute inset-0 z-10 hero-parallax"
           style={{
             background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 0.7%)',
             backdropFilter: 'blur(5px)',
@@ -109,25 +163,50 @@ export default function Home() {
           }}
         ></div>
 
+        {/* Floating Particles */}
+        <div className="absolute inset-0 z-5 pointer-events-none">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div
+              key={i}
+              className="absolute animate-particle-float"
+              style={{
+                left: `${20 + (i * 10)}%`,
+                top: `${30 + (i * 8)}%`,
+                animationDelay: `${i * 0.8}s`,
+                animationDuration: `${6 + (i % 3)}s`
+              }}
+            >
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{
+                  background: `rgba(${i % 2 === 0 ? '59, 130, 246' : '34, 197, 94'}, 0.4)`,
+                  boxShadow: `0 0 10px rgba(${i % 2 === 0 ? '59, 130, 246' : '34, 197, 94'}, 0.6)`,
+                  filter: 'blur(1px)'
+                }}
+              ></div>
+            </div>
+          ))}
+        </div>
+
         {/* Navigation */}
         <Navigation />
 
         {/* Hero Content */}
         <div 
-          className="relative z-20 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 pt-20 pb-8" 
+          className="hero-content relative z-20 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 pt-20 pb-8 transition-transform duration-300 ease-out" 
           style={{ 
             minHeight: '100dvh',
             paddingTop: 'max(80px, env(safe-area-inset-top))'
           }}
         >
           {/* Central Icon */}
-          <div className="mb-8 sm:mb-12">
+          <div className={`mb-8 sm:mb-12 ${isLoaded ? 'animate-fade-in-scale stagger-1' : 'animate-on-load'}`}>
             <div 
-              className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex items-center justify-center shadow-2xl mx-auto"
+              className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex items-center justify-center shadow-2xl mx-auto hero-logo-hover animate-float animate-pulse-glow"
               style={{
                 background: 'rgba(255, 255, 255, 0.075)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
                 border: '1px solid rgba(255, 255, 255, 0.2)',
               }}
             >
@@ -136,66 +215,119 @@ export default function Home() {
                 alt="CitiWatch Logo" 
                 width={64} 
                 height={64} 
-                className="filter brightness-200 w-16 h-16 sm:w-20 sm:h-20"
+                className="filter brightness-200 w-16 h-16 sm:w-20 sm:h-20 transition-all duration-300"
               />
             </div>
           </div>
 
-          {/* Badge */}
-          <div className="mb-6 sm:mb-8">
+          {/* Badge with Blinking Light */}
+          <div className={`mb-6 sm:mb-8 ${isLoaded ? 'animate-fade-in-up stagger-2' : 'animate-on-load'}`}>
             <span 
-              className="inline-flex items-center px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs font-medium text-blue-300 border"
+              className="inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 rounded-full text-xs font-medium text-blue-300 border hero-element-hover relative overflow-hidden animate-glow-pulse animate-morph-shape"
               style={{
-                background: 'rgba(30, 58, 138, 0.3)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                border: '1px solid rgba(59, 130, 246, 0.3)',
+                background: 'rgba(30, 58, 138, 0.4)',
+                backdropFilter: 'blur(15px)',
+                WebkitBackdropFilter: 'blur(15px)',
+                border: '1px solid rgba(34, 197, 94, 0.4)',
+                boxShadow: '0 0 20px rgba(34, 197, 94, 0.2)',
               }}
             >
-              • NEW CIVIC PARTNER
+              <span 
+                className="animate-blinking-light text-green-400 mr-2 text-sm font-bold"
+                style={{
+                  filter: 'drop-shadow(0 0 3px rgba(34, 197, 94, 0.8))'
+                }}
+              >
+                ●
+              </span>
+              <span className="animate-shimmer font-semibold tracking-wide">NEW CIVIC PARTNER</span>
+              <div 
+                className="absolute inset-0 rounded-full animate-pulse"
+                style={{
+                  background: 'linear-gradient(45deg, transparent 30%, rgba(34, 197, 94, 0.1) 50%, transparent 70%)',
+                  animation: 'shimmer 3s infinite'
+                }}
+              ></div>
             </span>
           </div>
 
           {/* Main Heading */}
-          <div className="text-center max-w-4xl mx-auto mb-4 sm:mb-6 px-2">
+          <div className={`text-center max-w-4xl mx-auto mb-4 sm:mb-6 px-2 ${isLoaded ? 'animate-fade-in-up stagger-3' : 'animate-on-load'}`}>
             <h1 
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-white leading-tight"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold leading-tight hero-text-hover relative"
               style={{
-                backgroundImage: 'radial-gradient(99% 86% at 50% 50%, rgb(213, 219, 230) 28.387387387387385%, rgb(4, 7, 13) 100%)',
+                background: 'linear-gradient(-45deg, #ffffff, #e2e8f0, #cbd5e1, #94a3b8, #ffffff)',
+                backgroundSize: '400% 400%',
                 WebkitBackgroundClip: 'text',
                 backgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                color: 'transparent'
+                color: 'transparent',
+                animation: 'textGradientShift 6s ease infinite',
+                textShadow: '0 0 40px rgba(255, 255, 255, 0.1)',
+                filter: 'drop-shadow(0 0 20px rgba(255, 255, 255, 0.2))'
               }}
             >
               Take Action. Report Civic Issues Seamlessly
             </h1>
+            
+            {/* Animated underline */}
+            <div 
+              className="mx-auto mt-4 h-1 rounded-full transition-all duration-1000 delay-500"
+              style={{
+                width: isLoaded ? '60%' : '0%',
+                background: 'linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.6), rgba(34, 197, 94, 0.6), transparent)',
+                animation: 'shimmer 3s infinite'
+              }}
+            ></div>
           </div>
 
           {/* Subtitle */}
-          <div className="text-center mb-8 sm:mb-12 px-4">
-            <p className="text-base sm:text-lg text-gray-400 max-w-md mx-auto leading-relaxed">
-              Report civic issues like potholes, broken lights, and graffiti in seconds. Upload photos, track progress, and make your city bettertogether.
+          <div className={`text-center mb-8 sm:mb-12 px-4 ${isLoaded ? 'animate-slide-in-left stagger-4' : 'animate-on-load'}`}>
+            <p className="text-base sm:text-lg text-gray-400 max-w-md mx-auto leading-relaxed hero-element-hover">
+              Report civic issues like potholes, broken lights, and graffiti in seconds. Upload photos, track progress, and make your city better together.
             </p>
           </div>
 
           {/* CTA Button */}
-          <div className="mb-12 sm:mb-16 px-4">
+          <div className={`mb-12 sm:mb-16 px-4 ${isLoaded ? 'animate-slide-in-right stagger-5' : 'animate-on-load'}`}>
             <Link
               href="/register"
-              className="inline-flex items-center px-6 py-3 text-gray-300 hover:text-white transition-all duration-300 text-sm font-medium rounded group"
+              className="inline-flex items-center px-8 py-4 text-gray-300 hover:text-white transition-all duration-500 text-base font-semibold rounded group hero-button-hover micro-bounce animate-float relative"
               style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.5)',
-                borderRadius: '20px',
+                background: 'rgba(255, 255, 255, 0.08)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.6)',
+                borderRadius: '25px',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
               }}
             >
-              Submit A Report
-              <svg className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              <span className="relative z-10">Submit A Report</span>
+              <svg 
+                className="ml-3 w-5 h-5 group-hover:translate-x-2 group-hover:scale-110 transition-all duration-500 relative z-10" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
+              
+              {/* Animated background gradient */}
+              <div 
+                className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                style={{
+                  background: 'linear-gradient(45deg, rgba(59, 130, 246, 0.1), rgba(34, 197, 94, 0.1))',
+                  animation: 'shimmer 2s infinite'
+                }}
+              ></div>
+              
+              {/* Ripple effect on hover */}
+              <div 
+                className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-30 transition-all duration-700 scale-0 group-hover:scale-150"
+                style={{
+                  background: 'radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%)',
+                }}
+              ></div>
             </Link>
           </div>
           
@@ -310,39 +442,45 @@ export default function Home() {
             {/* Video Stats/Info (Optional) */}
             <div className="grid grid-cols-3 gap-4 mt-8">
               <div 
-                className="text-center p-4 rounded-xl"
+                className="video-stat text-center p-4 rounded-xl hero-element-hover transition-all duration-500"
                 style={{
                   background: 'rgba(15, 23, 42, 0.5)',
                   backdropFilter: 'blur(15px)',
                   WebkitBackdropFilter: 'blur(15px)',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
-                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                  transform: 'translateY(20px) scale(0.95)',
+                  opacity: '0.7'
                 }}
               >
                 <div className="text-2xl font-bold text-white">10K+</div>
                 <div className="text-sm text-gray-300">Issues Reported</div>
               </div>
               <div 
-                className="text-center p-4 rounded-xl"
+                className="video-stat text-center p-4 rounded-xl hero-element-hover transition-all duration-500 delay-100"
                 style={{
                   background: 'rgba(15, 23, 42, 0.5)',
                   backdropFilter: 'blur(15px)',
                   WebkitBackdropFilter: 'blur(15px)',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
-                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                  transform: 'translateY(20px) scale(0.95)',
+                  opacity: '0.7'
                 }}
               >
                 <div className="text-2xl font-bold text-white">95%</div>
                 <div className="text-sm text-gray-300">Resolution Rate</div>
               </div>
               <div 
-                className="text-center p-4 rounded-xl"
+                className="video-stat text-center p-4 rounded-xl hero-element-hover transition-all duration-500 delay-200"
                 style={{
                   background: 'rgba(15, 23, 42, 0.5)',
                   backdropFilter: 'blur(15px)',
                   WebkitBackdropFilter: 'blur(15px)',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
-                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                  transform: 'translateY(20px) scale(0.95)',
+                  opacity: '0.7'
                 }}
               >
                 <div className="text-2xl font-bold text-white">50+</div>

@@ -4,6 +4,7 @@ import "./globals.css";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { AuthProvider } from "@/auth/AuthContext";
 import { QueryProvider } from "@/providers/QueryProvider";
+import BackToTop from "@/components/BackToTop";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -117,6 +118,7 @@ export default function RootLayout({
           <QueryProvider>
             <AuthProvider>
               {children}
+              <BackToTop />
             </AuthProvider>
           </QueryProvider>
         </ErrorBoundary>

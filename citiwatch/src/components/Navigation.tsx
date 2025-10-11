@@ -2,12 +2,22 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/auth/AuthContext";
 
 export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const { user, logout, isAuthenticated, isAdmin } = useAuth();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -16,27 +26,44 @@ export default function Navigation() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 w-full">
       <div 
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative"
+        className={`
+          max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative transition-all duration-500 ease-out
+          ${isScrolled ? 'py-2' : 'py-0'}
+        `}
         style={{
-          background: 'rgba(255, 255, 255, 0.05)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
+          background: isScrolled 
+            ? 'rgba(255, 255, 255, 0.1)' 
+            : 'rgba(255, 255, 255, 0.05)',
+          backdropFilter: isScrolled ? 'blur(30px)' : 'blur(20px)',
+          WebkitBackdropFilter: isScrolled ? 'blur(30px)' : 'blur(20px)',
           border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: '0 0 20px 20px'
+          borderRadius: '0 0 20px 20px',
+          boxShadow: isScrolled 
+            ? '0 10px 40px rgba(0, 0, 0, 0.3)' 
+            : '0 5px 20px rgba(0, 0, 0, 0.1)',
         }}
       >
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center">
-              <h1 className="text-xl font-bold text-white flex items-center">
-                <Image 
-                  src="/primarylogo.png" 
-                  alt="CitiWatch Logo" 
-                  width={40} 
-                  height={40} 
-                  className="mr-2"
-                />
+            <Link href="/" className="flex items-center group">
+              <h1 className="text-xl font-bold text-white flex items-center transition-all duration-300 group-hover:scale-105">
+                <div className="relative">
+                  <Image 
+                    src="/primarylogo.png" 
+                    alt="CitiWatch Logo" 
+                    width={40} 
+                    height={40} 
+                    className="mr-3 transition-transform duration-300 group-hover:rotate-12"
+                  />
+                  <div 
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    style={{
+                      background: 'radial-gradient(circle at center, rgba(59, 130, 246, 0.4) 0%, transparent 70%)',
+                      filter: 'blur(10px)',
+                    }}
+                  />
+                </div>
                 CitiWatch
               </h1>
             </Link>
@@ -44,35 +71,36 @@ export default function Navigation() {
           
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {/* Show landing page navigation for all users on home page */}
-            <>
-
-              <Link href="/" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
-                Home
-              </Link>
-              <Link href="#about" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
-                About
-              </Link>
-              <Link href="#how-to-use" className="text-gray-300 hover:text-white transition-colors text-sm flex items-center">
-                How to Use
-              </Link>
-              {isAuthenticated && !isAdmin && (
-                <>
-                  <Link 
-                    href="/dashboard" 
-                    className="text-gray-300 hover:text-white transition-colors text-sm flex items-center"
-                  >
-                    Dashboard
-                  </Link>
-                  <Link 
-                    href="/dashboard/submit" 
-                    className="text-gray-300 hover:text-white transition-colors text-sm flex items-center"
-                  >
-                    Submit a Report
-                  </Link>
-                </>
-              )}
-            </>
+            <Link href="/" className="text-gray-300 hover:text-white transition-all duration-300 text-sm relative group">
+              <span>Home</span>
+              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></div>
+            </Link>
+            <Link href="#about" className="text-gray-300 hover:text-white transition-all duration-300 text-sm relative group">
+              <span>About</span>
+              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></div>
+            </Link>
+            <Link href="#how-to-use" className="text-gray-300 hover:text-white transition-all duration-300 text-sm relative group">
+              <span>How to Use</span>
+              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></div>
+            </Link>
+            {isAuthenticated && !isAdmin && (
+              <>
+                <Link 
+                  href="/dashboard" 
+                  className="text-gray-300 hover:text-white transition-all duration-300 text-sm relative group"
+                >
+                  <span>Dashboard</span>
+                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></div>
+                </Link>
+                <Link 
+                  href="/dashboard/submit" 
+                  className="text-gray-300 hover:text-white transition-all duration-300 text-sm relative group"
+                >
+                  <span>Submit a Report</span>
+                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></div>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Desktop Auth Buttons */}
@@ -86,19 +114,18 @@ export default function Navigation() {
                     </span>
                     <button
                       onClick={logout}
-                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors flex items-center"
+                      className="bg-red-600/80 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 backdrop-blur-sm border border-red-500/30 hover:scale-105"
                     >
                       Logout
                     </button>
                   </>
                 )}
                 {isAdmin && (
-                  // Admin logout handled in AdminLayout - show dashboard link on landing
                   <Link
                     href="/admin"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors flex items-center"
+                    className="bg-blue-600/80 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 backdrop-blur-sm border border-blue-500/30 hover:scale-105"
                   >
-                    Dashboard
+                    Admin Dashboard
                   </Link>
                 )}
               </>
@@ -106,13 +133,13 @@ export default function Navigation() {
               <>
                 <Link
                   href="/login"
-                  className="text-gray-300 hover:text-white transition-colors text-sm font-medium flex items-center"
+                  className="text-gray-300 hover:text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 hover:bg-white/10"
                 >
                   Login
                 </Link>
                 <Link
                   href="/register"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors flex items-center"
+                  className="bg-blue-600/80 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 backdrop-blur-sm border border-blue-500/30 hover:scale-105"
                 >
                   Get Started
                 </Link>
@@ -122,146 +149,279 @@ export default function Navigation() {
 
           {/* Mobile menu button */}
           <div className="md:hidden">
-            <button
+            <button 
               onClick={toggleMobileMenu}
-              className="text-gray-300 hover:text-white focus:outline-none focus:text-white transition-colors"
-              aria-label="Toggle mobile menu"
+              className="relative p-3 rounded-xl text-gray-300 hover:text-white transition-all duration-300 group"
+              style={{
+                background: isMobileMenuOpen 
+                  ? 'rgba(255, 255, 255, 0.15)' 
+                  : 'rgba(255, 255, 255, 0.05)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+              }}
             >
-              {isMobileMenuOpen ? (
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              )}
+              {/* Animated hamburger icon */}
+              <div className="w-6 h-6 flex flex-col justify-center items-center">
+                <span 
+                  className={`
+                    block h-0.5 w-6 bg-current transform transition-all duration-300 ease-in-out
+                    ${isMobileMenuOpen 
+                      ? 'rotate-45 translate-y-1.5' 
+                      : 'rotate-0 translate-y-0'
+                    }
+                  `}
+                />
+                <span 
+                  className={`
+                    block h-0.5 w-6 bg-current transform transition-all duration-300 ease-in-out mt-1
+                    ${isMobileMenuOpen 
+                      ? 'opacity-0 scale-0' 
+                      : 'opacity-100 scale-100'
+                    }
+                  `}
+                />
+                <span 
+                  className={`
+                    block h-0.5 w-6 bg-current transform transition-all duration-300 ease-in-out mt-1
+                    ${isMobileMenuOpen 
+                      ? '-rotate-45 -translate-y-1.5' 
+                      : 'rotate-0 translate-y-0'
+                    }
+                  `}
+                />
+              </div>
+
+              {/* Glow effect */}
+              <div 
+                className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style={{
+                  background: 'radial-gradient(circle at center, rgba(59, 130, 246, 0.3) 0%, transparent 70%)',
+                }}
+              />
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Mobile Navigation Menu */}
-        {isMobileMenuOpen && (
-          <div 
-            className="md:hidden absolute left-0 top-full"
-            style={{
-              background: 'rgba(0, 0, 0, 0.95)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              zIndex: 100,
-              width: 'calc(100vw - 32px)',
-              height: 'calc(100vh - 120px)',
-              borderRadius: '0 16px 16px 0'
-            }}
-          >
-            <div className="py-8 px-8">
-              <div className="flex flex-col space-y-6">
-                {/* Common navigation for all users */}
-                <Link 
-                  href="/" 
-                  className="text-gray-300 hover:text-white transition-colors text-lg flex items-center py-3"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <i className="fas fa-home mr-4 w-5"></i>
-                  Home
-                </Link>
-                <Link 
-                  href="#about" 
-                  className="text-gray-300 hover:text-white transition-colors text-lg flex items-center py-3"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <i className="fas fa-info-circle mr-4 w-5"></i>
-                  About
-                </Link>
-                <Link 
-                  href="#how-to-use" 
-                  className="text-gray-300 hover:text-white transition-colors text-lg flex items-center py-3"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <i className="fas fa-question-circle mr-4 w-5"></i>
-                  How to Use
-                </Link>
-                
-                {isAuthenticated ? (
+      {/* Mobile Navigation Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="md:hidden fixed inset-0 z-40 top-20"
+          onClick={() => setIsMobileMenuOpen(false)}
+          style={{
+            background: 'rgba(0, 0, 0, 0.4)',
+            backdropFilter: 'blur(2px)',
+          }}
+        />
+      )}
+
+      {/* Mobile Navigation Menu */}
+      <div 
+        className={`
+          md:hidden fixed top-20 left-0 z-50 h-full w-80 max-w-[85vw]
+          transform transition-all duration-500 ease-out
+          ${isMobileMenuOpen 
+            ? 'translate-x-0 opacity-100' 
+            : '-translate-x-full opacity-0 pointer-events-none'
+          }
+        `}
+        style={{
+          background: 'rgba(15, 23, 42, 0.98)',
+          backdropFilter: 'blur(30px)',
+          WebkitBackdropFilter: 'blur(30px)',
+          borderRight: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '20px 0 40px rgba(0, 0, 0, 0.3)',
+        }}
+      >
+        <div className="py-8 px-6 h-full overflow-y-auto">
+          <div className="flex flex-col space-y-2">
+            {/* Common navigation for all users */}
+            <Link 
+              href="/" 
+              className={`
+                text-gray-300 hover:text-white transition-all duration-300 text-lg flex items-center py-4 px-4 rounded-xl
+                hover:bg-white/10 group transform
+                ${isMobileMenuOpen 
+                  ? 'translate-x-0 opacity-100' 
+                  : '-translate-x-4 opacity-0'
+                }
+              `}
+              style={{ transitionDelay: '0.1s' }}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <i className="fas fa-home mr-4 w-5 group-hover:scale-110 transition-transform duration-300"></i>
+              Home
+            </Link>
+            <Link 
+              href="#about" 
+              className={`
+                text-gray-300 hover:text-white transition-all duration-300 text-lg flex items-center py-4 px-4 rounded-xl
+                hover:bg-white/10 group transform
+                ${isMobileMenuOpen 
+                  ? 'translate-x-0 opacity-100' 
+                  : '-translate-x-4 opacity-0'
+                }
+              `}
+              style={{ transitionDelay: '0.2s' }}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <i className="fas fa-info-circle mr-4 w-5 group-hover:scale-110 transition-transform duration-300"></i>
+              About
+            </Link>
+            <Link 
+              href="#how-to-use" 
+              className={`
+                text-gray-300 hover:text-white transition-all duration-300 text-lg flex items-center py-4 px-4 rounded-xl
+                hover:bg-white/10 group transform
+                ${isMobileMenuOpen 
+                  ? 'translate-x-0 opacity-100' 
+                  : '-translate-x-4 opacity-0'
+                }
+              `}
+              style={{ transitionDelay: '0.3s' }}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <i className="fas fa-question-circle mr-4 w-5 group-hover:scale-110 transition-transform duration-300"></i>
+              How to Use
+            </Link>
+            
+            {isAuthenticated ? (
+              <>
+                {!isAdmin ? (
+                  // Regular User Mobile Navigation
                   <>
-                    {!isAdmin ? (
-                      // Regular User Mobile Navigation
-                      <>
-                        <Link 
-                          href="/dashboard" 
-                          className="text-gray-300 hover:text-white transition-colors text-lg flex items-center py-3"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          <i className="fas fa-tachometer-alt mr-4 w-5"></i>
-                          Dashboard
-                        </Link>
-                        <Link 
-                          href="/dashboard/submit" 
-                          className="text-gray-300 hover:text-white transition-colors text-lg flex items-center py-3"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          <i className="fas fa-plus-circle mr-4 w-5"></i>
-                          Submit a Report
-                        </Link>
-                        <div className="pt-6 mt-6 border-t border-gray-600/30 space-y-4">
-                          <div className="text-gray-400 text-sm">
-                            Welcome, {user?.fullName || 'User'}
-                          </div>
-                          <button
-                            onClick={() => {
-                              logout();
-                              setIsMobileMenuOpen(false);
-                            }}
-                            className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg text-lg font-medium transition-colors flex items-center w-full"
-                          >
-                            <i className="fas fa-sign-out-alt mr-4 w-5"></i>
-                            Logout
-                          </button>
-                        </div>
-                      </>
-                    ) : (
-                      // Admin Mobile Navigation
-                      <>
-                        <div className="pt-6 mt-6 border-t border-gray-600/30 space-y-4">
-                          <Link
-                            href="/admin"
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg text-lg font-medium transition-colors flex items-center w-full"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            <i className="fas fa-tachometer-alt mr-4 w-5"></i>
-                            Dashboard
-                          </Link>
-                        </div>
-                      </>
-                    )}
+                    <Link 
+                      href="/dashboard" 
+                      className={`
+                        text-gray-300 hover:text-white transition-all duration-300 text-lg flex items-center py-4 px-4 rounded-xl
+                        hover:bg-white/10 group transform
+                        ${isMobileMenuOpen 
+                          ? 'translate-x-0 opacity-100' 
+                          : '-translate-x-4 opacity-0'
+                        }
+                      `}
+                      style={{ transitionDelay: '0.4s' }}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <i className="fas fa-tachometer-alt mr-4 w-5 group-hover:scale-110 transition-transform duration-300"></i>
+                      Dashboard
+                    </Link>
+                    <Link 
+                      href="/dashboard/submit" 
+                      className={`
+                        text-gray-300 hover:text-white transition-all duration-300 text-lg flex items-center py-4 px-4 rounded-xl
+                        hover:bg-white/10 group transform
+                        ${isMobileMenuOpen 
+                          ? 'translate-x-0 opacity-100' 
+                          : '-translate-x-4 opacity-0'
+                        }
+                      `}
+                      style={{ transitionDelay: '0.5s' }}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <i className="fas fa-plus-circle mr-4 w-5 group-hover:scale-110 transition-transform duration-300"></i>
+                      Submit a Report
+                    </Link>
+                    <div className="pt-6 mt-6 border-t border-gray-600/30 space-y-4">
+                      <div className={`
+                        text-gray-400 text-sm px-4 transform transition-all duration-300
+                        ${isMobileMenuOpen 
+                          ? 'translate-x-0 opacity-100' 
+                          : '-translate-x-4 opacity-0'
+                        }
+                      `}
+                      style={{ transitionDelay: '0.6s' }}
+                      >
+                        Welcome, {user?.fullName || 'User'}
+                      </div>
+                      <button
+                        onClick={() => {
+                          logout();
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`
+                          bg-red-600/80 hover:bg-red-600 text-white px-6 py-3 rounded-xl text-lg font-medium 
+                          transition-all duration-300 flex items-center w-full backdrop-blur-sm border border-red-500/30
+                          transform hover:scale-105
+                          ${isMobileMenuOpen 
+                            ? 'translate-x-0 opacity-100' 
+                            : '-translate-x-4 opacity-0'
+                          }
+                        `}
+                        style={{ transitionDelay: '0.7s' }}
+                      >
+                        <i className="fas fa-sign-out-alt mr-4 w-5"></i>
+                        Logout
+                      </button>
+                    </div>
                   </>
                 ) : (
-                  // Guest Mobile Navigation (Landing Page)
+                  // Admin Mobile Navigation
                   <>
                     <div className="pt-6 mt-6 border-t border-gray-600/30 space-y-4">
                       <Link
-                        href="/login"
-                        className="flex items-center text-gray-300 hover:text-white transition-colors text-lg font-medium py-3"
+                        href="/admin"
+                        className={`
+                          bg-blue-600/80 hover:bg-blue-600 text-white px-6 py-3 rounded-xl text-lg font-medium 
+                          transition-all duration-300 flex items-center w-full backdrop-blur-sm border border-blue-500/30
+                          transform hover:scale-105
+                          ${isMobileMenuOpen 
+                            ? 'translate-x-0 opacity-100' 
+                            : '-translate-x-4 opacity-0'
+                          }
+                        `}
+                        style={{ transitionDelay: '0.4s' }}
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
-                        <i className="fas fa-sign-in-alt mr-4 w-5"></i>
-                        Login
-                      </Link>
-                      <Link
-                        href="/register"
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg text-lg font-medium transition-colors flex items-center"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        <i className="fas fa-user-plus mr-4 w-5"></i>
-                        Get Started
+                        <i className="fas fa-tachometer-alt mr-4 w-5"></i>
+                        Admin Dashboard
                       </Link>
                     </div>
                   </>
                 )}
-              </div>
-            </div>
+              </>
+            ) : (
+              // Guest Mobile Navigation (Landing Page)
+              <>
+                <div className="pt-6 mt-6 border-t border-gray-600/30 space-y-4">
+                  <Link
+                    href="/login"
+                    className={`
+                      text-gray-300 hover:text-white transition-all duration-300 text-lg flex items-center py-4 px-4 rounded-xl
+                      hover:bg-white/10 group transform
+                      ${isMobileMenuOpen 
+                        ? 'translate-x-0 opacity-100' 
+                        : '-translate-x-4 opacity-0'
+                      }
+                    `}
+                    style={{ transitionDelay: '0.4s' }}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <i className="fas fa-sign-in-alt mr-4 w-5 group-hover:scale-110 transition-transform duration-300"></i>
+                    Login
+                  </Link>
+                  <Link
+                    href="/register"
+                    className={`
+                      bg-blue-600/80 hover:bg-blue-600 text-white px-6 py-3 rounded-xl text-lg font-medium 
+                      transition-all duration-300 flex items-center backdrop-blur-sm border border-blue-500/30
+                      transform hover:scale-105
+                      ${isMobileMenuOpen 
+                        ? 'translate-x-0 opacity-100' 
+                        : '-translate-x-4 opacity-0'
+                      }
+                    `}
+                    style={{ transitionDelay: '0.5s' }}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <i className="fas fa-user-plus mr-4 w-5"></i>
+                    Get Started
+                  </Link>
+                </div>
+              </>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </nav>
   );
