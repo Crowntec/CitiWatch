@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/api-client';
+import { UserRoleUtils } from '@/utils/userRole';
 
 export interface Complaint {
   id: string;
@@ -51,14 +52,23 @@ export class ComplaintService {
     }
   }
 
-  // User: Get user's complaints
+  // User: Get user's complaints (with role-based endpoint selection)
   static async getUserComplaints(): Promise<{ success: boolean; data?: Complaint[]; message: string }> {
     try {
-      // The backend GetAllUserComplaints endpoint uses GET method and extracts user ID from JWT token
-      // ValidatorHelper.GetUserId() automatically gets the user ID from the 'jti' claim in the JWT
-      console.log('Fetching user complaints via GET /Complaint/GetAllUserComplaints');
+      // Log user role info for debugging
+      UserRoleUtils.logUserRoleInfo();
       
-      const response = await apiClient.get<{ status: boolean; data: Complaint[]; message: string }>('/Complaint/GetAllUserComplaints');
+      // Use role-appropriate endpoint
+      const endpoint = UserRoleUtils.getComplaintsEndpoint();
+      const isAdmin = UserRoleUtils.isCurrentUserAdmin();
+      
+      if (isAdmin) {
+        console.log('Admin user detected - fetching all complaints via GET /Complaint/GetAll');
+      } else {
+        console.log('Regular user - fetching user complaints via GET /Complaint/GetAllUserComplaints');
+      }
+      
+      const response = await apiClient.get<{ status: boolean; data: Complaint[]; message: string }>(endpoint);
       return {
         success: response.status,
         data: response.data,
@@ -75,10 +85,28 @@ export class ComplaintService {
         };
       }
       
+      // Handle 403 Forbidden errors specifically
+      if (error instanceof Error && error.message.includes('HTTP 403')) {
+        const user = typeof window !== 'undefined' ? 
+          JSON.parse(localStorage.getItem('userData') || '{}') : null;
+        const isAdmin = user?.role?.toLowerCase() === 'admin';
+        
+        console.error('Access forbidden when fetching complaints. This may indicate:');
+        console.error('1. Invalid or expired JWT token');
+        console.error('2. User role mismatch with endpoint access permissions');
+        console.error('3. Backend authentication/authorization issue');
+        console.error(`Current user role: ${user?.role || 'unknown'}, is admin: ${isAdmin}`);
+        
+        return {
+          success: false,
+          message: 'Access denied. Please log in again or contact support if this persists.'
+        };
+      }
+      
       console.error('Failed to fetch user complaints:', error);
       return {
         success: false,
-        message: error instanceof Error ? error.message : 'Failed to fetch complaints'
+        message: error instanceof Error ? error.message : 'Failed to fetch user complaints'
       };
     }
   }

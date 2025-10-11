@@ -47,6 +47,32 @@ async function proxyRequest(
 
     // Log the proxy request for debugging
     console.log(`[PROXY] ${method} ${targetUrl}`);
+    
+    // Enhanced logging for auth debugging
+    const authHeader = request.headers.get('authorization');
+    if (authHeader) {
+      console.log(`[PROXY] Auth header present: ${authHeader.substring(0, 20)}...${authHeader.slice(-10)}`);
+      
+      // Decode and log JWT payload for debugging
+      if (authHeader.startsWith('Bearer ')) {
+        try {
+          const token = authHeader.substring(7);
+          const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+          console.log('[PROXY] JWT payload:', {
+            sub: payload.sub,
+            jti: payload.jti,
+            role: payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || payload.role,
+            exp: payload.exp,
+            expiresAt: new Date(payload.exp * 1000).toISOString(),
+            isExpired: Date.now() / 1000 > payload.exp
+          });
+        } catch (error) {
+          console.log('[PROXY] Failed to decode JWT:', error);
+        }
+      }
+    } else {
+      console.log('[PROXY] No authorization header found');
+    }
 
     // Prepare headers - forward relevant headers from the original request
     const headers = new Headers();
@@ -97,6 +123,22 @@ async function proxyRequest(
     if (!response.ok) {
       const errorText = await response.clone().text();
       console.log(`[PROXY] Error response: ${errorText}`);
+      
+      // Special handling for 403 errors
+      if (response.status === 403) {
+        console.log(`[PROXY] 403 FORBIDDEN - This could indicate:`);
+        console.log(`[PROXY] 1. Backend API authentication/authorization issue`);
+        console.log(`[PROXY] 2. Invalid JWT claims or format expected by backend`);
+        console.log(`[PROXY] 3. User permissions issue on backend side`);
+        console.log(`[PROXY] 4. Backend API endpoint access restrictions`);
+        
+        // Log request headers that were forwarded
+        console.log(`[PROXY] Headers forwarded to backend:`, {
+          authorization: !!request.headers.get('authorization'),
+          contentType: request.headers.get('content-type'),
+          userAgent: request.headers.get('user-agent')
+        });
+      }
     }
 
     // Create response with the same status and headers

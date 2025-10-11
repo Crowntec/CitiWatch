@@ -27,11 +27,21 @@ export class SecureTokenStorage {
    * Retrieve authentication token
    */
   static getToken(): string | null {
-    if (this.isProduction()) {
-      return this.getSecureItem(this.TOKEN_KEY);
-    } else {
-      return localStorage.getItem(this.TOKEN_KEY);
+    const token = this.isProduction() 
+      ? this.getSecureItem(this.TOKEN_KEY)
+      : localStorage.getItem(this.TOKEN_KEY);
+    
+    // Debug logging in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔑 Token retrieval:', {
+        hasToken: !!token,
+        tokenLength: token ? token.length : 0,
+        isProduction: this.isProduction(),
+        storageType: this.isProduction() ? 'secure' : 'localStorage'
+      });
     }
+    
+    return token;
   }
 
   /**

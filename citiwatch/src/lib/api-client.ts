@@ -1,4 +1,5 @@
 import { SecureTokenStorage } from '@/utils/secureStorage';
+import { AuthDebugger } from '@/utils/debugAuth';
 
 class ApiClient {
   private baseUrl: string;
@@ -36,6 +37,8 @@ class ApiClient {
         fullUrl: url,
         isHttps: typeof window !== 'undefined' ? window.location.protocol === 'https:' : false,
         hasAuth: !!token,
+        tokenLength: token ? token.length : 0,
+        tokenType: token ? (token.startsWith('Bearer ') ? 'Bearer format' : 'Raw JWT') : 'None',
         // Never log the actual token or sensitive headers
       });
     }
@@ -63,6 +66,24 @@ class ApiClient {
           }
           
           throw new Error('Session expired. Please log in again.');
+        }
+
+        // Handle 403 Forbidden - likely authentication/authorization issue
+        if (response.status === 403) {
+          if (process.env.NODE_ENV === 'development') {
+            console.error('🚫 Access forbidden - checking auth status:');
+            AuthDebugger.logAuthStatus();
+            
+            if (!AuthDebugger.shouldBeAuthenticated()) {
+              console.warn('⚠️ User appears to be unauthenticated - redirecting to login');
+              
+              // Clear invalid auth data and redirect
+              if (typeof window !== 'undefined') {
+                AuthDebugger.clearAuthWithLogging();
+                window.location.href = '/login';
+              }
+            }
+          }
         }
         
         // Clone response to read body without consuming the stream

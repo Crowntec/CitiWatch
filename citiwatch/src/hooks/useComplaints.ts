@@ -34,12 +34,25 @@ export function useUserComplaints() {
     queryFn: async () => {
       const result = await ComplaintService.getUserComplaints();
       if (!result.success) {
+        // If it's an access denied error, it means auth issue
+        if (result.message.includes('Access denied') || result.message.includes('HTTP 403')) {
+          throw new Error('Authentication required. Please log in again.');
+        }
         throw new Error(result.message);
       }
       return result.data || [];
     },
     staleTime: 1000 * 60 * 1, // 1 minute (user data changes more frequently)
     gcTime: 1000 * 60 * 3, // 3 minutes
+    retry: (failureCount, error) => {
+      // Don't retry on authentication errors
+      if (error.message.includes('Authentication required') || 
+          error.message.includes('Access denied') ||
+          error.message.includes('HTTP 403')) {
+        return false;
+      }
+      return failureCount < 3;
+    },
   });
 }
 
