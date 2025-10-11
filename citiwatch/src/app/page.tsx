@@ -5,33 +5,18 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import Navigation from "@/components/Navigation";
 import StructuredData from "@/components/StructuredData";
-import PerformanceMonitor from "@/components/PerformanceMonitor";
 
 // Note: Since this is a client component, we'll set metadata via the root layout
 // For SEO optimization, consider converting to server component if possible
 
 export default function Home() {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [videoLoaded, setVideoLoaded] = useState(false);
 
   // Initialize staggered animations
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoaded(true);
     }, 100);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Lazy load video after critical content
-  useEffect(() => {
-    const loadVideo = () => {
-      const timer = setTimeout(() => {
-        setVideoLoaded(true);
-      }, 500); // Delay video loading by 500ms
-      return timer;
-    };
-
-    const timer = loadVideo();
     return () => clearTimeout(timer);
   }, []);
 
@@ -109,65 +94,56 @@ export default function Home() {
     statElements.forEach(el => observer.observe(el));
     scrollRevealElements.forEach(el => scrollRevealObserver.observe(el));
 
-    // Optimized scroll-based animations for hero elements
-    let scrollTicking = false;
+    // Scroll-based animations for hero elements
     const handleScroll = () => {
-      if (!scrollTicking) {
+      const scrollY = window.scrollY;
+      const heroElements = document.querySelectorAll('.hero-parallax');
+      
+      heroElements.forEach((element, index) => {
+        const speed = 0.5 + (index * 0.1);
+        const yPos = scrollY * speed;
+        (element as HTMLElement).style.transform = `translate3d(0, ${yPos}px, 0)`;
+      });
+    };
+
+    // Throttled scroll handler
+    let ticking = false;
+    const throttledScroll = () => {
+      if (!ticking) {
         requestAnimationFrame(() => {
-          const scrollY = window.scrollY;
-          const heroElements = document.querySelectorAll('.hero-parallax');
-          
-          // Reduced complexity - only transform if elements exist
-          if (heroElements.length > 0) {
-            heroElements.forEach((element, index) => {
-              const speed = 0.3 + (index * 0.05); // Reduced multiplier for smoother performance
-              const yPos = scrollY * speed;
-              (element as HTMLElement).style.transform = `translate3d(0, ${yPos}px, 0)`;
-            });
-          }
-          
-          scrollTicking = false;
+          handleScroll();
+          ticking = false;
         });
-        scrollTicking = true;
+        ticking = true;
       }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('scroll', throttledScroll, { passive: true });
     window.addEventListener('resize', () => observer.disconnect(), { passive: true });
 
     return () => {
       observer.disconnect();
       scrollRevealObserver.disconnect();
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scroll', throttledScroll);
     };
   }, []);
 
   return (
-    <PerformanceMonitor>
+    <>
       <StructuredData type="website" />
       
       {/* Hero Section with Video Background */}
       <div className="mobile-full-height relative overflow-hidden" style={{ minHeight: '100dvh' }}>
-                {/* Background Video - Lazy Loaded */}
-        {videoLoaded ? (
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="absolute inset-0 w-full h-full object-cover z-0"
-            preload="none"
-          >
-            <source src="/cityatnight.mp4" type="video/mp4" />
-          </video>
-        ) : (
-          <div 
-            className="absolute inset-0 w-full h-full z-0"
-            style={{
-              background: 'linear-gradient(135deg, #0a0f1c 0%, #1e293b 50%, #0f172a 100%)'
-            }}
-          />
-        )}
+        {/* Background Video */}
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover z-0"
+        >
+          <source src="/cityatnight.mp4" type="video/mp4" />
+        </video>
         
         {/* Gradient Overlay */}
         <div 
@@ -860,6 +836,6 @@ export default function Home() {
           </div>
         </section>
       </div>
-    </PerformanceMonitor>
+    </>
   );
 }
