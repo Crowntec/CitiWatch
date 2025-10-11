@@ -91,7 +91,6 @@ export default function OptimizedHome() {
             playsInline
             className="absolute inset-0 w-full h-full object-cover z-0"
             preload="none"
-            loading="lazy"
           >
             <source src="/cityatnight.mp4" type="video/mp4" />
           </video>

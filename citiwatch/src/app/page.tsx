@@ -148,7 +148,7 @@ export default function Home() {
       
       {/* Hero Section with Video Background */}
       <div className="mobile-full-height relative overflow-hidden" style={{ minHeight: '100dvh' }}>
-        {/* Background Video - Lazy Loaded */}
+                {/* Background Video - Lazy Loaded */}
         {videoLoaded ? (
           <video
             autoPlay
