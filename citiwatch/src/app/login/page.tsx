@@ -205,33 +205,6 @@ function LoginForm() {
             </h3>
           </div>
           
-          {/* Attention-Grabbing Banner */}
-          <div className="mb-4 p-3 bg-gradient-to-r from-yellow-600/30 to-orange-600/30 border-2 border-yellow-400/50 rounded-lg animate-pulse">
-            <div className="flex items-center justify-center space-x-2 text-yellow-200 text-sm">
-              <i className="fas fa-rocket animate-bounce text-yellow-400"></i>
-              <span className="font-bold text-center">🔥 COMPLETE PROJECT DOCUMENTATION & SOURCE CODE ON GITHUB!</span>
-              <i className="fas fa-rocket animate-bounce text-yellow-400"></i>
-            </div>
-            <div className="text-center text-xs text-yellow-300 mt-1 font-medium">
-              💎 Explore features, architecture, API docs & more!
-            </div>
-            <div className="flex justify-center mt-3">
-              <a 
-                href="https://github.com/Crowntec/CitiWatch" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="github-attention group relative inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 hover:from-blue-500 hover:via-purple-500 hover:to-blue-500 text-white rounded-lg transition-all duration-300 shadow-lg hover:shadow-2xl border border-blue-400"
-                title="🚀 Explore Complete Project Documentation, Features & Source Code!"
-              >
-                <i className="fab fa-github text-xl animate-pulse group-hover:animate-bounce"></i>
-                <span className="hidden sm:inline font-bold text-sm">CHECK FULL DOCUMENTATION</span>
-                <span className="sm:hidden font-bold text-sm">GitHub</span>
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-ping"></div>
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full"></div>
-              </a>
-            </div>
-          </div>
-          
           <p className="text-blue-200 text-sm mb-4">
             Use these credentials to explore the platform&apos;s features:
           </p>
@@ -272,6 +245,35 @@ function LoginForm() {
           <p className="text-xs text-gray-400 text-center mt-3">
             Use these credentials to explore the platform&apos;s features
           </p>
+
+          
+          
+          {/* Attention-Grabbing Banner */}
+          <div className="mb-4 p-3 bg-gradient-to-r from-yellow-600/30 to-orange-600/30 border-2 border-yellow-400/50 rounded-lg animate-pulse">
+            <div className="flex items-center justify-center space-x-2 text-yellow-200 text-sm">
+              <i className="fas fa-rocket animate-bounce text-yellow-400"></i>
+              <span className="font-bold text-center">🔥 COMPLETE PROJECT DOCUMENTATION & SOURCE CODE ON GITHUB!</span>
+              <i className="fas fa-rocket animate-bounce text-yellow-400"></i>
+            </div>
+            <div className="text-center text-xs text-yellow-300 mt-1 font-medium">
+              💎 Explore features, architecture, API docs & more!
+            </div>
+            <div className="flex justify-center mt-3">
+              <a 
+                href="https://github.com/Crowntec/CitiWatch" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="github-attention group relative inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 hover:from-blue-500 hover:via-purple-500 hover:to-blue-500 text-white rounded-lg transition-all duration-300 shadow-lg hover:shadow-2xl border border-blue-400"
+                title="🚀 Explore Complete Project Documentation, Features & Source Code!"
+              >
+                <i className="fab fa-github text-xl animate-pulse group-hover:animate-bounce"></i>
+                <span className="hidden sm:inline font-bold text-sm">CHECK FULL DOCUMENTATION</span>
+                <span className="sm:hidden font-bold text-sm">GitHub</span>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-ping"></div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full"></div>
+              </a>
+            </div>
+          </div>
         </div>
 
           </form>
