@@ -14,6 +14,7 @@ function LoginForm() {
     password: '',
   });
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const { login, isLoading, isAuthenticated, isAdmin } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -82,15 +83,15 @@ function LoginForm() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
       <Navigation />
-      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8" style={{ minHeight: 'calc(100vh - 80px)' }}>
+      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 pt-24" style={{ minHeight: 'calc(100vh - 80px)' }}>
       <div className="max-w-md w-full space-y-8">
         <div>
-          <div className="text-center">
-            <Link href="/" className="text-3xl font-bold text-blue-400">
-              <i className="fas fa-sign-in-alt mr-4 w-5"></i>
-            </Link>
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600/20 rounded-full border-2 border-blue-500/30 mb-4">
+              <i className="fas fa-sign-in-alt text-2xl text-blue-400"></i>
+            </div>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
+          <h2 className="text-center text-3xl font-extrabold text-white">
             Sign in to your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-400">
@@ -103,6 +104,68 @@ function LoginForm() {
             </Link>
           </p>
         </div>
+
+        {/* Demo Credentials Section */}
+        <div className="bg-blue-900/20 backdrop-blur-sm py-4 px-6 rounded-lg border border-blue-700/50 mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-semibold text-blue-300">
+              <i className="fas fa-info-circle mr-2"></i>
+              Demo Credentials
+            </h3>
+            <a 
+              href="https://github.com/Crowntec/CitiWatch" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors duration-200 text-sm"
+              title="View Project Documentation on GitHub"
+            >
+              <i className="fab fa-github text-lg"></i>
+              <span className="hidden sm:inline">View on GitHub</span>
+              <span className="sm:hidden">GitHub</span>
+            </a>
+          </div>
+          <p className="text-blue-200 text-sm mb-4">
+            Use these credentials to explore the platform&apos;s features:
+          </p>
+          <div className="space-y-3">
+            <div className="bg-gray-800/50 p-3 rounded-md border border-gray-600">
+              <h4 className="text-sm font-medium text-green-400 mb-2">
+                <i className="fas fa-user-shield mr-2"></i>
+                Admin Access
+              </h4>
+              <div className="text-xs text-gray-300 space-y-1">
+                <div>
+                  <span className="text-gray-400">Email:</span>{' '}
+                  <span className="font-mono text-blue-300">admin123@citiwatch.com</span>
+                </div>
+                <div>
+                  <span className="text-gray-400">Password:</span>{' '}
+                  <span className="font-mono text-blue-300">Admin123!Pass</span>
+                </div>
+              </div>
+            </div>
+            <div className="bg-gray-800/50 p-3 rounded-md border border-gray-600">
+              <h4 className="text-sm font-medium text-yellow-400 mb-2">
+                <i className="fas fa-user mr-2"></i>
+                Regular User Access
+              </h4>
+              <div className="text-xs text-gray-300 space-y-1">
+                <div>
+                  <span className="text-gray-400">Email:</span>{' '}
+                  <span className="font-mono text-blue-300">user@citiwatch.com</span>
+                </div>
+                <div>
+                  <span className="text-gray-400">Password:</span>{' '}
+                  <span className="font-mono text-blue-300">User123</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p className="text-xs text-gray-400 text-center mt-3">
+            Use these credentials to explore the platform&apos;s features
+          </p>
+        </div>
+
         <div className="bg-gray-800/50 backdrop-blur-sm py-8 px-6 shadow-xl rounded-lg border border-gray-700">
         <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
@@ -132,17 +195,37 @@ function LoginForm() {
               <label htmlFor="password" className="block text-sm font-medium text-gray-300">
                 Password
               </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={formData.password}
-                onChange={handleChange}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-600 bg-gray-700/50 placeholder-gray-400 text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Enter your password"
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="mt-1 appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-600 bg-gray-700/50 placeholder-gray-400 text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  placeholder="Enter your password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 mt-1"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  <i 
+                    className={`fas transition-all duration-300 ease-in-out text-gray-400 hover:text-blue-400 ${
+                      showPassword 
+                        ? 'fa-eye-slash transform scale-110' 
+                        : 'fa-eye transform scale-100'
+                    }`}
+                    style={{
+                      transform: showPassword ? 'scale(1.1) rotateY(180deg)' : 'scale(1) rotateY(0deg)',
+                      transition: 'all 0.3s ease-in-out'
+                    }}
+                  ></i>
+                </button>
+              </div>
             </div>
 
             <div className="flex items-center justify-between">
