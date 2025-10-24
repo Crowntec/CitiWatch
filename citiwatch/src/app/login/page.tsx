@@ -104,85 +104,6 @@ function LoginForm() {
             </Link>
           </p>
         </div>
-
-        {/* Demo Credentials Section */}
-        <div className="bg-blue-900/20 backdrop-blur-sm py-4 px-6 rounded-lg border border-blue-700/50 mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold text-blue-300">
-              <i className="fas fa-info-circle mr-2"></i>
-              Demo Credentials
-            </h3>
-          </div>
-          
-          {/* Attention-Grabbing Banner */}
-          <div className="mb-4 p-3 bg-gradient-to-r from-yellow-600/30 to-orange-600/30 border-2 border-yellow-400/50 rounded-lg animate-pulse">
-            <div className="flex items-center justify-center space-x-2 text-yellow-200 text-sm">
-              <i className="fas fa-rocket animate-bounce text-yellow-400"></i>
-              <span className="font-bold text-center">🔥 COMPLETE PROJECT DOCUMENTATION & SOURCE CODE ON GITHUB!</span>
-              <i className="fas fa-rocket animate-bounce text-yellow-400"></i>
-            </div>
-            <div className="text-center text-xs text-yellow-300 mt-1 font-medium">
-              💎 Explore features, architecture, API docs & more!
-            </div>
-            <div className="flex justify-center mt-3">
-              <a 
-                href="https://github.com/Crowntec/CitiWatch" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="github-attention group relative inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 hover:from-blue-500 hover:via-purple-500 hover:to-blue-500 text-white rounded-lg transition-all duration-300 shadow-lg hover:shadow-2xl border border-blue-400"
-                title="🚀 Explore Complete Project Documentation, Features & Source Code!"
-              >
-                <i className="fab fa-github text-xl animate-pulse group-hover:animate-bounce"></i>
-                <span className="hidden sm:inline font-bold text-sm">CHECK FULL DOCUMENTATION</span>
-                <span className="sm:hidden font-bold text-sm">GitHub</span>
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-ping"></div>
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full"></div>
-              </a>
-            </div>
-          </div>
-          
-          <p className="text-blue-200 text-sm mb-4">
-            Use these credentials to explore the platform&apos;s features:
-          </p>
-          <div className="space-y-3">
-            <div className="bg-gray-800/50 p-3 rounded-md border border-gray-600">
-              <h4 className="text-sm font-medium text-green-400 mb-2">
-                <i className="fas fa-user-shield mr-2"></i>
-                Admin Access
-              </h4>
-              <div className="text-xs text-gray-300 space-y-1">
-                <div>
-                  <span className="text-gray-400">Email:</span>{' '}
-                  <span className="font-mono text-blue-300">admin123@citiwatch.com</span>
-                </div>
-                <div>
-                  <span className="text-gray-400">Password:</span>{' '}
-                  <span className="font-mono text-blue-300">Admin123!Pass</span>
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-800/50 p-3 rounded-md border border-gray-600">
-              <h4 className="text-sm font-medium text-yellow-400 mb-2">
-                <i className="fas fa-user mr-2"></i>
-                Regular User Access
-              </h4>
-              <div className="text-xs text-gray-300 space-y-1">
-                <div>
-                  <span className="text-gray-400">Email:</span>{' '}
-                  <span className="font-mono text-blue-300">user@citiwatch.com</span>
-                </div>
-                <div>
-                  <span className="text-gray-400">Password:</span>{' '}
-                  <span className="font-mono text-blue-300">User123</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <p className="text-xs text-gray-400 text-center mt-3">
-            Use these credentials to explore the platform&apos;s features
-          </p>
-        </div>
-
         <div className="bg-gray-800/50 backdrop-blur-sm py-8 px-6 shadow-xl rounded-lg border border-gray-700">
         <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
@@ -275,6 +196,84 @@ function LoginForm() {
                 Sign in
               </LoadingButton>
             </div>
+            {/* Demo Credentials Section */}
+        <div className="bg-blue-900/20 backdrop-blur-sm py-4 px-6 rounded-lg border border-blue-700/50 mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-semibold text-blue-300">
+              <i className="fas fa-info-circle mr-2"></i>
+              Demo Credentials
+            </h3>
+          </div>
+          
+          {/* Attention-Grabbing Banner */}
+          <div className="mb-4 p-3 bg-gradient-to-r from-yellow-600/30 to-orange-600/30 border-2 border-yellow-400/50 rounded-lg animate-pulse">
+            <div className="flex items-center justify-center space-x-2 text-yellow-200 text-sm">
+              <i className="fas fa-rocket animate-bounce text-yellow-400"></i>
+              <span className="font-bold text-center">🔥 COMPLETE PROJECT DOCUMENTATION & SOURCE CODE ON GITHUB!</span>
+              <i className="fas fa-rocket animate-bounce text-yellow-400"></i>
+            </div>
+            <div className="text-center text-xs text-yellow-300 mt-1 font-medium">
+              💎 Explore features, architecture, API docs & more!
+            </div>
+            <div className="flex justify-center mt-3">
+              <a 
+                href="https://github.com/Crowntec/CitiWatch" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="github-attention group relative inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 hover:from-blue-500 hover:via-purple-500 hover:to-blue-500 text-white rounded-lg transition-all duration-300 shadow-lg hover:shadow-2xl border border-blue-400"
+                title="🚀 Explore Complete Project Documentation, Features & Source Code!"
+              >
+                <i className="fab fa-github text-xl animate-pulse group-hover:animate-bounce"></i>
+                <span className="hidden sm:inline font-bold text-sm">CHECK FULL DOCUMENTATION</span>
+                <span className="sm:hidden font-bold text-sm">GitHub</span>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-ping"></div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full"></div>
+              </a>
+            </div>
+          </div>
+          
+          <p className="text-blue-200 text-sm mb-4">
+            Use these credentials to explore the platform&apos;s features:
+          </p>
+          <div className="space-y-3">
+            <div className="bg-gray-800/50 p-3 rounded-md border border-gray-600">
+              <h4 className="text-sm font-medium text-green-400 mb-2">
+                <i className="fas fa-user-shield mr-2"></i>
+                Admin Access
+              </h4>
+              <div className="text-xs text-gray-300 space-y-1">
+                <div>
+                  <span className="text-gray-400">Email:</span>{' '}
+                  <span className="font-mono text-blue-300">admin123@citiwatch.com</span>
+                </div>
+                <div>
+                  <span className="text-gray-400">Password:</span>{' '}
+                  <span className="font-mono text-blue-300">Admin123!Pass</span>
+                </div>
+              </div>
+            </div>
+            <div className="bg-gray-800/50 p-3 rounded-md border border-gray-600">
+              <h4 className="text-sm font-medium text-yellow-400 mb-2">
+                <i className="fas fa-user mr-2"></i>
+                Regular User Access
+              </h4>
+              <div className="text-xs text-gray-300 space-y-1">
+                <div>
+                  <span className="text-gray-400">Email:</span>{' '}
+                  <span className="font-mono text-blue-300">user@citiwatch.com</span>
+                </div>
+                <div>
+                  <span className="text-gray-400">Password:</span>{' '}
+                  <span className="font-mono text-blue-300">User123</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p className="text-xs text-gray-400 text-center mt-3">
+            Use these credentials to explore the platform&apos;s features
+          </p>
+        </div>
+
           </form>
         </div>
       </div>
