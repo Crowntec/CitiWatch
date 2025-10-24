@@ -17,6 +17,8 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
   const { register } = useAuth();
 
@@ -84,15 +86,15 @@ export default function Register() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
       <Navigation />
-      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8" style={{ minHeight: 'calc(100vh - 80px)' }}>
+      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 pt-24" style={{ minHeight: 'calc(100vh - 80px)' }}>
       <div className="max-w-md w-full space-y-8">
         <div>
-          <div className="text-center">
-            <Link href="/" className="text-3xl font-bold text-blue-400 flex items-center justify-center">
-              <i className="fas fa-user-plus mr-4 w-5"></i>
-            </Link>
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600/20 rounded-full border-2 border-blue-500/30 mb-4">
+              <i className="fas fa-user-plus text-2xl text-blue-400"></i>
+            </div>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
+          <h2 className="text-center text-3xl font-extrabold text-white">
             Create your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-400">
@@ -158,36 +160,76 @@ export default function Register() {
               <label htmlFor="password" className="block text-sm font-medium text-gray-300">
                 Password
               </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                value={formData.password}
-                onChange={handleChange}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-600 bg-gray-700/50 placeholder-gray-400 text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Enter your password"
-                minLength={6}
-                maxLength={100}
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="mt-1 appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-600 bg-gray-700/50 placeholder-gray-400 text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  placeholder="Enter your password"
+                  minLength={6}
+                  maxLength={100}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 mt-1"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  <i 
+                    className={`fas transition-all duration-300 ease-in-out text-gray-400 hover:text-blue-400 ${
+                      showPassword 
+                        ? 'fa-eye-slash transform scale-110' 
+                        : 'fa-eye transform scale-100'
+                    }`}
+                    style={{
+                      transform: showPassword ? 'scale(1.1) rotateY(180deg)' : 'scale(1) rotateY(0deg)',
+                      transition: 'all 0.3s ease-in-out'
+                    }}
+                  ></i>
+                </button>
+              </div>
             </div>
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300">
                 Confirm Password
               </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                required
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-600 bg-gray-700/50 placeholder-gray-400 text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Confirm your password"
-              />
+              <div className="relative">
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  required
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className="mt-1 appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-600 bg-gray-700/50 placeholder-gray-400 text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  placeholder="Confirm your password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 mt-1"
+                  aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                >
+                  <i 
+                    className={`fas transition-all duration-300 ease-in-out text-gray-400 hover:text-blue-400 ${
+                      showConfirmPassword 
+                        ? 'fa-eye-slash transform scale-110' 
+                        : 'fa-eye transform scale-100'
+                    }`}
+                    style={{
+                      transform: showConfirmPassword ? 'scale(1.1) rotateY(180deg)' : 'scale(1) rotateY(0deg)',
+                      transition: 'all 0.3s ease-in-out'
+                    }}
+                  ></i>
+                </button>
+              </div>
             </div>
 
 
